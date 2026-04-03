@@ -646,14 +646,15 @@ document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=
 load(); renderAll();
 </script>
 
-<!-- Firebase setup -->
+<!-- Firebase RTDB setup -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
     authDomain: "badmintonsnowite.firebaseapp.com",
+    databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
     projectId: "badmintonsnowite",
     storageBucket: "badmintonsnowite.firebasestorage.app",
     messagingSenderId: "278915115830",
@@ -663,25 +664,28 @@ load(); renderAll();
 
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
-  const db = firebase.firestore();
+  const db = firebase.database();
 
   async function syncMembersToFirebase() {
-    const batch = db.batch();
-    const col = db.collection('members');
-    S.members.forEach(member => {
-      const ref = col.doc(String(member.id));
-      batch.set(ref, member, { merge: true });
-    });
-    await batch.commit();
-    toast('ซิงก์สมาชิกไป Firebase เรียบร้อย', '✅');
+    await db.ref('members').set(S.members || []);
+    toast('ซิงก์สมาชิกไป Realtime DB เรียบร้อย', '✅');
   }
 
   async function loadMembersFromFirebase() {
-    const membersSnap = await db.collection('members').get();
-    S.members = membersSnap.docs.map(doc => doc.data());
+    const snapshot = await db.ref('members').once('value');
+    const data = snapshot.val();
+    if (!data) {
+      toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
+      return;
+    }
+    if (Array.isArray(data)) {
+      S.members = data;
+    } else {
+      S.members = Object.values(data);
+    }
     save();
     renderAll();
-    toast('โหลดสมาชิกจาก Firebase เรียบร้อย', '✅');
+    toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
   }
 
   window.syncMembersToFirebase = syncMembersToFirebase;

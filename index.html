@@ -79,6 +79,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mcard:hover{border-color:var(--accent);transform:translateY(-1px);}
 .mcard-name{font-size:12px;font-weight:700;text-align:center;}
 .mcard-elo{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600;}
+.checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:220px;overflow:auto;padding:6px 0;}
+.chk-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--s1);cursor:pointer;transition:border-color .18s,background .18s;}
+.chk-item:hover{border-color:var(--accent);background:rgba(240,192,64,.08);}
+.chk-item input{width:16px;height:16px;}
+.chk-item label{font-size:13px;color:var(--text);}
 .mcard-sub{font-size:10px;color:var(--muted);text-align:center;}
 .court-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
 .court-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;}
@@ -357,7 +362,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <div class="fg"><label class="fl">จำนวนชั่วโมง</label><input class="fi" type="number" min="0" step="0.5" id="f-hours" placeholder="2"></div>
       <div class="fg"><label class="fl">ราคา/ชม.</label><input class="fi" type="number" min="0" step="10" id="f-rate" placeholder="200"></div>
     </div>
-    <div class="fg"><label class="fl">ผู้ร่วมตี (เลือกหลายคน)</label><select class="fs" id="f-participants" multiple size="4"></select></div>
+    <div class="fg"><label class="fl">ผู้ร่วมตี (เลือกหลายคน)</label><div id="f-participants" class="checkbox-grid"></div></div>
     <div class="pt" style="margin-bottom:8px;">🚩 ค่าลูกแบด</div>
     <div class="g2" style="gap:10px;">
       <div class="fg"><label class="fl">ผู้ใช้ 1</label><select class="fs" id="f-shuttle-user-1"></select></div>
@@ -721,14 +726,36 @@ function renderFinance(){
 
 function renderFinanceOptions(){
   const members=S.members||[];
-  ['f-booker','f-participants','f-shuttle-user-1','f-shuttle-user-2','f-shuttle-user-3'].forEach(id=>{
+  ['f-booker','f-shuttle-user-1','f-shuttle-user-2','f-shuttle-user-3'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el) return;
     el.innerHTML=members.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
   });
+  const participantsEl=document.getElementById('f-participants');
+  if(participantsEl){
+    participantsEl.innerHTML=members.map(m=>`
+      <label class="chk-item"><input type="checkbox" value="${m.id}"><span>${m.name}</span></label>
+    `).join('');
+  }
 }
 
 function openFinanceModal(){
+  if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
+  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-hours').value='';
+  document.getElementById('f-rate').value='';
+  const participantsEl=document.getElementById('f-participants');
+  if(participantsEl) participantsEl.innerHTML='';
+  document.getElementById('f-shuttle-count-1').value='';
+  document.getElementById('f-shuttle-count-2').value='';
+  document.getElementById('f-shuttle-count-3').value='';
+  document.getElementById('f-shuttle-price-1').value='';
+  document.getElementById('f-shuttle-price-2').value='';
+  document.getElementById('f-shuttle-price-3').value='';
+  renderFinanceOptions();
+  document.getElementById('modal-finance').classList.add('on');
+}
+
   if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
   document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
   document.getElementById('f-hours').value='';
@@ -749,7 +776,7 @@ function saveFinanceSession(){
   const booker=parseInt(document.getElementById('f-booker').value);
   const hours=parseFloat(document.getElementById('f-hours').value)||0;
   const ratePerHour=parseFloat(document.getElementById('f-rate').value)||0;
-  const participants=[...document.getElementById('f-participants').selectedOptions].map(o=>parseInt(o.value));
+  const participants=[...document.querySelectorAll('#f-participants input[type="checkbox"]:checked')].map(o=>parseInt(o.value));
   if(!date||!booker||!hours||!ratePerHour||participants.length===0){ toast('กรุณากรอกข้อมูลให้ครบ','⚠️'); return; }
   const shuttleUsage=[1,2,3].map(i=>({
     user:parseInt(document.getElementById(`f-shuttle-user-${i}`).value)||null,

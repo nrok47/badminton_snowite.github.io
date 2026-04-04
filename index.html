@@ -134,6 +134,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <button class="nb on" onclick="tab('dashboard',this)">📊 Dashboard</button>
     <button class="nb" onclick="tab('club',this)">👥 ก๊วน</button>
     <button class="nb" onclick="tab('stats',this)">📈 สถิติ</button>
+    <button class="nb" onclick="tab('finance',this)">💰 การเงิน</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
   </nav>
   <div class="header-actions">
@@ -299,6 +300,20 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
+<!-- FINANCE -->
+<div id="page-finance" class="page">
+  <div class="panel">
+    <div class="pt">💰 ระบบการเงิน <button class="btn btn-y btn-sm pt-action" onclick="openFinanceModal()">➕ บันทึกค่าใช้จ่าย</button></div>
+    <div class="g4" style="margin-bottom:14px;">
+      <div class="scard"><div class="scard-icon">🏸</div><div class="scard-val" id="finance-sessions">0</div><div class="scard-lbl">เซสชัน</div></div>
+      <div class="scard"><div class="scard-icon">💵</div><div class="scard-val" id="finance-total">0</div><div class="scard-lbl">รวมทั้งหมด</div></div>
+      <div class="scard"><div class="scard-icon">👥</div><div class="scard-val" id="finance-participants">0</div><div class="scard-lbl">คนล่าสุด</div></div>
+      <div class="scard"><div class="scard-icon">🕒</div><div class="scard-val" id="finance-rate">0</div><div class="scard-lbl">เรทต่อชม.</div></div>
+    </div>
+    <div id="finance-list"></div>
+  </div>
+</div>
+
 </div>
 
 <!-- MODAL ADD -->
@@ -330,9 +345,38 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="el2"></select></div>
       </div>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-finance">
+  <div class="modal">
+    <div class="modal-t">💰 บันทึกค่าใช้จ่ายสนาม</div>
+    <div class="fg"><label class="fl">วันที่</label><input class="fi" type="date" id="f-date"></div>
+    <div class="fg"><label class="fl">ผู้จอง / ผู้จ่าย</label><select class="fs" id="f-booker"></select></div>
+    <div class="g2">
+      <div class="fg"><label class="fl">จำนวนชั่วโมง</label><input class="fi" type="number" min="0" step="0.5" id="f-hours" placeholder="2"></div>
+      <div class="fg"><label class="fl">ราคา/ชม.</label><input class="fi" type="number" min="0" step="10" id="f-rate" placeholder="200"></div>
+    </div>
+    <div class="fg"><label class="fl">ผู้ร่วมตี (เลือกหลายคน)</label><select class="fs" id="f-participants" multiple size="4"></select></div>
+    <div class="pt" style="margin-bottom:8px;">🚩 ค่าลูกแบด</div>
+    <div class="g2" style="gap:10px;">
+      <div class="fg"><label class="fl">ผู้ใช้ 1</label><select class="fs" id="f-shuttle-user-1"></select></div>
+      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-1"></div>
+      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-1"></div>
+    </div>
+    <div class="g2" style="gap:10px;">
+      <div class="fg"><label class="fl">ผู้ใช้ 2</label><select class="fs" id="f-shuttle-user-2"></select></div>
+      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-2"></div>
+      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-2"></div>
+    </div>
+    <div class="g2" style="gap:10px;">
+      <div class="fg"><label class="fl">ผู้ใช้ 3</label><select class="fs" id="f-shuttle-user-3"></select></div>
+      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-3"></div>
+      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-3"></div>
+    </div>
     <div class="modal-act">
-      <button class="btn btn-y btn-full" onclick="saveEdit()">✅ บันทึก</button>
-      <button class="btn btn-s" onclick="closeModal('modal-edit')">ยกเลิก</button>
+      <button class="btn btn-y btn-full" onclick="saveFinanceSession()">✅ บันทึก</button>
+      <button class="btn btn-s" onclick="closeModal('modal-finance')">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -341,7 +385,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[] };
+let S = { members:[], matches:[], finance:[] };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
 const gi = n => n.charAt(0).toUpperCase();
@@ -494,7 +538,7 @@ function recordMatch(){
 // ===== RENDER =====
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
-  renderMemberGrid(); renderSelects(); renderMatchHistory();
+  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance();
 }
 
 function renderStats(){
@@ -637,6 +681,91 @@ function renderMatchHistory(){
       </div>
     </div>`;
   }).join('');
+}
+
+function renderFinance(){
+  const listEl=document.getElementById('finance-list');
+  const sessions=S.finance||[];
+  document.getElementById('finance-sessions').textContent=sessions.length;
+  const totalCost=sessions.reduce((sum,s)=>sum+(s.courtCost+s.shuttleCost),0);
+  document.getElementById('finance-total').textContent=totalCost.toLocaleString();
+  document.getElementById('finance-participants').textContent=sessions[sessions.length-1]?.participants?.length||0;
+  document.getElementById('finance-rate').textContent=sessions[sessions.length-1]?.ratePerHour?.toLocaleString()||0;
+  if(!sessions.length){
+    listEl.innerHTML='<div class="empty"><div class="empty-i">💸</div><div class="empty-t">ยังไม่มีบันทึกค่าใช้จ่าย</div></div>';
+    return;
+  }
+  listEl.innerHTML=sessions.slice().reverse().map(s=>{
+    const bookerName=gm(s.booker)?.name||'ไม่ระบุ';
+    const participants=s.participants.map(id=>gm(id)?.name||'?').join(' / ');
+    const shuttleRows=s.shuttleUsage.map(u=>u.count?`<div style="font-size:12px;color:var(--muted);">${gm(u.user)?.name||'?'}: ${u.count} ลูก × ${u.price.toLocaleString()} = ${(u.count*u.price).toLocaleString()}</div>`:'').join('');
+    const courtCost=s.courtCost.toLocaleString();
+    const shuttleCost=s.shuttleCost.toLocaleString();
+    const perPerson=s.perPerson.toLocaleString(undefined,{maximumFractionDigits:2});
+    return `<div class="panel" style="padding:14px;margin-bottom:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div><strong>${s.date}</strong> | ${bookerName}</div>
+        <div><span class="badge bg-gray">คนตี ${s.participants.length}</span></div>
+      </div>
+      <div style="margin-top:10px;font-size:13px;color:var(--text);">
+        <div>จอง ${s.hours} ชม. × ${s.ratePerHour.toLocaleString()} = ${courtCost}</div>
+        <div>ค่าลูกแบด = ${shuttleCost}</div>
+        ${shuttleRows}
+        <div style="margin-top:8px;font-weight:700;">รวม ${ (s.courtCost+s.shuttleCost).toLocaleString() } ฿</div>
+        <div style="margin-top:4px;color:var(--muted);">เฉลี่ยต่อคน ${perPerson} ฿</div>
+        <div style="margin-top:4px;color:var(--muted);">ผู้เล่น: ${participants}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFinanceOptions(){
+  const members=S.members||[];
+  ['f-booker','f-participants','f-shuttle-user-1','f-shuttle-user-2','f-shuttle-user-3'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.innerHTML=members.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
+  });
+}
+
+function openFinanceModal(){
+  if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
+  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+  document.getElementById('f-hours').value='';
+  document.getElementById('f-rate').value='';
+  document.getElementById('f-participants').innerHTML='';
+  document.getElementById('f-shuttle-count-1').value='';
+  document.getElementById('f-shuttle-count-2').value='';
+  document.getElementById('f-shuttle-count-3').value='';
+  document.getElementById('f-shuttle-price-1').value='';
+  document.getElementById('f-shuttle-price-2').value='';
+  document.getElementById('f-shuttle-price-3').value='';
+  renderFinanceOptions();
+  document.getElementById('modal-finance').classList.add('on');
+}
+
+function saveFinanceSession(){
+  const date=document.getElementById('f-date').value;
+  const booker=parseInt(document.getElementById('f-booker').value);
+  const hours=parseFloat(document.getElementById('f-hours').value)||0;
+  const ratePerHour=parseFloat(document.getElementById('f-rate').value)||0;
+  const participants=[...document.getElementById('f-participants').selectedOptions].map(o=>parseInt(o.value));
+  if(!date||!booker||!hours||!ratePerHour||participants.length===0){ toast('กรุณากรอกข้อมูลให้ครบ','⚠️'); return; }
+  const shuttleUsage=[1,2,3].map(i=>({
+    user:parseInt(document.getElementById(`f-shuttle-user-${i}`).value)||null,
+    count:parseInt(document.getElementById(`f-shuttle-count-${i}`).value)||0,
+    price:parseFloat(document.getElementById(`f-shuttle-price-${i}`).value)||0
+  })).filter(u=>u.user && u.count>0 && u.price>0);
+  const shuttleCost=shuttleUsage.reduce((sum,u)=>sum+u.count*u.price,0);
+  const courtCost=Math.round(hours*ratePerHour);
+  const totalCost=courtCost+shuttleCost;
+  const perPerson=Number((totalCost/participants.length).toFixed(2));
+  const session={
+    id:Date.now(), date, booker, hours, ratePerHour, participants, shuttleUsage, shuttleCost, courtCost, perPerson
+  };
+  S.finance=S.finance||[];
+  S.finance.push(session);
+  save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว');
 }
 
 // ===== ACTIONS =====

@@ -390,6 +390,25 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
+<div class="overlay" id="modal-finance-detail">
+  <div class="modal">
+    <div class="modal-t">📌 รายละเอียด session ค่าใช้จ่าย</div>
+    <input type="hidden" id="finance-detail-id">
+    <div class="fg"><label class="fl">วันที่</label><div class="fs" id="fd-date"></div></div>
+    <div class="fg"><label class="fl">ผู้จอง / ผู้จ่าย</label><div class="fs" id="fd-booker"></div></div>
+    <div class="g2">
+      <div class="fg"><label class="fl">รวมทั้งหมด</label><div class="fs" id="fd-total"></div></div>
+      <div class="fg"><label class="fl">เฉลี่ยต่อคน</label><div class="fs" id="fd-per-person"></div></div>
+    </div>
+    <div class="fg"><label class="fl">ผู้ร่วมตี</label><div id="fd-participants" class="checkbox-grid"></div></div>
+    <div class="fg"><label class="fl">สถานะการจ่าย</label><div id="fd-paid-count" class="fs" style="padding:10px;background:var(--s1);border-radius:10px;">0 คน</div></div>
+    <div class="modal-act">
+      <button class="btn btn-y btn-full" onclick="saveFinanceSessionDetail()">💾 บันทึกสถานะ</button>
+      <button class="btn btn-s" onclick="closeModal('modal-finance-detail')">ปิด</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="ti">✅</span><span id="tm"></span></div>
 
 <script>
@@ -726,9 +745,10 @@ function renderFinance(){
         ${shuttleRows}
         <div style="margin-top:8px;font-weight:700;">รวม ${ (s.courtCost+s.shuttleCost).toLocaleString() } ฿</div>
         <div style="margin-top:4px;color:var(--text);">เฉลี่ยต่อคน ${perPerson} ฿</div>
-        <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้จ่ายแล้ว (${paidArr.length}/${participantsArr.length}): ${paidNames}</div>
-        <div style="margin-top:4px;color:var(--text);">ยังไม่ได้จ่าย: ${unpaidNames}</div>
-        <div style="margin-top:6px;color:var(--muted);">ผู้เล่น: ${participants}</div>
+        <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้เล่น: ${participants}</div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button class="btn btn-s btn-sm" onclick="openFinanceSession(${s.id})">ดู session / จ่าย</button>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -801,6 +821,45 @@ function openFinanceModal(){
   document.getElementById('modal-finance').classList.add('on');
 }
 
+function openFinanceSession(id){
+  const session=S.finance?.find(s=>s.id===id);
+  if(!session){ toast('ไม่พบ session นี้','⚠️'); return; }
+  document.getElementById('finance-detail-id').value=id;
+  document.getElementById('fd-date').textContent=session.date;
+  document.getElementById('fd-booker').textContent=gm(session.booker)?.name||'ไม่ระบุ';
+  document.getElementById('fd-total').textContent=`${(session.courtCost+session.shuttleCost).toLocaleString()} ฿`;
+  document.getElementById('fd-per-person').textContent=`${session.perPerson.toLocaleString(undefined,{maximumFractionDigits:2})} ฿`;
+  const participantsEl=document.getElementById('fd-participants');
+  if(participantsEl){
+    participantsEl.innerHTML=session.participants.map(id=>{
+      const name=gm(id)?.name||'?';
+      const paid=(session.paidParticipants||[]).includes(id);
+      return `
+        <label class="chk-item">
+          <input type="checkbox" class="fd-paid" value="${id}" ${paid?'checked':''} onchange="syncFinanceDetailPaidRow()">
+          <span>${name}</span>
+        </label>
+      `;
+    }).join('');
+  }
+  syncFinanceDetailPaidRow();
+  document.getElementById('modal-finance-detail').classList.add('on');
+}
+
+function syncFinanceDetailPaidRow(){
+  const paidInputs=[...document.querySelectorAll('#fd-participants input.fd-paid:checked')];
+  const paidCountEl=document.getElementById('fd-paid-count');
+  if(paidCountEl) paidCountEl.textContent=`${paidInputs.length} คน`;
+}
+
+function saveFinanceSessionDetail(){
+  const id=parseInt(document.getElementById('finance-detail-id').value);
+  const session=S.finance?.find(s=>s.id===id);
+  if(!session){ toast('ไม่พบ session นี้','⚠️'); return; }
+  const paidParticipants=[...document.querySelectorAll('#fd-participants input.fd-paid:checked')].map(i=>parseInt(i.value));
+  session.paidParticipants=paidParticipants;
+  save(); renderAll(); closeModal('modal-finance-detail'); toast('อัปเดตสถานะการจ่ายแล้ว');
+}
 
 function saveFinanceSession(){
   const date=document.getElementById('f-date').value;

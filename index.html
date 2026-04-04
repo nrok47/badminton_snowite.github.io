@@ -151,7 +151,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- CLUB -->
 <div id="page-club" class="page">
   <div class="panel">
-    <div class="pt">👥 สมาชิก <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div>
+    <div class="pt">👥 สมาชิก <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button><button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">⬇️ โหลดจาก Firebase</button><button class="btn btn-g btn-sm" onclick="syncMembersToFirebase()">⬆️ บันทึกไป Firebase</button></div>
     <div id="member-grid" class="mgrid"><div class="empty" style="grid-column:1/-1"><div class="empty-i">👤</div><div class="empty-t">คลิก "เพิ่มสมาชิก"</div></div></div>
   </div>
   <div class="panel">
@@ -283,7 +283,7 @@ const gi = n => n.charAt(0).toUpperCase();
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
-function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); }
+function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); syncMembersToFirebase(); }
 function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); }catch(e){} }
 
 // ===== ELO ENGINE =====
@@ -657,6 +657,61 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySele
 document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
 
 load(); renderAll();
+</script>
+
+<!-- Firebase RTDB setup -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+    authDomain: "badmintonsnowite.firebaseapp.com",
+    databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+    projectId: "badmintonsnowite",
+    storageBucket: "badmintonsnowite.firebasestorage.app",
+    messagingSenderId: "278915115830",
+    appId: "1:278915115830:web:5aff2fbb71db4df62a6197",
+    measurementId: "G-RB42S3K4BZ"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  const db = firebase.database();
+
+  async function syncMembersToFirebase() {
+    try {
+      await db.ref('members').set(S.members || []);
+      console.log('✅ Auto-synced members to Firebase');
+    } catch(e) {
+      console.error('Firebase sync error:', e);
+    }
+  }
+
+  async function loadMembersFromFirebase() {
+    try {
+      const snapshot = await db.ref('members').once('value');
+      const data = snapshot.val();
+      if (!data) {
+        toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
+        return;
+      }
+      if (Array.isArray(data)) {
+        S.members = data;
+      } else {
+        S.members = Object.values(data);
+      }
+      save();
+      renderAll();
+      toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
+    } catch(e) {
+      toast('เกิดข้อผิดพลาดในการโหลด Firebase', '❌');
+      console.error('Firebase load error:', e);
+    }
+  }
+
+  window.syncMembersToFirebase = syncMembersToFirebase;
+  window.loadMembersFromFirebase = loadMembersFromFirebase;
 </script>
 </body>
 </html>

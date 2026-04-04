@@ -12,6 +12,10 @@
   --blue:#38bdf8; --purple:#a78bfa; --text:#e8edf2; --muted:#556070; --dim:#8896a4;
   --mono:'IBM Plex Mono',monospace;
 }
+[data-theme="light"] {
+  --bg:#f8fafc; --s1:#ffffff; --s2:#f1f5f9; --s3:#e2e8f0; --border:#cbd5e1;
+  --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -19,6 +23,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
              radial-gradient(ellipse 70% 50% at 100% 100%,rgba(224,120,32,.05) 0%,transparent 55%);}
 .header{position:sticky;top:0;z-index:100;background:rgba(8,12,16,.92);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;}
+.header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
+#theme-toggle{min-width:40px;height:34px;padding:0 10px;font-size:13px;}
 .logo{font-size:18px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
   background:linear-gradient(135deg,var(--accent),var(--accent2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .nav{display:flex;gap:2px;flex:1;overflow-x:auto;}.nav::-webkit-scrollbar{display:none;}
@@ -130,9 +136,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <button class="nb" onclick="tab('stats',this)">📈 สถิติ</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
   </nav>
-  <div class="fb-status">
-    <span class="fb-indicator" id="fb-indicator"></span>
-    <span id="fb-text">Firebase</span>
+  <div class="header-actions">
+    <button class="btn btn-s btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙</button>
+    <div class="fb-status">
+      <span class="fb-indicator" id="fb-indicator"></span>
+      <span id="fb-text">Firebase</span>
+    </div>
   </div>
 </header>
 
@@ -792,6 +801,20 @@ function tab(name,btn){
 }
 function openModal(id){ document.getElementById(id).classList.add('on'); }
 function closeModal(id){ document.getElementById(id).classList.remove('on'); }
+function setTheme(theme){
+  document.documentElement.dataset.theme=theme;
+  localStorage.setItem('bcm_theme',theme);
+  const btn=document.getElementById('theme-toggle');
+  if(btn) btn.textContent=theme==='light'?'☀️':'🌙';
+}
+function toggleTheme(){
+  const next=document.documentElement.dataset.theme==='light'?'dark':'light';
+  setTheme(next);
+}
+function loadTheme(){
+  const saved=localStorage.getItem('bcm_theme');
+  setTheme(saved==='light'?'light':'dark');
+}
 function toast(msg,icon='✅'){
   const t=document.getElementById('toast');
   document.getElementById('tm').textContent=msg; document.getElementById('ti').textContent=icon;
@@ -800,6 +823,7 @@ function toast(msg,icon='✅'){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on')); });
 document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
 
+loadTheme();
 load(); renderAll();
 </script>
 

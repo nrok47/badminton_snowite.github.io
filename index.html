@@ -129,6 +129,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .fb-indicator.online{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);}
 .fb-indicator.offline{background:#f43f5e;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+.toast-undo{display:none;margin-left:8px;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;background:var(--s3);border:1px solid var(--border);color:var(--accent);font-family:'Kanit',sans-serif;}
+.toast-undo:hover{background:rgba(240,192,64,.15);}
+.elo-chart-wrap{padding:8px 0;}
+.rsvp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin-top:8px;}
 </style>
 </head>
 <body>
@@ -178,6 +182,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <div class="panel">
     <div class="pt">👥 สมาชิก <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div>
     <div id="member-grid" class="mgrid"><div class="empty" style="grid-column:1/-1"><div class="empty-i">👤</div><div class="empty-t">คลิก "เพิ่มสมาชิก"</div></div></div>
+  </div>
+  <div class="panel">
+    <div class="pt">📋 RSVP — ใครมา session นี้? <button class="btn btn-r btn-sm pt-action" onclick="applyDecayToAbsent()">🧊 Decay ผู้ขาด</button></div>
+    <div class="rsvp-grid" id="rsvp-grid"></div>
   </div>
   <div class="panel">
     <div class="pt">🎯 จัดคอร์ท <button class="btn btn-sm btn-s pt-action" onclick="randomCourts()">🎲 สุ่มจัดคอร์ท</button></div>
@@ -311,6 +319,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
           <div class="scard-lbl">สตรีค</div>
           <div class="scard-val" id="detail-streak">0</div>
         </div>
+      </div>
+      <div class="panel">
+        <div class="pt">📈 ELO Trend</div>
+        <div id="elo-chart-container" class="elo-chart-wrap"></div>
       </div>
       <div class="panel">
         <div class="pt">🏆 Head-to-Head</div>
@@ -510,7 +522,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
-<div class="toast" id="toast"><span id="ti">✅</span><span id="tm"></span></div>
+<div class="toast" id="toast"><span id="ti">✅</span><span id="tm"></span><button class="toast-undo" id="toast-undo">↩ Undo</button></div>
 
 <script>
 // ===== STATE =====
@@ -672,7 +684,119 @@ function recordMatch(){
 // ===== RENDER =====
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
-  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderDecayHistory();
+  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderDecayHistory(); renderRSVP();
+}
+
+// ===== ELO HISTORY / CHART =====
+function getEloHistory(id){
+  const events=[];
+  S.matches.forEach(m=>{ if(m.winners.includes(id)||m.losers.includes(id)) events.push({type:'match',time:m.time,data:m}); });
+  (S.decayEvents||[]).forEach(ev=>{ if(ev.playerId===id) events.push({type:'decay',time:ev.time}); });
+  events.sort((a,b)=>a.time-b.time);
+  let elo=BASE;
+  const pts=[{elo}];
+  events.forEach(ev=>{
+    if(ev.type==='match'){
+      const m=ev.data;
+      const wi=m.winners.indexOf(id), li=m.losers.indexOf(id);
+      if(wi>=0) elo=Math.max(FLOOR,elo+(m.wDeltas[wi]??0));
+      else if(li>=0) elo=Math.max(FLOOR,elo+(m.lDeltas[li]??0));
+    } else { elo=Math.max(FLOOR,elo-300); }
+    pts.push({elo});
+  });
+  return pts;
+}
+
+function renderEloChart(id){
+  const pts=getEloHistory(id);
+  if(pts.length<2) return '<div style="color:var(--muted);font-size:12px;text-align:center;padding:14px;">เล่นอย่างน้อย 1 เกมเพื่อดูกราฟ</div>';
+  const W=300,H=72,pad=8;
+  const vals=pts.map(p=>p.elo);
+  const minV=Math.min(...vals),maxV=Math.max(...vals),range=maxV-minV||800;
+  const cx=i=>pad+(i/(pts.length-1))*(W-pad*2);
+  const cy=e=>pad+((maxV-e)/range)*(H-pad*2);
+  const polyPts=pts.map((p,i)=>`${cx(i).toFixed(1)},${cy(p.elo).toFixed(1)}`).join(' ');
+  const last=vals[vals.length-1],first=vals[0];
+  const color=last>=first?'var(--green)':'var(--red)';
+  const delta=last-first;
+  return `<div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:11px;color:var(--muted);">${pts.length-1} เกม</span>
+      <span style="font-family:var(--mono);font-size:12px;color:${color};font-weight:700;">${delta>=0?'+':''}${delta.toLocaleString()}</span>
+    </div>
+    <svg width="100%" viewBox="0 0 ${W} ${H}" style="overflow:visible;display:block;">
+      <polyline points="${polyPts}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" opacity=".9"/>
+      <circle cx="${cx(0).toFixed(1)}" cy="${cy(first).toFixed(1)}" r="2.5" fill="var(--muted)"/>
+      <circle cx="${cx(pts.length-1).toFixed(1)}" cy="${cy(last).toFixed(1)}" r="3.5" fill="${color}"/>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px;">
+      <span>${first.toLocaleString()}</span><span style="color:${color};font-weight:700;">${last.toLocaleString()}</span>
+    </div>
+  </div>`;
+}
+
+// ===== LAST DELTA & WIN STREAK =====
+function getLastDelta(id){
+  const myMatches=S.matches.filter(m=>m.winners.includes(id)||m.losers.includes(id));
+  if(!myMatches.length) return null;
+  const last=myMatches[myMatches.length-1];
+  const wi=last.winners.indexOf(id),li=last.losers.indexOf(id);
+  if(wi>=0) return last.wDeltas?.[wi]??0;
+  if(li>=0) return last.lDeltas?.[li]??0;
+  return null;
+}
+
+function getWinStreak(id){
+  const myMatches=[...S.matches].filter(m=>m.winners.includes(id)||m.losers.includes(id)).reverse();
+  let streak=0;
+  for(const m of myMatches){ if(m.winners.includes(id)) streak++; else break; }
+  return streak;
+}
+
+// ===== ELO SNAPSHOTS (before/after per match) =====
+function computeEloSnapshots(){
+  const elos={};
+  S.members.forEach(m=>elos[m.id]=BASE);
+  const snaps={};
+  [...S.matches].sort((a,b)=>a.time-b.time).forEach(match=>{
+    snaps[match.id]={};
+    [...match.winners,...match.losers].forEach(id=>{ snaps[match.id][id]={before:elos[id]??BASE}; });
+    match.winners.forEach((id,i)=>{ elos[id]=Math.max(FLOOR,(elos[id]??BASE)+(match.wDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
+    match.losers.forEach((id,i)=>{ elos[id]=Math.max(FLOOR,(elos[id]??BASE)+(match.lDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
+  });
+  return snaps;
+}
+
+// ===== RSVP =====
+let rsvpState={};
+function renderRSVP(){
+  const el=document.getElementById('rsvp-grid'); if(!el) return;
+  if(!S.members.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);">ยังไม่มีสมาชิก</div>'; return; }
+  el.innerHTML=S.members.map(m=>{
+    const on=rsvpState[m.id]!==false;
+    return `<label class="chk-item" style="padding:6px 8px;${on?'border-color:var(--green);background:rgba(34,197,94,.07);':'opacity:.5'}">
+      <input type="checkbox" ${on?'checked':''} onchange="toggleRSVP(${m.id},this.checked)">
+      <span style="font-size:12px;">${esc(m.name)}</span>
+    </label>`;
+  }).join('');
+}
+
+function toggleRSVP(id,val){ rsvpState[id]=val; renderRSVP(); }
+
+function applyDecayToAbsent(){
+  const absent=S.members.filter(m=>rsvpState[m.id]===false);
+  if(!absent.length){ toast('ไม่มีผู้ขาด session — untick ชื่อที่ขาดก่อน','ℹ️'); return; }
+  S.decayEvents=S.decayEvents||[];
+  let applied=0,skipped=0;
+  absent.forEach((m,i)=>{
+    const used=(S.decayEvents||[]).filter(e=>e.playerId===m.id).length;
+    if(used>=2){ skipped++; return; }
+    S.decayEvents.push({id:Date.now()+i,playerId:m.id,time:Date.now()+i});
+    applied++;
+  });
+  if(!applied){ toast('ผู้ขาดทุกคนถึง Decay limit แล้ว','⚠️'); return; }
+  replayStats(); save(); renderAll();
+  toast(`🧊 Decay -300 ใส่ ${applied} คน${skipped?` (ข้าม ${skipped} คน ครบ limit)`:''}`);
 }
 
 function renderDecayHistory(){
@@ -756,15 +880,18 @@ function renderRanking(){
     const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
     const idx=S.members.indexOf(m);
-    const streak=m.lossStreak||0;
+    const lStreak=m.lossStreak||0;
+    const wStreak=getWinStreak(m.id);
+    const delta=getLastDelta(m.id);
+    const deltaHtml=delta!==null?`<span style="font-size:10px;font-weight:700;color:${delta>=0?'var(--green)':'var(--red)'};margin-left:3px;">${delta>=0?'+':''}${delta.toLocaleString()}</span>`:'';
     return `<tr>
       <td><span class="rnk ${rc}">${medal||(i+1)}</span></td>
       <td><div style="display:flex;align-items:center;gap:8px;">
         <div class="av" style="width:30px;height:30px;font-size:12px;background:${gc(idx)}">${gi(m.name)}</div>
-        <div><div style="font-size:13px;font-weight:700;">${esc(m.name)}${streak>=2?` <span style="font-size:10px;color:var(--blue)">🧊×${streak}</span>`:''}</div>
+        <div><div style="font-size:13px;font-weight:700;">${esc(m.name)}${lStreak>=2?` <span style="font-size:10px;color:var(--blue)">🧊×${lStreak}</span>`:''}${wStreak>=2?` <span style="font-size:10px;color:var(--accent)">🔥×${wStreak}</span>`:''}</div>
         <div class="wr-bar"><div class="wr-fill" style="width:${wr}%"></div></div></div>
       </div></td>
-      <td><span class="elo-val">${(m.elo??BASE).toLocaleString()}</span></td>
+      <td><span class="elo-val">${(m.elo??BASE).toLocaleString()}</span>${deltaHtml}</td>
       <td><span class="badge bg-green">${m.wins||0}</span></td>
       <td><span class="badge bg-red">${m.losses||0}</span></td>
       <td><span style="font-size:12px;color:var(--dim)">${wr}%</span></td>
@@ -833,30 +960,39 @@ function renderSelects(){
 function renderMatchHistory(){
   const el=document.getElementById('match-history');
   if(!S.matches.length){ el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">ยังไม่มีประวัติ</div></div>'; return; }
+  const snaps=computeEloSnapshots();
   el.innerHTML=[...S.matches].reverse().map(m=>{
     const t=new Date(m.time);
     const ts=`${t.getDate()}/${t.getMonth()+1} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
     const sc=m.sw!==null?` ${m.sw}–${m.sl}`:'';
-    const wdStr=m.wDeltas?m.wDeltas.map((d,i)=>`${gm(m.winners[i])?.name||'?'} <span class="chip chip-up">+${d.toLocaleString()}</span>`).join(' '):'';
+    const snap=snaps[m.id]||{};
+    const wdStr=m.wDeltas?m.wDeltas.map((d,i)=>{
+      const pid=m.winners[i]; const s=snap[pid];
+      const before=s?.before,after=s?.after;
+      const arrow=before!=null?`<span style="font-size:9px;color:var(--muted);margin-left:2px;">${before.toLocaleString()}→${after?.toLocaleString()??'?'}</span>`:'';
+      return `${esc(gm(pid)?.name||'?')} <span class="chip chip-up">+${d.toLocaleString()}</span>${arrow}`;
+    }).join(' &nbsp;'):'';
     const ldStr=m.lDeltas?m.lDeltas.map((d,i)=>{
-      const tag=m.streakTags?.[i];
-      if(tag==='freeze') return `${gm(m.losers[i])?.name||'?'} <span class="chip chip-ice">🧊 0</span>`;
-      if(tag==='half') return `${gm(m.losers[i])?.name||'?'} <span class="chip chip-dn">${d.toLocaleString()} <span style="opacity:.6">−50%</span></span>`;
-      return `${gm(m.losers[i])?.name||'?'} <span class="chip chip-dn">${d.toLocaleString()}</span>`;
-    }).join(' '):'';
+      const pid=m.losers[i]; const tag=m.streakTags?.[i]; const s=snap[pid];
+      const before=s?.before,after=s?.after;
+      const arrow=before!=null?`<span style="font-size:9px;color:var(--muted);margin-left:2px;">${before.toLocaleString()}→${after?.toLocaleString()??'?'}</span>`:'';
+      if(tag==='freeze') return `${esc(gm(pid)?.name||'?')} <span class="chip chip-ice">🧊 0</span>${arrow}`;
+      if(tag==='half') return `${esc(gm(pid)?.name||'?')} <span class="chip chip-dn">${d.toLocaleString()} <span style="opacity:.6">−50%</span></span>${arrow}`;
+      return `${esc(gm(pid)?.name||'?')} <span class="chip chip-dn">${d.toLocaleString()}</span>${arrow}`;
+    }).join(' &nbsp;'):'';
     const cls=m.frozen?'frozen':m.farmHit?'farm':'';
     return `<div class="mlog ${cls}">
       <div style="flex:1;min-width:0;">
-        <div class="mlog-w">✅ ${m.winners.map(id=>gm(id)?.name||'?').join(' / ')}${sc}</div>
-        <div class="mlog-l" style="margin-top:2px;">❌ ${m.losers.map(id=>gm(id)?.name||'?').join(' / ')}</div>
-        <div style="margin-top:5px;font-size:11px;color:var(--dim)">${wdStr} &nbsp; ${ldStr}</div>
+        <div class="mlog-w">✅ ${m.winners.map(id=>esc(gm(id)?.name||'?')).join(' / ')}${sc}</div>
+        <div class="mlog-l" style="margin-top:2px;">❌ ${m.losers.map(id=>esc(gm(id)?.name||'?')).join(' / ')}</div>
+        <div style="margin-top:5px;font-size:11px;color:var(--dim);line-height:1.8;">${wdStr} &nbsp; ${ldStr}</div>
         <div style="margin-top:3px;font-size:10px;color:var(--muted);">
           ${m.frozen?'🧊 Freeze &nbsp;':''}${m.halfStreak?'🧊 −50% streak &nbsp;':''}${m.farmHit?`🔥 Farm ${Math.round(m.farmMult*100)}% &nbsp;`:''}${m.margin?'🎯 Margin &nbsp;':''}${ts}
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:8px;">
-        <button class="btn btn-s btn-sm" onclick="openEdit(${m.id})">✏️</button>
-        <button class="btn btn-r btn-sm" onclick="delMatch(${m.id})">🗑</button>
+        <button class="btn btn-s btn-sm" onclick="openEdit(${m.id})" style="min-width:36px;min-height:36px;">✏️</button>
+        <button class="btn btn-r btn-sm" onclick="delMatch(${m.id})" style="min-width:36px;min-height:36px;">🗑</button>
       </div>
     </div>`;
   }).join('');
@@ -1168,9 +1304,14 @@ function replayStats(){
 
 function delMatch(id){
   if(!confirm('ลบแมตช์นี้? คะแนนจะถูก revert ด้วย')) return;
+  const idx=S.matches.findIndex(m=>m.id===id);
+  const deleted=S.matches[idx];
   S.matches=S.matches.filter(m=>m.id!==id);
-  replayStats();
-  save(); renderAll(); toast('ลบแล้ว (คะแนน revert แล้ว)','🗑️');
+  replayStats(); save(); renderAll();
+  toast('ลบแล้ว (คะแนน revert แล้ว)','🗑️',()=>{
+    S.matches.splice(idx,0,deleted);
+    replayStats(); save(); renderAll(); toast('กู้คืนแมตช์แล้ว ✅');
+  });
 }
 
 function openEdit(id){
@@ -1276,6 +1417,7 @@ function renderPlayerDetails(id){
       <div style="font-size:10px;color:var(--muted);margin-top:4px;">${h2h.total} \u0e40\u0e01\u0e21</div>
     </div>`;
   }).join('');
+  document.getElementById('elo-chart-container').innerHTML=renderEloChart(id);
   document.getElementById('h2h-list').innerHTML=h2hHtml||'<div class="empty"><div class="empty-t">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e40\u0e01\u0e21\u0e42\u0e08\u0e21\u0e19</div></div>';
   
   const recentHtml=recentMatches.map(match=>{
@@ -1334,10 +1476,16 @@ function loadTheme(){
   const saved=localStorage.getItem('bcm_theme');
   setTheme(saved==='light'?'light':'dark');
 }
-function toast(msg,icon='✅'){
+function toast(msg,icon='✅',undoFn=null){
   const t=document.getElementById('toast');
-  document.getElementById('tm').textContent=msg; document.getElementById('ti').textContent=icon;
-  t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),3200);
+  document.getElementById('tm').textContent=msg;
+  document.getElementById('ti').textContent=icon;
+  const ub=document.getElementById('toast-undo');
+  if(ub){ if(undoFn){ ub.style.display='inline-flex'; ub.onclick=()=>{undoFn();t.classList.remove('on');}; } else ub.style.display='none'; }
+  const dur=Math.max(3500,msg.length*55);
+  t.classList.add('on');
+  clearTimeout(window._toastTimer);
+  window._toastTimer=setTimeout(()=>t.classList.remove('on'),dur);
 }
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on')); });
 document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });

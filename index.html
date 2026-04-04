@@ -756,20 +756,6 @@ function openFinanceModal(){
   document.getElementById('modal-finance').classList.add('on');
 }
 
-  if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('f-hours').value='';
-  document.getElementById('f-rate').value='';
-  document.getElementById('f-participants').innerHTML='';
-  document.getElementById('f-shuttle-count-1').value='';
-  document.getElementById('f-shuttle-count-2').value='';
-  document.getElementById('f-shuttle-count-3').value='';
-  document.getElementById('f-shuttle-price-1').value='';
-  document.getElementById('f-shuttle-price-2').value='';
-  document.getElementById('f-shuttle-price-3').value='';
-  renderFinanceOptions();
-  document.getElementById('modal-finance').classList.add('on');
-}
 
 function saveFinanceSession(){
   const date=document.getElementById('f-date').value;

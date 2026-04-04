@@ -127,6 +127,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   <nav class="nav">
     <button class="nb on" onclick="tab('dashboard',this)">📊 Dashboard</button>
     <button class="nb" onclick="tab('club',this)">👥 ก๊วน</button>
+    <button class="nb" onclick="tab('stats',this)">📈 สถิติ</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
   </nav>
   <div class="fb-status">
@@ -239,6 +240,52 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="divider"></div>
     <div style="font-size:12px;color:var(--muted);line-height:2;">
       
+    </div>
+  </div>
+</div>
+
+<!-- STATISTICS -->
+<div id="page-stats" class="page">
+  <div class="panel">
+    <div class="pt">📈 สถิติผู้เล่น</div>
+    <div id="stats-grid" class="mgrid"></div>
+  </div>
+  <div id="player-details" style="display:none;">
+    <div class="panel">
+      <div class="pt">
+        <span id="detail-name"></span>
+        <button class="btn btn-s btn-sm pt-action" onclick="backToStatsList()">← กลับ</button>
+      </div>
+      <div class="g2">
+        <div class="scard">
+          <div class="scard-icon">🎯</div>
+          <div class="scard-lbl">ชนะ</div>
+          <div class="scard-val" id="detail-wins">0</div>
+        </div>
+        <div class="scard">
+          <div class="scard-icon">❌</div>
+          <div class="scard-lbl">แพ้</div>
+          <div class="scard-val" id="detail-losses">0</div>
+        </div>
+        <div class="scard">
+          <div class="scard-icon">📊</div>
+          <div class="scard-lbl">Win Rate</div>
+          <div class="scard-val" id="detail-winrate">0%</div>
+        </div>
+        <div class="scard">
+          <div class="scard-icon">🔥</div>
+          <div class="scard-lbl">สตรีค</div>
+          <div class="scard-val" id="detail-streak">0</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="pt">🏆 Head-to-Head</div>
+        <div id="h2h-list"></div>
+      </div>
+      <div class="panel">
+        <div class="pt">📋 เกมล่าสุด</div>
+        <div id="player-recent"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -649,11 +696,99 @@ function saveEdit(){
   save(); closeModal('modal-edit'); renderAll(); toast('แก้ไขสำเร็จ');
 }
 
+// ===== STATISTICS =====
+function getPlayerStats(id){
+  const m=gm(id); if(!m) return null;
+  const wins=m.wins??0; const losses=m.losses??0; const total=wins+losses;
+  const winRate=total>0?(wins/total*100).toFixed(1):'0';
+  const matchesWithPlayer=S.matches.filter(match=>match.winners.includes(id)||match.losers.includes(id));
+  let streak=0, streakType='';
+  for(let i=matchesWithPlayer.length-1;i>=0;i--){
+    if(matchesWithPlayer[i].winners.includes(id)){ streak++; streakType='W'; }
+    else{ return {id,name:m.name,elo:m.elo??BASE,wins,losses,winRate,streak,streakType}; }
+  }
+  return {id,name:m.name,elo:m.elo??BASE,wins,losses,winRate,streak,streakType};
+}
+
+function getH2HRecord(id1,id2){
+  const matches=S.matches.filter(m=>(m.winners.includes(id1)||m.losers.includes(id1))&&(m.winners.includes(id2)||m.losers.includes(id2)));
+  const id1Wins=matches.filter(m=>m.winners.includes(id1)&&m.losers.includes(id2)).length;
+  const id2Wins=matches.filter(m=>m.winners.includes(id2)&&m.losers.includes(id1)).length;
+  return {total:matches.length,id1Wins,id2Wins};
+}
+
+function getPlayerRecentMatches(id,limit=10){
+  return S.matches.filter(m=>m.winners.includes(id)||m.losers.includes(id)).slice(-limit).reverse();
+}
+
+function renderPlayerStats(){
+  const statsList=document.getElementById('stats-grid');
+  const sorted=S.members.sort((a,b)=>(b.elo??BASE)-(a.elo??BASE));
+  statsList.innerHTML=sorted.map((m,i)=>{
+    const stats=getPlayerStats(m.id);
+    return `<div class="mcard" onclick="renderPlayerDetails(${m.id})" style="cursor:pointer;border-color:${stats.streakType==='W'?'var(--green)':'var(--red)'};transition:all .2s;">
+      <div style="font-size:24px;margin-bottom:4px;">${i<3?['🥇','🥈','🥉'][i]:'📌'}</div>
+      <div class="mcard-name">${m.name}</div>
+      <div style="font-size:11px;color:var(--muted);margin:4px 0;">
+        ${stats.wins}W-${stats.losses}L (${stats.winRate}%)
+      </div>
+      <div class="mcard-elo">${(m.elo??BASE).toLocaleString()}</div>
+      ${stats.streak>0?`<div style="font-size:10px;color:var(--green);font-weight:700;">🔥 ${stats.streak}W</div>`:''}
+    </div>`;
+  }).join('');
+}
+
+function renderPlayerDetails(id){
+  const m=gm(id); if(!m) return;
+  const stats=getPlayerStats(id);
+  const recentMatches=getPlayerRecentMatches(id);
+  
+  document.getElementById('detail-name').textContent=m.name;
+  document.getElementById('detail-wins').textContent=stats.wins;
+  document.getElementById('detail-losses').textContent=stats.losses;
+  document.getElementById('detail-winrate').textContent=stats.winRate+'%';
+  document.getElementById('detail-streak').textContent=`${stats.streak} ${stats.streakType}`;
+  
+  const h2hHtml=S.members.filter(x=>x.id!==id).map(other=>{
+    const h2h=getH2HRecord(id,other.id);
+    if(h2h.total===0) return '';
+    return `<div class="scard" style="padding:12px;">
+      <div style="font-weight:600;margin-bottom:6px;">${other.name}</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:700;">
+        <span style="color:var(--green);">${h2h.id1Wins}W</span> - <span style="color:var(--red);">${h2h.id2Wins}L</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">${h2h.total} \u0e40\u0e01\u0e21</div>
+    </div>`;
+  }).join('');
+  document.getElementById('h2h-list').innerHTML=h2hHtml||'<div class="empty"><div class="empty-t">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e40\u0e01\u0e21\u0e42\u0e08\u0e21\u0e19</div></div>';
+  
+  const recentHtml=recentMatches.map(match=>{
+    const isWin=match.winners.includes(id);
+    const opponent=match[isWin?'losers':'winners'][0];
+    const opName=gm(opponent)?.name||'?';
+    const score=match.score?` ${match.score.w}-${match.score.l}`:'';
+    return `<div class="mlog ${isWin?'':''}"><div class="${isWin?'mlog-w':'mlog-l'}">
+      ${isWin?'✅':'❌'} vs ${opName}${score}
+    </div></div>`;
+  }).join('');
+  document.getElementById('player-recent').innerHTML=recentHtml||'<div class="empty"><div class="empty-t">\u0e40\u0e01\u0e21\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14</div></div>';
+  
+  document.getElementById('stats-grid').style.display='none';
+  document.getElementById('player-details').style.display='block';
+}
+
+function backToStatsList(){
+  document.getElementById('stats-grid').style.display='grid';
+  document.getElementById('player-details').style.display='none';
+  renderPlayerStats();
+}
+
 function tab(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   btn.classList.add('on'); renderAll();
+  if(name==='stats'){ backToStatsList(); }
 }
 function openModal(id){ document.getElementById(id).classList.add('on'); }
 function closeModal(id){ document.getElementById(id).classList.remove('on'); }

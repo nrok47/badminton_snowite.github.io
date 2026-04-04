@@ -505,6 +505,7 @@ let S = { members:[], matches:[], finance:[] };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
 const gi = n => n.charAt(0).toUpperCase();
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
@@ -619,6 +620,9 @@ function recordMatch(){
   const slRaw=document.getElementById('score-l').value;
   const sw=swRaw!==''?parseInt(swRaw):null;
   const sl=slRaw!==''?parseInt(slRaw):null;
+  if(sw!==null && (isNaN(sw)||sw<0||sw>30)){ toast('คะแนนฝ่ายชนะต้องอยู่ระหว่าง 0–30','⚠️'); return; }
+  if(sl!==null && (isNaN(sl)||sl<0||sl>30)){ toast('คะแนนฝ่ายแพ้ต้องอยู่ระหว่าง 0–30','⚠️'); return; }
+  if(sw!==null && sl!==null && sw<=sl){ toast('คะแนนฝ่ายชนะต้องมากกว่าฝ่ายแพ้','⚠️'); return; }
 
   const { wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak } = computeDeltas(winners,losers,sw,sl);
 
@@ -699,7 +703,7 @@ function renderRanking(){
       <td><span class="rnk ${rc}">${medal||(i+1)}</span></td>
       <td><div style="display:flex;align-items:center;gap:8px;">
         <div class="av" style="width:30px;height:30px;font-size:12px;background:${gc(idx)}">${gi(m.name)}</div>
-        <div><div style="font-size:13px;font-weight:700;">${m.name}${streak>=2?` <span style="font-size:10px;color:var(--blue)">🧊×${streak}</span>`:''}</div>
+        <div><div style="font-size:13px;font-weight:700;">${esc(m.name)}${streak>=2?` <span style="font-size:10px;color:var(--blue)">🧊×${streak}</span>`:''}</div>
         <div class="wr-bar"><div class="wr-fill" style="width:${wr}%"></div></div></div>
       </div></td>
       <td><span class="elo-val">${(m.elo??BASE).toLocaleString()}</span></td>
@@ -763,7 +767,7 @@ function renderSelects(){
   ['w1','w2','l1','l2','ew1','ew2','el1','el2'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value;
-    el.innerHTML=`<option value="">-- เลือก --</option>`+S.members.map(m=>`<option value="${m.id}">${m.name} (${(m.elo??BASE).toLocaleString()})</option>`).join('');
+    el.innerHTML=`<option value="">-- เลือก --</option>`+S.members.map(m=>`<option value="${m.id}">${esc(m.name)} (${(m.elo??BASE).toLocaleString()})</option>`).join('');
     el.value=cur;
   });
 }
@@ -1090,9 +1094,19 @@ function randomCourts(){
   toast('สุ่มคอร์ทสำเร็จ 🎲');
 }
 
+function replayStats(){
+  S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; });
+  [...S.matches].sort((a,b)=>a.time-b.time).forEach(match=>{
+    match.winners.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(FLOOR,(m.elo??BASE)+(match.wDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.wins=(m.wins??0)+1; m.lossStreak=0; });
+    match.losers.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(FLOOR,(m.elo??BASE)+(match.lDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.losses=(m.losses??0)+1; m.lossStreak=(m.lossStreak??0)+1; });
+  });
+}
+
 function delMatch(id){
-  if(!confirm('ลบแมตช์นี้? (คะแนนจะไม่ถูก revert)')) return;
-  S.matches=S.matches.filter(m=>m.id!==id); save(); renderAll(); toast('ลบแล้ว','🗑️');
+  if(!confirm('ลบแมตช์นี้? คะแนนจะถูก revert ด้วย')) return;
+  S.matches=S.matches.filter(m=>m.id!==id);
+  replayStats();
+  save(); renderAll(); toast('ลบแล้ว (คะแนน revert แล้ว)','🗑️');
 }
 
 function openEdit(id){
@@ -1110,11 +1124,21 @@ function saveEdit(){
   const match=S.matches.find(m=>m.id===id); if(!match) return;
   const w1v=document.getElementById('ew1').value, l1v=document.getElementById('el1').value;
   if(!w1v||!l1v){ toast('กรุณาเลือกผู้เล่น','⚠️'); return; }
-  match.winners=[parseInt(w1v)];
-  const w2v=document.getElementById('ew2').value; if(w2v) match.winners.push(parseInt(w2v));
-  match.losers=[parseInt(l1v)];
-  const l2v=document.getElementById('el2').value; if(l2v) match.losers.push(parseInt(l2v));
-  save(); closeModal('modal-edit'); renderAll(); toast('แก้ไขสำเร็จ');
+  const newWinners=[parseInt(w1v)];
+  const w2v=document.getElementById('ew2').value; if(w2v) newWinners.push(parseInt(w2v));
+  const newLosers=[parseInt(l1v)];
+  const l2v=document.getElementById('el2').value; if(l2v) newLosers.push(parseInt(l2v));
+  if(newWinners.some(id=>newLosers.includes(id))){ toast('ผู้เล่นซ้ำกัน','⚠️'); return; }
+  match.winners=newWinners;
+  match.losers=newLosers;
+  // Recalculate deltas: temporarily remove this match so computeDeltas sees state before it
+  const idx=S.matches.indexOf(match);
+  S.matches.splice(idx,1);
+  const { wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak } = computeDeltas(newWinners, newLosers, match.sw, match.sl);
+  Object.assign(match,{ wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak });
+  S.matches.splice(idx,0,match);
+  replayStats();
+  save(); closeModal('modal-edit'); renderAll(); toast('แก้ไขสำเร็จ (คะแนน recalculate แล้ว)');
 }
 
 // ===== STATISTICS =====
@@ -1144,12 +1168,12 @@ function getPlayerRecentMatches(id,limit=10){
 
 function renderPlayerStats(){
   const statsList=document.getElementById('stats-grid');
-  const sorted=S.members.sort((a,b)=>(b.elo??BASE)-(a.elo??BASE));
+  const sorted=[...S.members].sort((a,b)=>(b.elo??BASE)-(a.elo??BASE));
   statsList.innerHTML=sorted.map((m,i)=>{
     const stats=getPlayerStats(m.id);
     return `<div class="mcard" onclick="renderPlayerDetails(${m.id})" style="cursor:pointer;border-color:${stats.streakType==='W'?'var(--green)':'var(--red)'};transition:all .2s;">
       <div style="font-size:24px;margin-bottom:4px;">${i<3?['🥇','🥈','🥉'][i]:'📌'}</div>
-      <div class="mcard-name">${m.name}</div>
+      <div class="mcard-name">${esc(m.name)}</div>
       <div style="font-size:11px;color:var(--muted);margin:4px 0;">
         ${stats.wins}W-${stats.losses}L (${stats.winRate}%)
       </div>
@@ -1181,7 +1205,7 @@ function renderPlayerDetails(id){
     const h2h=getH2HRecord(id,other.id);
     if(h2h.total===0) return '';
     return `<div class="scard" style="padding:12px;">
-      <div style="font-weight:600;margin-bottom:6px;">${other.name}</div>
+      <div style="font-weight:600;margin-bottom:6px;">${esc(other.name)}</div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:700;">
         <span style="color:var(--green);">${h2h.id1Wins}W</span> - <span style="color:var(--red);">${h2h.id2Wins}L</span>
       </div>
@@ -1193,8 +1217,8 @@ function renderPlayerDetails(id){
   const recentHtml=recentMatches.map(match=>{
     const isWin=match.winners.includes(id);
     const opponent=match[isWin?'losers':'winners'][0];
-    const opName=gm(opponent)?.name||'?';
-    const score=match.score?` ${match.score.w}-${match.score.l}`:'';
+    const opName=esc(gm(opponent)?.name||'?');
+    const score=(match.sw!==null&&match.sw!==undefined)?` ${match.sw}–${match.sl}`:'';
     return `<div class="mlog ${isWin?'':''}"><div class="${isWin?'mlog-w':'mlog-l'}">
       ${isWin?'✅':'❌'} vs ${opName}${score}
     </div></div>`;

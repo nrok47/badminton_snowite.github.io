@@ -1139,18 +1139,34 @@ function uploadPlayerPhoto(){
   const file=fileInput.files[0];
   if(!file) return;
   
-  const reader=new FileReader();
-  reader.onload=(e)=>{
-    const playerId=window.currentPlayerIdForPhoto;
-    const member=gm(playerId);
-    if(member){
-      member.photo=e.target.result;
-      save();
-      renderPlayerDetails(playerId);
-      toast('อัพโหลดรูปสำเร็จ','📷');
-    }
-  };
-  reader.readAsDataURL(file);
+  const playerId=window.currentPlayerIdForPhoto;
+  const member=gm(playerId);
+  if(!member) return;
+  
+  // Show loading state
+  const uploadBtn=event.target;
+  const originalText=uploadBtn.textContent;
+  uploadBtn.textContent='กำลังอัพโหลด...';
+  uploadBtn.disabled=true;
+  
+  // Upload to Firebase Storage
+  const storageRef=firebase.storage().ref(`members/${playerId}/photo`);
+  storageRef.put(file).then(snapshot=>{
+    return snapshot.ref.getDownloadURL();
+  }).then(url=>{
+    member.photo=url;
+    fileInput.value='';
+    save();
+    renderPlayerDetails(playerId);
+    uploadBtn.textContent=originalText;
+    uploadBtn.disabled=false;
+    toast('อัพโหลดรูปสำเร็จ','📷');
+  }).catch(error=>{
+    console.error('Photo upload failed:',error);
+    toast('อัพโหลดรูปล้มเหลว: '+error.message,'❌');
+    uploadBtn.textContent=originalText;
+    uploadBtn.disabled=false;
+  });
 }
 
 function tab(name,btn){
@@ -1192,6 +1208,7 @@ load(); renderAll();
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
 <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
@@ -1207,6 +1224,7 @@ load(); renderAll();
   firebase.initializeApp(firebaseConfig);
   firebase.analytics();
   const db = firebase.database();
+  const storage = firebase.storage();
 
   async function syncMembersToFirebase() {
     try {

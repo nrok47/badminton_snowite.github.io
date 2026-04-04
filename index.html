@@ -272,12 +272,10 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <button class="btn btn-s btn-sm pt-action" onclick="backToStatsList()">← กลับ</button>
       </div>
       <div style="text-align:center;margin-bottom:16px;">
-        <img id="detail-photo" src="" style="width:120px;height:120px;border-radius:50%;object-fit:cover;background:var(--s1);display:none;margin:0 auto;">
-        <div id="detail-photo-placeholder" style="width:120px;height:120px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:48px;">📷</div>
+        <div id="member-icon-display" style="width:120px;height:120px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:48px;">👤</div>
       </div>
       <div style="text-align:center;margin-bottom:16px;">
-        <input type="file" id="player-photo-input" accept="image/*" style="display:none;" onchange="uploadPlayerPhoto()">
-        <button class="btn btn-y btn-sm" onclick="document.getElementById('player-photo-input').click()">🖼️ อัพโหลดรูป</button>
+        <button class="btn btn-y btn-sm" onclick="openModal('modal-icon-select')">🎨 เลือก icon</button>
       </div>
       <div class="g2">
         <div class="scard">
@@ -446,6 +444,28 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="modal-act">
       <button class="btn btn-r btn-full" onclick="verifyDelete()">🗑️ ลบเลยเถอะ</button>
       <button class="btn btn-s" onclick="closeModal('modal-confirm-delete')">ไม่ลบ</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL ICON SELECT -->
+<div class="overlay" id="modal-icon-select">
+  <div class="modal">
+    <div class="modal-t">🎨 เลือก icon สมาชิก</div>
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:16px 0;">
+      <button class="btn btn-s" onclick="selectIcon('👤')" style="font-size:24px;">👤</button>
+      <button class="btn btn-s" onclick="selectIcon('🧑')" style="font-size:24px;">🧑</button>
+      <button class="btn btn-s" onclick="selectIcon('👨')" style="font-size:24px;">👨</button>
+      <button class="btn btn-s" onclick="selectIcon('👩')" style="font-size:24px;">👩</button>
+      <button class="btn btn-s" onclick="selectIcon('🧔')" style="font-size:24px;">🧔</button>
+      <button class="btn btn-s" onclick="selectIcon('👨‍🦰')" style="font-size:24px;">👨‍🦰</button>
+      <button class="btn btn-s" onclick="selectIcon('👩‍🦰')" style="font-size:24px;">👩‍🦰</button>
+      <button class="btn btn-s" onclick="selectIcon('🧑‍🦱')" style="font-size:24px;">🧑‍🦱</button>
+      <button class="btn btn-s" onclick="selectIcon('👨‍🦱')" style="font-size:24px;">👨‍🦱</button>
+      <button class="btn btn-s" onclick="selectIcon('👩‍🦱')" style="font-size:24px;">👩‍🦱</button>
+    </div>
+    <div class="modal-act">
+      <button class="btn btn-s btn-full" onclick="closeModal('modal-icon-select')">ปิด</button>
     </div>
   </div>
 </div>
@@ -1123,19 +1143,12 @@ function renderPlayerDetails(id){
   document.getElementById('detail-winrate').textContent=stats.winRate+'%';
   document.getElementById('detail-streak').textContent=`${stats.streak} ${stats.streakType}`;
   
-  // Display player photo
-  const photoImg=document.getElementById('detail-photo');
-  const photoPlaceholder=document.getElementById('detail-photo-placeholder');
-  if(m.photo){
-    photoImg.src=m.photo;
-    photoImg.style.display='block';
-    photoPlaceholder.style.display='none';
-  } else {
-    photoImg.style.display='none';
-    photoPlaceholder.style.display='flex';
-  }
-  document.getElementById('player-photo-input').value='';
-  window.currentPlayerIdForPhoto=id;
+  // Display player icon
+  const iconDisplay=document.getElementById('member-icon-display');
+  const defaultIcons=['👤','🧑','👨','👩','🧔','👨‍🦰','👩‍🦰','🧑‍🦱','👨‍🦱','👩‍🦱'];
+  const currentIcon=m.icon || '👤';
+  iconDisplay.textContent=currentIcon;
+  window.currentPlayerIdForIcon=id;
   
   const h2hHtml=S.members.filter(x=>x.id!==id).map(other=>{
     const h2h=getH2HRecord(id,other.id);
@@ -1171,39 +1184,16 @@ function backToStatsList(){
   renderPlayerStats();
 }
 
-function uploadPlayerPhoto(){
-  const fileInput=document.getElementById('player-photo-input');
-  const file=fileInput.files[0];
-  if(!file) return;
-  
-  const playerId=window.currentPlayerIdForPhoto;
+function selectIcon(icon){
+  const playerId=window.currentPlayerIdForIcon;
   const member=gm(playerId);
   if(!member) return;
   
-  // Show loading state
-  const uploadBtn=event.target;
-  const originalText=uploadBtn.textContent;
-  uploadBtn.textContent='กำลังอัพโหลด...';
-  uploadBtn.disabled=true;
-  
-  // Upload to Firebase Storage
-  const storageRef=firebase.storage().ref(`members/${playerId}/photo`);
-  storageRef.put(file).then(snapshot=>{
-    return snapshot.ref.getDownloadURL();
-  }).then(url=>{
-    member.photo=url;
-    fileInput.value='';
-    save();
-    renderPlayerDetails(playerId);
-    uploadBtn.textContent=originalText;
-    uploadBtn.disabled=false;
-    toast('อัพโหลดรูปสำเร็จ','📷');
-  }).catch(error=>{
-    console.error('Photo upload failed:',error);
-    toast('อัพโหลดรูปล้มเหลว: '+error.message,'❌');
-    uploadBtn.textContent=originalText;
-    uploadBtn.disabled=false;
-  });
+  member.icon=icon;
+  save();
+  renderPlayerDetails(playerId);
+  closeModal('modal-icon-select');
+  toast('เลือก icon สำเร็จ ✅');
 }
 
 function tab(name,btn){

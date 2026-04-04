@@ -221,7 +221,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <div class="rcard"><div class="rcard-t">⚡ คะแนนตั้งต้น</div>
         <div class="rrow"><span>เริ่มต้นทุกคน</span><span class="rval" style="color:var(--accent)">10,000</span></div>
       </div>
-      <div class="rcard"><div class="rcard-t">🟰 สูสี (|Δ| ≤ 1500)</div>
+      <div class="rcard"><div class="rcard-t">🟰 สูสี (|Δ| ≤ 300)</div>
         <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+1,000</span></div>
         <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">−1,000</span></div>
       </div>
@@ -233,7 +233,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+800</span></div>
         <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">−1,200</span></div>
       </div>
-      <div class="rcard"><div class="rcard-t">🎯 Margin Score (แต้มต่าง ≥ 9)</div>
+      <div class="rcard"><div class="rcard-t">🎯 Margin Score (แต้มต่าง ≥ 8)</div>
         <div class="rrow"><span>ชนะ bonus</span><span class="rval" style="color:var(--green)">+150</span></div>
         <div class="rrow"><span>แพ้ penalty</span><span class="rval" style="color:var(--red)">−150</span></div>
       </div>
@@ -242,9 +242,15 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="rrow"><span>คนคะแนนต่ำ</span><span class="rval">×1.2</span></div>
       </div>
       <div class="rcard"><div class="rcard-t">🔥 กันฟาร์ม (ทีมเดิม/วัน)</div>
-        <div class="rrow"><span>เกมที่ 1–3</span><span class="rval">100%</span></div>
-        <div class="rrow"><span>เกมที่ 4</span><span class="rval" style="color:var(--accent2)">50%</span></div>
-        <div class="rrow"><span>เกมที่ 5+</span><span class="rval" style="color:var(--red)">20%</span></div>
+        <div class="rrow"><span>เกมที่ 1–2</span><span class="rval">100%</span></div>
+        <div class="rrow"><span>เกมที่ 3+</span><span class="rval" style="color:var(--accent2)">50%</span></div>
+      </div>
+      <div class="rcard"><div class="rcard-t">🛡️ Safety Cap</div>
+        <div class="rrow"><span>เสียสูงสุด/เกม</span><span class="rval" style="color:var(--red)">−900</span></div>
+      </div>
+      <div class="rcard"><div class="rcard-t">🧊 Decay (ไม่มา session)</div>
+        <div class="rrow"><span>ต่อ session</span><span class="rval" style="color:var(--blue)">−300</span></div>
+        <div class="rrow"><span>สูงสุด</span><span class="rval">2 ครั้ง (−600)</span></div>
       </div>
       <div class="rcard"><div class="rcard-t">🧊 แพ้ติดต่อกัน (Streak)</div>
         <div class="rrow"><span>เกมที่ 3 ในสตรีค</span><span class="rval" style="color:var(--blue)">ฟรีซ (0)</span></div>
@@ -253,9 +259,16 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
     </div>
     <div class="divider"></div>
-    <div style="font-size:12px;color:var(--muted);line-height:2;">
-      
+    <div class="pt">⚙️ Admin Tools</div>
+    <div style="margin-bottom:12px;">
+      <label class="fl">🧊 Decay -300 (ไม่มา session) สูงสุด 2 ครั้ง/คน</label>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <select class="fs" id="decay-player" style="flex:1;"><option value="">-- เลือกผู้เล่น --</option></select>
+        <button class="btn btn-y" onclick="applyDecayUI()">Apply</button>
+      </div>
     </div>
+    <div id="decay-history" style="margin-bottom:16px;"></div>
+    <button class="btn btn-r btn-full" onclick="resetStats()">🗑️ ล้างสถิติทั้งหมด (เทสใหม่)</button>
   </div>
 </div>
 
@@ -501,7 +514,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[], finance:[] };
+let S = { members:[], matches:[], finance:[], decayEvents:[] };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
 const gi = n => n.charAt(0).toUpperCase();
@@ -510,7 +523,7 @@ const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
 function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); syncMembersToFirebase(); }
-function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); }catch(e){} }
+function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); S.decayEvents=S.decayEvents||[]; }catch(e){} }
 
 // ===== ELO ENGINE =====
 const BASE = 10000;
@@ -548,20 +561,19 @@ function computeDeltas(winners, losers, sw, sl){
 
   // 1. Base by tier
   let wBase, lBase;
-  if(Math.abs(diff)<=1500){ wBase=1000; lBase=-1000; }
-  else if(diff<-1500){ wBase=1200; lBase=-600; }
+  if(Math.abs(diff)<=300){ wBase=1000; lBase=-1000; }
+  else if(diff<-300){ wBase=1200; lBase=-600; }
   else { wBase=800; lBase=-1200; }
 
   // 2. Margin
   let margin = 0;
-  if(sw!==null && sl!==null && (sw-sl)>=9) margin=150;
+  if(sw!==null && sl!==null && (sw-sl)>=8) margin=150;
 
-  // 3. Farm multiplier
+  // 3. Farm multiplier (เกม 3+ ของทีมเดิม = 50%)
   const fc = getFarmCount(winners,losers);
   let farmMult = 1.0;
-  if(fc>=4) farmMult=0.20;
-  else if(fc>=3) farmMult=0.5;
-  const farmHit = fc>=3;
+  if(fc>=2) farmMult=0.5;
+  const farmHit = fc>=2;
 
   // 4. Anti-Carry per team
   function antiCarry(ids, base){
@@ -594,6 +606,8 @@ function computeDeltas(winners, losers, sw, sl){
       // 4th+ loss → 50% of original
       else { v = Math.round(d * farmMult * 0.5); streakTag = 'half'; }
     }
+    // Safety cap 7.1: เสียสูงสุด -900 / เกม
+    if(v < -900) v = -900;
     return { val: v, streakTag };
   });
 
@@ -658,7 +672,51 @@ function recordMatch(){
 // ===== RENDER =====
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
-  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance();
+  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderDecayHistory();
+}
+
+function renderDecayHistory(){
+  const el=document.getElementById('decay-history'); if(!el) return;
+  const events=(S.decayEvents||[]);
+  if(!events.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);">ยังไม่มี Decay</div>'; return; }
+  el.innerHTML=[...events].reverse().map(ev=>{
+    const m=gm(ev.playerId);
+    const name=esc(m?.name||'?');
+    const dc=(S.decayEvents||[]).filter(e=>e.playerId===ev.playerId).indexOf(ev)+1;
+    const t=new Date(ev.time);
+    const ts=`${t.getDate()}/${t.getMonth()+1} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
+    return `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;">
+      <span>🧊 ${name} <span style="color:var(--red);">-300</span> <span style="color:var(--muted);">(ครั้งที่ ${dc}/2) · ${ts}</span></span>
+      <button class="btn btn-r btn-sm" onclick="delDecay(${ev.id})">🗑</button>
+    </div>`;
+  }).join('');
+}
+
+function applyDecayUI(){
+  const sel=document.getElementById('decay-player');
+  const id=parseInt(sel.value); if(!id){ toast('กรุณาเลือกผู้เล่น','⚠️'); return; }
+  const m=gm(id); if(!m) return;
+  const used=(S.decayEvents||[]).filter(e=>e.playerId===id).length;
+  if(used>=2){ toast(`${esc(m.name)} ใช้ Decay ครบ 2 ครั้งแล้ว`,'⚠️'); return; }
+  S.decayEvents=S.decayEvents||[];
+  S.decayEvents.push({ id:Date.now(), playerId:id, time:Date.now() });
+  replayStats();
+  save(); renderAll(); toast(`🧊 Decay -300 ใส่ ${esc(m.name)} แล้ว (ครั้งที่ ${used+1}/2)`);
+}
+
+function delDecay(id){
+  if(!confirm('ลบ Decay นี้? คะแนนจะถูก revert')) return;
+  S.decayEvents=(S.decayEvents||[]).filter(e=>e.id!==id);
+  replayStats();
+  save(); renderAll(); toast('ลบ Decay แล้ว','🗑️');
+}
+
+function resetStats(){
+  if(!confirm('⚠️ ล้างสถิติทั้งหมด?\n\nจะลบ: แมตช์ทั้งหมด + Decay\nELO กลับ 10,000 ทุกคน\nสมาชิกและชื่อยังอยู่')) return;
+  S.matches=[];
+  S.decayEvents=[];
+  S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });
+  save(); renderAll(); toast('ล้างสถิติสำเร็จ ✅');
 }
 
 function renderStats(){
@@ -764,7 +822,7 @@ function renderMemberGrid(){
 }
 
 function renderSelects(){
-  ['w1','w2','l1','l2','ew1','ew2','el1','el2'].forEach(id=>{
+  ['w1','w2','l1','l2','ew1','ew2','el1','el2','decay-player'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value;
     el.innerHTML=`<option value="">-- เลือก --</option>`+S.members.map(m=>`<option value="${m.id}">${esc(m.name)} (${(m.elo??BASE).toLocaleString()})</option>`).join('');
@@ -1095,10 +1153,16 @@ function randomCourts(){
 }
 
 function replayStats(){
-  S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; });
+  S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });
   [...S.matches].sort((a,b)=>a.time-b.time).forEach(match=>{
     match.winners.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(FLOOR,(m.elo??BASE)+(match.wDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.wins=(m.wins??0)+1; m.lossStreak=0; });
     match.losers.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(FLOOR,(m.elo??BASE)+(match.lDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.losses=(m.losses??0)+1; m.lossStreak=(m.lossStreak??0)+1; });
+  });
+  // Apply decay events in order
+  (S.decayEvents||[]).sort((a,b)=>a.time-b.time).forEach(ev=>{
+    const m=gm(ev.playerId); if(!m) return;
+    m.elo=Math.max(FLOOR,(m.elo??BASE)-300);
+    m.decayCount=(m.decayCount??0)+1;
   });
 }
 

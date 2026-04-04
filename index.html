@@ -1058,7 +1058,13 @@ function renderPostAuthorOptions(){
   if (!el) return;
   const lastAuthor = localStorage.getItem('lastWebboardAuthor');
   el.innerHTML = '<option value="">-- เลือกสมาชิก --</option>' + S.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  if (lastAuthor) el.value = lastAuthor;
+  // Check if lastAuthor is still a valid member
+  if (lastAuthor && S.members.some(m => m.id == lastAuthor)) {
+    el.value = lastAuthor;
+  } else {
+    el.value = '';
+    localStorage.removeItem('lastWebboardAuthor');
+  }
 }
 
 function openPostModal(){
@@ -1072,6 +1078,7 @@ function addPost(){
   const authorVal = document.getElementById('post-author').value.trim();
   const author = authorVal ? parseInt(authorVal) : null;
   if (!title || !content) { toast('กรุณากรอกหัวข้อและเนื้อหา', '⚠️'); return; }
+  if (!author) { toast('กรุณาเลือกผู้โพสต์', '⚠️'); return; }
   S.webboard = S.webboard || [];
   S.webboard.push({ id: Date.now(), title, content, author, time: Date.now() });
   if (author) localStorage.setItem('lastWebboardAuthor', author);

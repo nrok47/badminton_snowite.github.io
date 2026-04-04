@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏸 SnowiteFC Badminton</title>
+<title>🏸 BC Manager</title>
 <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -12,10 +12,6 @@
   --blue:#38bdf8; --purple:#a78bfa; --text:#e8edf2; --muted:#556070; --dim:#8896a4;
   --mono:'IBM Plex Mono',monospace;
 }
-[data-theme="light"] {
-  --bg:#f8fafc; --s1:#ffffff; --s2:#f1f5f9; --s3:#e2e8f0; --border:#cbd5e1;
-  --text:#0f172a; --muted:#64748b; --dim:#94a3b8;
-}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Kanit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -23,10 +19,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
              radial-gradient(ellipse 70% 50% at 100% 100%,rgba(224,120,32,.05) 0%,transparent 55%);}
 .header{position:sticky;top:0;z-index:100;background:rgba(8,12,16,.92);backdrop-filter:blur(16px);
   border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;padding:0 20px;height:56px;}
-.header-actions{display:flex;align-items:center;gap:10px;margin-left:auto;}
-#theme-toggle{min-width:40px;height:34px;padding:0 10px;font-size:13px;}
 .logo{font-size:18px;font-weight:900;letter-spacing:-.5px;white-space:nowrap;
-  background:linear-gradient(135deg,var(--accent),var(--accent2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .nav{display:flex;gap:2px;flex:1;overflow-x:auto;}.nav::-webkit-scrollbar{display:none;}
 .nb{background:none;border:none;color:var(--muted);font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;
   padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .18s;white-space:nowrap;}
@@ -43,7 +37,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .scard{background:var(--s1);border:1px solid var(--border);border-radius:10px;padding:14px 16px;transition:border-color .2s,transform .2s;}
 .scard:hover{border-color:var(--accent);transform:translateY(-2px);}
 .scard-icon{font-size:20px;margin-bottom:6px;}
-.scard-val{font-family:var(--mono);font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.scard-val{font-family:var(--mono);font-size:26px;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .scard-lbl{font-size:11px;color:var(--muted);margin-top:2px;}
 .rtable{width:100%;border-collapse:collapse;font-size:13px;}
 .rtable th{text-align:left;padding:7px 10px;background:var(--s2);color:var(--muted);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;}
@@ -52,7 +46,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .rtable tr:last-child td{border-bottom:none;}.rtable tr:hover td{background:rgba(255,255,255,.015);}
 .rnk{font-family:var(--mono);font-weight:700;font-size:13px;}
 .r1{color:#f0c040;}.r2{color:#94a3b8;}.r3{color:#d97706;}
-.elo-val{font-family:var(--mono);font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.elo-val{font-family:var(--mono);font-weight:700;font-size:15px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
 .wr-bar{height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden;width:70px;}
 .wr-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;}
 .badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;font-size:11px;font-weight:600;}
@@ -79,11 +73,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .mcard:hover{border-color:var(--accent);transform:translateY(-1px);}
 .mcard-name{font-size:12px;font-weight:700;text-align:center;}
 .mcard-elo{font-family:var(--mono);font-size:11px;color:var(--accent);font-weight:600;}
-.checkbox-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;max-height:220px;overflow:auto;padding:6px 0;}
-.chk-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--s1);cursor:pointer;transition:border-color .18s,background .18s;}
-.chk-item:hover{border-color:var(--accent);background:rgba(240,192,64,.08);}
-.chk-item input{width:16px;height:16px;}
-.chk-item label{font-size:13px;color:var(--text);}
 .mcard-sub{font-size:10px;color:var(--muted);text-align:center;}
 .court-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
 .court-card{background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px;}
@@ -124,31 +113,17 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .empty{text-align:center;padding:36px 16px;color:var(--muted);}
 .empty-i{font-size:36px;margin-bottom:10px;}.empty-t{font-size:13px;}
 ::-webkit-scrollbar{width:5px;height:5px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
-.fb-status{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:auto;background:rgba(0,0,0,.2);}
-.fb-indicator{width:8px;height:8px;border-radius:50%;display:inline-block;animation:pulse 2s infinite;}
-.fb-indicator.online{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);}
-.fb-indicator.offline{background:#f43f5e;}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
 </style>
 </head>
 <body>
 
 <header class="header">
-  <div class="logo">🏸 SwFC</div>
+  <div class="logo">🏸 BC Manager</div>
   <nav class="nav">
     <button class="nb on" onclick="tab('dashboard',this)">📊 Dashboard</button>
     <button class="nb" onclick="tab('club',this)">👥 ก๊วน</button>
-    <button class="nb" onclick="tab('stats',this)">📈 สถิติ</button>
-    <button class="nb" onclick="tab('finance',this)">💰 การเงิน</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
   </nav>
-  <div class="header-actions">
-    <button class="btn btn-s btn-sm" id="theme-toggle" onclick="toggleTheme()">🌙</button>
-    <div class="fb-status">
-      <span class="fb-indicator" id="fb-indicator"></span>
-      <span id="fb-text">Firebase</span>
-    </div>
-  </div>
 </header>
 
 <div class="main">
@@ -176,7 +151,12 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- CLUB -->
 <div id="page-club" class="page">
   <div class="panel">
-    <div class="pt">👥 สมาชิก <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button><button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">⬇️ โหลดจาก Firebase</button><button class="btn btn-g btn-sm" onclick="syncMembersToFirebase()">⬆️ บันทึกไป Firebase</button></div>
+    <div class="pt">
+      👥 สมาชิก
+      <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button>
+      <button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">⬇️ โหลดจาก Firebase</button>
+      <button class="btn btn-g btn-sm" onclick="syncMembersToFirebase()">⬆️ บันทึกไป Firebase</button>
+    </div>
     <div id="member-grid" class="mgrid"><div class="empty" style="grid-column:1/-1"><div class="empty-i">👤</div><div class="empty-t">คลิก "เพิ่มสมาชิก"</div></div></div>
   </div>
   <div class="panel">
@@ -202,7 +182,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       <div class="score-box">
         <input class="score-inp" id="score-w" type="number" min="0" max="30" placeholder="21">
         <div class="score-dash">—</div>
-        <input class="score-inp" id="score-l" type="number" min="0" max="30" placeholder="">
+        <input class="score-inp" id="score-l" type="number" min="0" max="30" placeholder="15">
       </div>
     </div>
     <button class="btn btn-g btn-full" onclick="recordMatch()">✅ บันทึกผลการแข่งขัน</button>
@@ -220,8 +200,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="rule-grid">
       <div class="rcard"><div class="rcard-t">⚡ คะแนนตั้งต้น</div>
         <div class="rrow"><span>เริ่มต้นทุกคน</span><span class="rval" style="color:var(--accent)">10,000</span></div>
+        <div class="rrow"><span>คะแนนต่ำสุด</span><span class="rval">8,000</span></div>
       </div>
-      <div class="rcard"><div class="rcard-t">🟰 สูสี (|Δ| ≤ 1500)</div>
+      <div class="rcard"><div class="rcard-t">🟰 สูสี (|Δ| ≤ 300)</div>
         <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+1,000</span></div>
         <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">−1,000</span></div>
       </div>
@@ -233,7 +214,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+800</span></div>
         <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">−1,200</span></div>
       </div>
-      <div class="rcard"><div class="rcard-t">🎯 Margin Score (แต้มต่าง ≥ 9)</div>
+      <div class="rcard"><div class="rcard-t">🎯 Margin Score (แต้มต่าง ≥ 8)</div>
         <div class="rrow"><span>ชนะ bonus</span><span class="rval" style="color:var(--green)">+150</span></div>
         <div class="rrow"><span>แพ้ penalty</span><span class="rval" style="color:var(--red)">−150</span></div>
       </div>
@@ -243,8 +224,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
       <div class="rcard"><div class="rcard-t">🔥 กันฟาร์ม (ทีมเดิม/วัน)</div>
         <div class="rrow"><span>เกมที่ 1–3</span><span class="rval">100%</span></div>
-        <div class="rrow"><span>เกมที่ 4</span><span class="rval" style="color:var(--accent2)">50%</span></div>
-        <div class="rrow"><span>เกมที่ 5+</span><span class="rval" style="color:var(--red)">20%</span></div>
+        <div class="rrow"><span>เกมที่ 4–6</span><span class="rval" style="color:var(--accent2)">75%</span></div>
+        <div class="rrow"><span>เกมที่ 7+</span><span class="rval" style="color:var(--red)">50%</span></div>
       </div>
       <div class="rcard"><div class="rcard-t">🧊 แพ้ติดต่อกัน (Streak)</div>
         <div class="rrow"><span>เกมที่ 3 ในสตรีค</span><span class="rval" style="color:var(--blue)">ฟรีซ (0)</span></div>
@@ -254,68 +235,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div>
     <div class="divider"></div>
     <div style="font-size:12px;color:var(--muted);line-height:2;">
-      
+      <b style="color:var(--dim)">📊 ผลลัพธ์คาดการณ์</b><br>
+      🥇 Top → 24,000 – 26,000 &nbsp;·&nbsp; ⚖️ กลาง → 18,000 – 22,000 &nbsp;·&nbsp; 📉 ล่าง → 15,000 – 17,000
     </div>
-  </div>
-</div>
-
-<!-- STATISTICS -->
-<div id="page-stats" class="page">
-  <div class="panel">
-    <div class="pt">📈 สถิติผู้เล่น</div>
-    <div id="stats-grid" class="mgrid"></div>
-  </div>
-  <div id="player-details" style="display:none;">
-    <div class="panel">
-      <div class="pt">
-        <span id="detail-name"></span>
-        <button class="btn btn-s btn-sm pt-action" onclick="backToStatsList()">← กลับ</button>
-      </div>
-      <div class="g2">
-        <div class="scard">
-          <div class="scard-icon">🎯</div>
-          <div class="scard-lbl">ชนะ</div>
-          <div class="scard-val" id="detail-wins">0</div>
-        </div>
-        <div class="scard">
-          <div class="scard-icon">❌</div>
-          <div class="scard-lbl">แพ้</div>
-          <div class="scard-val" id="detail-losses">0</div>
-        </div>
-        <div class="scard">
-          <div class="scard-icon">📊</div>
-          <div class="scard-lbl">Win Rate</div>
-          <div class="scard-val" id="detail-winrate">0%</div>
-        </div>
-        <div class="scard">
-          <div class="scard-icon">🔥</div>
-          <div class="scard-lbl">สตรีค</div>
-          <div class="scard-val" id="detail-streak">0</div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="pt">🏆 Head-to-Head</div>
-        <div id="h2h-list"></div>
-      </div>
-      <div class="panel">
-        <div class="pt">📋 เกมล่าสุด</div>
-        <div id="player-recent"></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- FINANCE -->
-<div id="page-finance" class="page">
-  <div class="panel">
-    <div class="pt">💰 ระบบการเงิน <button class="btn btn-y btn-sm pt-action" onclick="openFinanceModal()">➕ บันทึกค่าใช้จ่าย</button></div>
-    <div class="g4" style="margin-bottom:14px;">
-      <div class="scard"><div class="scard-icon">🏸</div><div class="scard-val" id="finance-sessions">0</div><div class="scard-lbl">เซสชัน</div></div>
-      <div class="scard"><div class="scard-icon">💵</div><div class="scard-val" id="finance-total">0</div><div class="scard-lbl">รวมทั้งหมด</div></div>
-      <div class="scard"><div class="scard-icon">👥</div><div class="scard-val" id="finance-participants">0</div><div class="scard-lbl">คนล่าสุด</div></div>
-      <div class="scard"><div class="scard-icon">🕒</div><div class="scard-val" id="finance-rate">0</div><div class="scard-lbl">เรทต่อชม.</div></div>
-    </div>
-    <div id="finance-list"></div>
   </div>
 </div>
 
@@ -333,6 +255,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div>
   </div>
 </div>
+
 <!-- MODAL EDIT MATCH -->
 <div class="overlay" id="modal-edit">
   <div class="modal">
@@ -350,42 +273,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="el2"></select></div>
       </div>
     </div>
-  </div>
-</div>
-
-<div class="overlay" id="modal-finance">
-  <div class="modal">
-    <div class="modal-t">💰 บันทึกค่าใช้จ่ายสนาม</div>
-    <div class="fg"><label class="fl">วันที่</label><input class="fi" type="date" id="f-date"></div>
-    <div class="fg"><label class="fl">ผู้จอง / ผู้จ่าย</label><select class="fs" id="f-booker"></select></div>
-    <div class="g2">
-      <div class="fg"><label class="fl">จำนวนชั่วโมง</label><input class="fi" type="number" min="0" step="0.5" id="f-hours" placeholder="2" oninput="syncFinancePaymentRows()"></div>
-      <div class="fg"><label class="fl">ราคา/ชม.</label><input class="fi" type="number" min="0" step="10" id="f-rate" placeholder="200" oninput="syncFinancePaymentRows()"></div>
-    </div>
-    <div class="fg"><label class="fl">ผู้ร่วมตี (เลือกหลายคน)</label><div id="f-participants" class="checkbox-grid"></div></div>
-    <div class="g2">
-      <div class="fg"><label class="fl">เก็บคนละ</label><input class="fi" id="f-per-person" disabled></div>
-      <div class="fg"><label class="fl">ผู้จ่ายแล้ว</label><div id="f-paid-count" class="fs" style="padding:10px;background:var(--s1);border-radius:10px;">0 คน</div></div>
-    </div>
-    <div class="pt" style="margin-bottom:8px;">🚩 ค่าลูกแบด</div>
-    <div class="g2" style="gap:10px;">
-      <div class="fg"><label class="fl">ผู้ใช้ 1</label><select class="fs" id="f-shuttle-user-1"></select></div>
-      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-1" oninput="syncFinancePaymentRows()"></div>
-      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-1" oninput="syncFinancePaymentRows()"></div>
-    </div>
-    <div class="g2" style="gap:10px;">
-      <div class="fg"><label class="fl">ผู้ใช้ 2</label><select class="fs" id="f-shuttle-user-2"></select></div>
-      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-2" oninput="syncFinancePaymentRows()"></div>
-      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-2" oninput="syncFinancePaymentRows()"></div>
-    </div>
-    <div class="g2" style="gap:10px;">
-      <div class="fg"><label class="fl">ผู้ใช้ 3</label><select class="fs" id="f-shuttle-user-3"></select></div>
-      <div class="fg"><label class="fl">จำนวนลูก</label><input class="fi" type="number" min="0" id="f-shuttle-count-3" oninput="syncFinancePaymentRows()"></div>
-      <div class="fg"><label class="fl">ราคา/ลูก</label><input class="fi" type="number" min="0" id="f-shuttle-price-3" oninput="syncFinancePaymentRows()"></div>
-    </div>
     <div class="modal-act">
-      <button class="btn btn-y btn-full" onclick="saveFinanceSession()">✅ บันทึก</button>
-      <button class="btn btn-s" onclick="closeModal('modal-finance')">ยกเลิก</button>
+      <button class="btn btn-y btn-full" onclick="saveEdit()">✅ บันทึก</button>
+      <button class="btn btn-s" onclick="closeModal('modal-edit')">ยกเลิก</button>
     </div>
   </div>
 </div>
@@ -394,14 +284,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[], finance:[] };
+let S = { members:[], matches:[] };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
 const gi = n => n.charAt(0).toUpperCase();
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
-function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); syncMembersToFirebase(); }
+function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); }
 function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); }catch(e){} }
 
 // ===== ELO ENGINE =====
@@ -411,14 +301,14 @@ const FLOOR = 8000;
 function getElo(id){ const m=gm(id); return m?(m.elo??BASE):BASE; }
 function teamAvgElo(ids){ return ids.reduce((s,id)=>s+getElo(id),0)/ids.length; }
 
-
-  // Farm: count times this winners team played today (not exact pair)
-function getFarmCount(wIds){
+// Farm: count times this exact pair (winners vs losers) played today
+function getFarmCount(wIds, lIds){
   const ds = todayStr();
   return S.matches.filter(m => {
     if(m.dateStr!==ds) return false;
     const sw = wIds.length===m.winners.length && wIds.every(id=>m.winners.includes(id));
-    return sw;  // ✅ Only check if same winners, not the losers
+    const sl = lIds.length===m.losers.length && lIds.every(id=>m.losers.includes(id));
+    return sw && sl;
   }).length;
 }
 
@@ -440,19 +330,19 @@ function computeDeltas(winners, losers, sw, sl){
 
   // 1. Base by tier
   let wBase, lBase;
-  if(Math.abs(diff)<=1500){ wBase=1000; lBase=-1000; }
-  else if(diff<-1500){ wBase=1200; lBase=-600; }
+  if(Math.abs(diff)<=300){ wBase=1000; lBase=-1000; }
+  else if(diff<-300){ wBase=1200; lBase=-600; }
   else { wBase=800; lBase=-1200; }
 
   // 2. Margin
   let margin = 0;
-  if(sw!==null && sl!==null && (sw-sl)>=9) margin=150;
+  if(sw!==null && sl!==null && (sw-sl)>=8) margin=150;
 
   // 3. Farm multiplier
-  const fc = getFarmCount(winners,losers);
+  const fc = getFarmCount(winners, losers);
   let farmMult = 1.0;
-  if(fc>=4) farmMult=0.20;
-  else if(fc>=3) farmMult=0.5;
+  if(fc>=6) farmMult=0.5;
+  else if(fc>=3) farmMult=0.75;
   const farmHit = fc>=3;
 
   // 4. Anti-Carry per team
@@ -547,7 +437,7 @@ function recordMatch(){
 // ===== RENDER =====
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
-  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance();
+  renderMemberGrid(); renderSelects(); renderMatchHistory();
 }
 
 function renderStats(){
@@ -557,31 +447,11 @@ function renderStats(){
   document.getElementById('st-farm').textContent=S.matches.filter(m=>m.farmHit).length;
 }
 
-function getForm(id){
-  // last 5 matches for this player, newest first
-  return [...S.matches]
-    .filter(m => m.winners.includes(id) || m.losers.includes(id))
-    .reverse()
-    .slice(0, 5);
-}
-
-function renderForm(id){
-  const matches = getForm(id);
-  if(!matches.length) return '<span style="color:var(--muted);font-size:10px;">—</span>';
-  return matches.map(m => {
-    const win = m.winners.includes(id);
-    const frozen = !win && m.streakTags && m.losers.indexOf(id) >= 0 && m.streakTags[m.losers.indexOf(id)] === 'freeze';
-    if(frozen) return `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:9px;background:rgba(56,189,248,.15);color:var(--blue);font-weight:700;" title="Freeze">🧊</span>`;
-    if(win) return `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:800;background:rgba(34,197,94,.15);color:var(--green);">W</span>`;
-    return `<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;font-size:10px;font-weight:800;background:rgba(244,63,94,.15);color:var(--red);">L</span>`;
-  }).join('<span style="width:3px;display:inline-block;"></span>');
-}
-
 function renderRanking(){
   const el=document.getElementById('ranking-list');
   if(!S.members.length){ el.innerHTML='<div class="empty"><div class="empty-i">📊</div><div class="empty-t">เพิ่มสมาชิกและบันทึกผล</div></div>'; return; }
   const sorted=[...S.members].sort((a,b)=>(b.elo??BASE)-(a.elo??BASE));
-  el.innerHTML=`<table class="rtable"><thead><tr><th>#</th><th>ชื่อ</th><th>คะแนน</th><th>W</th><th>L</th><th>WR%</th><th>Form</th></tr></thead><tbody>
+  el.innerHTML=`<table class="rtable"><thead><tr><th>#</th><th>ชื่อ</th><th>คะแนน</th><th>W</th><th>L</th><th>WR%</th></tr></thead><tbody>
   ${sorted.map((m,i)=>{
     const wr=(m.wins||0)+(m.losses||0)>0?Math.round((m.wins||0)/((m.wins||0)+(m.losses||0))*100):0;
     const rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
@@ -599,7 +469,6 @@ function renderRanking(){
       <td><span class="badge bg-green">${m.wins||0}</span></td>
       <td><span class="badge bg-red">${m.losses||0}</span></td>
       <td><span style="font-size:12px;color:var(--dim)">${wr}%</span></td>
-      <td><div style="display:flex;align-items:center;gap:2px;">${renderForm(m.id)}</div></td>
     </tr>`;
   }).join('')}</tbody></table>`;
 }
@@ -692,141 +561,6 @@ function renderMatchHistory(){
   }).join('');
 }
 
-function renderFinance(){
-  const listEl=document.getElementById('finance-list');
-  const sessions=S.finance||[];
-  document.getElementById('finance-sessions').textContent=sessions.length;
-  const totalCost=sessions.reduce((sum,s)=>sum+(s.courtCost+s.shuttleCost),0);
-  document.getElementById('finance-total').textContent=totalCost.toLocaleString();
-  document.getElementById('finance-participants').textContent=sessions[sessions.length-1]?.participants?.length||0;
-  document.getElementById('finance-rate').textContent=sessions[sessions.length-1]?.ratePerHour?.toLocaleString()||0;
-  if(!sessions.length){
-    listEl.innerHTML='<div class="empty"><div class="empty-i">💸</div><div class="empty-t">ยังไม่มีบันทึกค่าใช้จ่าย</div></div>';
-    return;
-  }
-  listEl.innerHTML=sessions.slice().reverse().map(s=>{
-    const bookerName=gm(s.booker)?.name||'ไม่ระบุ';
-    const participantsArr=s.participants||[];
-    const paidArr=s.paidParticipants||[];
-    const participants=participantsArr.map(id=>gm(id)?.name||'?').join(' / ');
-    const paidNames=paidArr.length ? paidArr.map(id=>gm(id)?.name||'?').join(' / ') : 'ยังไม่มีใคร';
-    const unpaidNames=participantsArr.filter(id=>!paidArr.includes(id)).map(id=>gm(id)?.name||'?').join(' / ')||'ยังไม่มีใคร';
-    const shuttleRows=s.shuttleUsage.map(u=>u.count?`<div style="font-size:12px;color:var(--muted);">${gm(u.user)?.name||'?'}: ${u.count} ลูก × ${u.price.toLocaleString()} = ${(u.count*u.price).toLocaleString()}</div>`:'').join('');
-    const courtCost=s.courtCost.toLocaleString();
-    const shuttleCost=s.shuttleCost.toLocaleString();
-    const perPerson=s.perPerson.toLocaleString(undefined,{maximumFractionDigits:2});
-    return `<div class="panel" style="padding:14px;margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
-        <div><strong>${s.date}</strong> | ${bookerName}</div>
-        <div><span class="badge bg-gray">คนตี ${s.participants.length}</span></div>
-      </div>
-      <div style="margin-top:10px;font-size:13px;color:var(--text);">
-        <div>จอง ${s.hours} ชม. × ${s.ratePerHour.toLocaleString()} = ${courtCost}</div>
-        <div>ค่าลูกแบด = ${shuttleCost}</div>
-        ${shuttleRows}
-        <div style="margin-top:8px;font-weight:700;">รวม ${ (s.courtCost+s.shuttleCost).toLocaleString() } ฿</div>
-        <div style="margin-top:4px;color:var(--text);">เฉลี่ยต่อคน ${perPerson} ฿</div>
-        <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้จ่ายแล้ว (${paidArr.length}/${participantsArr.length}): ${paidNames}</div>
-        <div style="margin-top:4px;color:var(--text);">ยังไม่ได้จ่าย: ${unpaidNames}</div>
-        <div style="margin-top:6px;color:var(--muted);">ผู้เล่น: ${participants}</div>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function renderFinanceOptions(){
-  const members=S.members||[];
-  ['f-booker','f-shuttle-user-1','f-shuttle-user-2','f-shuttle-user-3'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(!el) return;
-    el.innerHTML=members.map(m=>`<option value="${m.id}">${m.name}</option>`).join('');
-  });
-  const participantsEl=document.getElementById('f-participants');
-  if(participantsEl){
-    participantsEl.innerHTML=members.map(m=>`
-      <label class="chk-item">
-        <input type="checkbox" class="f-participant" value="${m.id}" onchange="syncFinancePaymentRows()">
-        <div style="display:flex;flex-direction:column;gap:6px;flex:1;">
-          <span>${m.name}</span>
-          <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);">
-            <input type="checkbox" class="f-paid" value="${m.id}" disabled onchange="syncFinancePaymentRows()">
-            <span>จ่ายแล้ว</span>
-          </div>
-        </div>
-      </label>
-    `).join('');
-  }
-}
-
-function syncFinancePaymentRows(){
-  const selectedIds=[...document.querySelectorAll('#f-participants input.f-participant:checked')].map(i=>parseInt(i.value));
-  const paidInputs=[...document.querySelectorAll('#f-participants input.f-paid')];
-  paidInputs.forEach(input=>{
-    const id=parseInt(input.value);
-    input.disabled=!selectedIds.includes(id);
-    if(!selectedIds.includes(id)) input.checked=false;
-  });
-  const hours=parseFloat(document.getElementById('f-hours').value)||0;
-  const ratePerHour=parseFloat(document.getElementById('f-rate').value)||0;
-  const shuttleUsage=[1,2,3].map(i=>({
-    count:parseInt(document.getElementById(`f-shuttle-count-${i}`).value)||0,
-    price:parseFloat(document.getElementById(`f-shuttle-price-${i}`).value)||0
-  })).filter(u=>u.count>0 && u.price>0);
-  const shuttleCost=shuttleUsage.reduce((sum,u)=>sum+u.count*u.price,0);
-  const courtCost=Math.round(hours*ratePerHour);
-  const totalCost=courtCost+shuttleCost;
-  const perPerson=selectedIds.length?Number((totalCost/selectedIds.length).toFixed(2)):0;
-  const perPersonEl=document.getElementById('f-per-person');
-  if(perPersonEl) perPersonEl.value = selectedIds.length ? `${perPerson} ฿` : '';
-  const paidCountEl=document.getElementById('f-paid-count');
-  if(paidCountEl) paidCountEl.textContent = `${paidInputs.filter(i=>i.checked).length} คน`;
-}
-
-function openFinanceModal(){
-  if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('f-hours').value='';
-  document.getElementById('f-rate').value='';
-  const participantsEl=document.getElementById('f-participants');
-  if(participantsEl) participantsEl.innerHTML='';
-  document.getElementById('f-per-person').value='';
-  document.getElementById('f-paid-count').textContent='0 คน';
-  document.getElementById('f-shuttle-count-1').value='';
-  document.getElementById('f-shuttle-count-2').value='';
-  document.getElementById('f-shuttle-count-3').value='';
-  document.getElementById('f-shuttle-price-1').value='';
-  document.getElementById('f-shuttle-price-2').value='';
-  document.getElementById('f-shuttle-price-3').value='';
-  renderFinanceOptions();
-  document.getElementById('modal-finance').classList.add('on');
-}
-
-
-function saveFinanceSession(){
-  const date=document.getElementById('f-date').value;
-  const booker=parseInt(document.getElementById('f-booker').value);
-  const hours=parseFloat(document.getElementById('f-hours').value)||0;
-  const ratePerHour=parseFloat(document.getElementById('f-rate').value)||0;
-  const participants=[...document.querySelectorAll('#f-participants input.f-participant:checked')].map(o=>parseInt(o.value));
-  const paidParticipants=[...document.querySelectorAll('#f-participants input.f-paid:checked')].map(o=>parseInt(o.value)).filter(id=>participants.includes(id));
-  if(!date||!booker||!hours||!ratePerHour||participants.length===0){ toast('กรุณากรอกข้อมูลให้ครบ','⚠️'); return; }
-  const shuttleUsage=[1,2,3].map(i=>({
-    user:parseInt(document.getElementById(`f-shuttle-user-${i}`).value)||null,
-    count:parseInt(document.getElementById(`f-shuttle-count-${i}`).value)||0,
-    price:parseFloat(document.getElementById(`f-shuttle-price-${i}`).value)||0
-  })).filter(u=>u.user && u.count>0 && u.price>0);
-  const shuttleCost=shuttleUsage.reduce((sum,u)=>sum+u.count*u.price,0);
-  const courtCost=Math.round(hours*ratePerHour);
-  const totalCost=courtCost+shuttleCost;
-  const perPerson=Number((totalCost/participants.length).toFixed(2));
-  const session={
-    id:Date.now(), date, booker, hours, ratePerHour, participants, paidParticipants, shuttleUsage, shuttleCost, courtCost, perPerson
-  };
-  S.finance=S.finance||[];
-  S.finance.push(session);
-  save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว');
-}
-
 // ===== ACTIONS =====
 function addMember(){
   const name=document.getElementById('nm-name').value.trim();
@@ -893,116 +627,14 @@ function saveEdit(){
   save(); closeModal('modal-edit'); renderAll(); toast('แก้ไขสำเร็จ');
 }
 
-// ===== STATISTICS =====
-function getPlayerStats(id){
-  const m=gm(id); if(!m) return null;
-  const wins=m.wins??0; const losses=m.losses??0; const total=wins+losses;
-  const winRate=total>0?(wins/total*100).toFixed(1):'0';
-  const matchesWithPlayer=S.matches.filter(match=>match.winners.includes(id)||match.losers.includes(id));
-  let streak=0, streakType='';
-  for(let i=matchesWithPlayer.length-1;i>=0;i--){
-    if(matchesWithPlayer[i].winners.includes(id)){ streak++; streakType='W'; }
-    else{ return {id,name:m.name,elo:m.elo??BASE,wins,losses,winRate,streak,streakType}; }
-  }
-  return {id,name:m.name,elo:m.elo??BASE,wins,losses,winRate,streak,streakType};
-}
-
-function getH2HRecord(id1,id2){
-  const matches=S.matches.filter(m=>(m.winners.includes(id1)||m.losers.includes(id1))&&(m.winners.includes(id2)||m.losers.includes(id2)));
-  const id1Wins=matches.filter(m=>m.winners.includes(id1)&&m.losers.includes(id2)).length;
-  const id2Wins=matches.filter(m=>m.winners.includes(id2)&&m.losers.includes(id1)).length;
-  return {total:matches.length,id1Wins,id2Wins};
-}
-
-function getPlayerRecentMatches(id,limit=10){
-  return S.matches.filter(m=>m.winners.includes(id)||m.losers.includes(id)).slice(-limit).reverse();
-}
-
-function renderPlayerStats(){
-  const statsList=document.getElementById('stats-grid');
-  const sorted=S.members.sort((a,b)=>(b.elo??BASE)-(a.elo??BASE));
-  statsList.innerHTML=sorted.map((m,i)=>{
-    const stats=getPlayerStats(m.id);
-    return `<div class="mcard" onclick="renderPlayerDetails(${m.id})" style="cursor:pointer;border-color:${stats.streakType==='W'?'var(--green)':'var(--red)'};transition:all .2s;">
-      <div style="font-size:24px;margin-bottom:4px;">${i<3?['🥇','🥈','🥉'][i]:'📌'}</div>
-      <div class="mcard-name">${m.name}</div>
-      <div style="font-size:11px;color:var(--muted);margin:4px 0;">
-        ${stats.wins}W-${stats.losses}L (${stats.winRate}%)
-      </div>
-      <div class="mcard-elo">${(m.elo??BASE).toLocaleString()}</div>
-      ${stats.streak>0?`<div style="font-size:10px;color:var(--green);font-weight:700;">🔥 ${stats.streak}W</div>`:''}
-    </div>`;
-  }).join('');
-}
-
-function renderPlayerDetails(id){
-  const m=gm(id); if(!m) return;
-  const stats=getPlayerStats(id);
-  const recentMatches=getPlayerRecentMatches(id);
-  
-  document.getElementById('detail-name').textContent=m.name;
-  document.getElementById('detail-wins').textContent=stats.wins;
-  document.getElementById('detail-losses').textContent=stats.losses;
-  document.getElementById('detail-winrate').textContent=stats.winRate+'%';
-  document.getElementById('detail-streak').textContent=`${stats.streak} ${stats.streakType}`;
-  
-  const h2hHtml=S.members.filter(x=>x.id!==id).map(other=>{
-    const h2h=getH2HRecord(id,other.id);
-    if(h2h.total===0) return '';
-    return `<div class="scard" style="padding:12px;">
-      <div style="font-weight:600;margin-bottom:6px;">${other.name}</div>
-      <div style="font-family:var(--mono);font-size:13px;font-weight:700;">
-        <span style="color:var(--green);">${h2h.id1Wins}W</span> - <span style="color:var(--red);">${h2h.id2Wins}L</span>
-      </div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;">${h2h.total} \u0e40\u0e01\u0e21</div>
-    </div>`;
-  }).join('');
-  document.getElementById('h2h-list').innerHTML=h2hHtml||'<div class="empty"><div class="empty-t">\u0e22\u0e31\u0e07\u0e44\u0e21\u0e48\u0e21\u0e35\u0e40\u0e01\u0e21\u0e42\u0e08\u0e21\u0e19</div></div>';
-  
-  const recentHtml=recentMatches.map(match=>{
-    const isWin=match.winners.includes(id);
-    const opponent=match[isWin?'losers':'winners'][0];
-    const opName=gm(opponent)?.name||'?';
-    const score=match.score?` ${match.score.w}-${match.score.l}`:'';
-    return `<div class="mlog ${isWin?'':''}"><div class="${isWin?'mlog-w':'mlog-l'}">
-      ${isWin?'✅':'❌'} vs ${opName}${score}
-    </div></div>`;
-  }).join('');
-  document.getElementById('player-recent').innerHTML=recentHtml||'<div class="empty"><div class="empty-t">\u0e40\u0e01\u0e21\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14</div></div>';
-  
-  document.getElementById('stats-grid').style.display='none';
-  document.getElementById('player-details').style.display='block';
-}
-
-function backToStatsList(){
-  document.getElementById('stats-grid').style.display='grid';
-  document.getElementById('player-details').style.display='none';
-  renderPlayerStats();
-}
-
 function tab(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
   btn.classList.add('on'); renderAll();
-  if(name==='stats'){ backToStatsList(); }
 }
 function openModal(id){ document.getElementById(id).classList.add('on'); }
 function closeModal(id){ document.getElementById(id).classList.remove('on'); }
-function setTheme(theme){
-  document.documentElement.dataset.theme=theme;
-  localStorage.setItem('bcm_theme',theme);
-  const btn=document.getElementById('theme-toggle');
-  if(btn) btn.textContent=theme==='light'?'☀️':'🌙';
-}
-function toggleTheme(){
-  const next=document.documentElement.dataset.theme==='light'?'dark':'light';
-  setTheme(next);
-}
-function loadTheme(){
-  const saved=localStorage.getItem('bcm_theme');
-  setTheme(saved==='light'?'light':'dark');
-}
 function toast(msg,icon='✅'){
   const t=document.getElementById('toast');
   document.getElementById('tm').textContent=msg; document.getElementById('ti').textContent=icon;
@@ -1011,7 +643,6 @@ function toast(msg,icon='✅'){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on')); });
 document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
 
-loadTheme();
 load(); renderAll();
 </script>
 
@@ -1036,62 +667,29 @@ load(); renderAll();
   const db = firebase.database();
 
   async function syncMembersToFirebase() {
-    try {
-      await db.ref('members').set(S.members || []);
-      console.log('✅ Auto-synced members to Firebase');
-    } catch(e) {
-      console.error('Firebase sync error:', e);
-    }
+    await db.ref('members').set(S.members || []);
+    toast('ซิงก์สมาชิกไป Realtime DB เรียบร้อย', '✅');
   }
 
   async function loadMembersFromFirebase() {
-    try {
-      const snapshot = await db.ref('members').once('value');
-      const data = snapshot.val();
-      if (!data) {
-        toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
-        return;
-      }
-      if (Array.isArray(data)) {
-        S.members = data;
-      } else {
-        S.members = Object.values(data);
-      }
-      save();
-      renderAll();
-      toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
-    } catch(e) {
-      toast('เกิดข้อผิดพลาดในการโหลด Firebase', '❌');
-      console.error('Firebase load error:', e);
+    const snapshot = await db.ref('members').once('value');
+    const data = snapshot.val();
+    if (!data) {
+      toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
+      return;
     }
+    if (Array.isArray(data)) {
+      S.members = data;
+    } else {
+      S.members = Object.values(data);
+    }
+    save();
+    renderAll();
+    toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
   }
 
   window.syncMembersToFirebase = syncMembersToFirebase;
   window.loadMembersFromFirebase = loadMembersFromFirebase;
-
-  // Monitor Firebase connection status
-  function updateFirebaseStatus(isConnected) {
-    const indicator = document.getElementById('fb-indicator');
-    const text = document.getElementById('fb-text');
-    if (isConnected) {
-      indicator.classList.remove('offline');
-      indicator.classList.add('online');
-      text.textContent = 'Firebase ✅';
-    } else {
-      indicator.classList.remove('online');
-      indicator.classList.add('offline');
-      text.textContent = 'Firebase ❌';
-    }
-  }
-
-  // Listen for connection state changes
-  db.ref('.info/connected').on('value', (snapshot) => {
-    if (snapshot.val() === true) {
-      updateFirebaseStatus(true);
-    } else {
-      updateFirebaseStatus(false);
-    }
-  });
 </script>
 </body>
 </html>

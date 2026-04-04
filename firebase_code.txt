@@ -1,0 +1,44 @@
+<!-- Firebase RTDB setup -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-analytics-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+    authDomain: "badmintonsnowite.firebaseapp.com",
+    databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+    projectId: "badmintonsnowite",
+    storageBucket: "badmintonsnowite.firebasestorage.app",
+    messagingSenderId: "278915115830",
+    appId: "1:278915115830:web:5aff2fbb71db4df62a6197",
+    measurementId: "G-RB42S3K4BZ"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+  const db = firebase.database();
+
+  async function syncMembersToFirebase() {
+    await db.ref('members').set(S.members || []);
+    toast('ซิงก์สมาชิกไป Realtime DB เรียบร้อย', '✅');
+  }
+
+  async function loadMembersFromFirebase() {
+    const snapshot = await db.ref('members').once('value');
+    const data = snapshot.val();
+    if (!data) {
+      toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
+      return;
+    }
+    if (Array.isArray(data)) {
+      S.members = data;
+    } else {
+      S.members = Object.values(data);
+    }
+    save();
+    renderAll();
+    toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
+  }
+
+  window.syncMembersToFirebase = syncMembersToFirebase;
+  window.loadMembersFromFirebase = loadMembersFromFirebase;

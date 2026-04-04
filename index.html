@@ -271,6 +271,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
         <span id="detail-name"></span>
         <button class="btn btn-s btn-sm pt-action" onclick="backToStatsList()">← กลับ</button>
       </div>
+      <div style="text-align:center;margin-bottom:16px;">
+        <img id="detail-photo" src="" style="width:120px;height:120px;border-radius:50%;object-fit:cover;background:var(--s1);display:none;">
+        <div id="detail-photo-placeholder" style="width:120px;height:120px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:48px;">📷</div>
+      </div>
+      <div style="text-align:center;margin-bottom:16px;">
+        <input type="file" id="player-photo-input" accept="image/*" style="display:none;" onchange="uploadPlayerPhoto()">
+        <button class="btn btn-y btn-sm" onclick="document.getElementById('player-photo-input').click()">🖼️ อัพโหลดรูป</button>
+      </div>
       <div class="g2">
         <div class="scard">
           <div class="scard-icon">🎯</div>
@@ -1039,6 +1047,20 @@ function renderPlayerDetails(id){
   document.getElementById('detail-winrate').textContent=stats.winRate+'%';
   document.getElementById('detail-streak').textContent=`${stats.streak} ${stats.streakType}`;
   
+  // Display player photo
+  const photoImg=document.getElementById('detail-photo');
+  const photoPlaceholder=document.getElementById('detail-photo-placeholder');
+  if(m.photo){
+    photoImg.src=m.photo;
+    photoImg.style.display='block';
+    photoPlaceholder.style.display='none';
+  } else {
+    photoImg.style.display='none';
+    photoPlaceholder.style.display='flex';
+  }
+  document.getElementById('player-photo-input').value='';
+  window.currentPlayerIdForPhoto=id;
+  
   const h2hHtml=S.members.filter(x=>x.id!==id).map(other=>{
     const h2h=getH2HRecord(id,other.id);
     if(h2h.total===0) return '';
@@ -1071,6 +1093,25 @@ function backToStatsList(){
   document.getElementById('stats-grid').style.display='grid';
   document.getElementById('player-details').style.display='none';
   renderPlayerStats();
+}
+
+function uploadPlayerPhoto(){
+  const fileInput=document.getElementById('player-photo-input');
+  const file=fileInput.files[0];
+  if(!file) return;
+  
+  const reader=new FileReader();
+  reader.onload=(e)=>{
+    const playerId=window.currentPlayerIdForPhoto;
+    const member=gm(playerId);
+    if(member){
+      member.photo=e.target.result;
+      save();
+      renderPlayerDetails(playerId);
+      toast('อัพโหลดรูปสำเร็จ','📷');
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 function tab(name,btn){

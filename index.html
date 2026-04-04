@@ -331,13 +331,10 @@ a:hover{text-decoration:underline;}
 <!-- WEBBOARD -->
 <div id="page-webboard" class="page">
   <div class="panel">
-    <div class="pt">💬 Webboard <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-new-post')">➕ โพสต์ใหม่</button></div>
+    <div class="pt">💬 Webboard <button class="btn btn-y btn-sm pt-action" onclick="openPostModal()">➕ โพสต์ใหม่</button></div>
     <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
       หัวข้อหลักที่แนะนำ: อุปกรณ์, ท่าตี, การรักษาบาดเจ็บ<br>
       ใช้ webboard นี้แทนการคุยในไลน์เพื่อเก็บเรื่องสำคัญไว้ และแชร์ต่อได้ง่าย
-      <div style="margin-top:10px;">
-        ลิงก์ดูเพิ่มเติม: <a href="https://www.google.com/search?q=draobbe" target="_blank" rel="noreferrer">draobbe</a>
-      </div>
     </div>
     <div id="webboard-posts"><div class="empty"><div class="empty-i">💬</div><div class="empty-t">ยังไม่มีโพสต์</div></div></div>
   </div>
@@ -1056,13 +1053,28 @@ function saveFinanceSession(){
   save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว');
 }
 
+function renderPostAuthorOptions(){
+  const el = document.getElementById('post-author');
+  if (!el) return;
+  const lastAuthor = localStorage.getItem('lastWebboardAuthor');
+  el.innerHTML = '<option value="">-- เลือกสมาชิก --</option>' + S.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  if (lastAuthor) el.value = lastAuthor;
+}
+
+function openPostModal(){
+  renderPostAuthorOptions();
+  document.getElementById('modal-new-post').classList.add('on');
+}
+
 function addPost(){
   const title = document.getElementById('post-title').value.trim();
   const content = document.getElementById('post-content').value.trim();
-  const author = parseInt(document.getElementById('post-author').value);
+  const authorVal = document.getElementById('post-author').value.trim();
+  const author = authorVal ? parseInt(authorVal) : null;
   if (!title || !content) { toast('กรุณากรอกหัวข้อและเนื้อหา', '⚠️'); return; }
   S.webboard = S.webboard || [];
   S.webboard.push({ id: Date.now(), title, content, author, time: Date.now() });
+  if (author) localStorage.setItem('lastWebboardAuthor', author);
   save();
   document.getElementById('post-title').value = '';
   document.getElementById('post-content').value = '';

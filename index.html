@@ -74,8 +74,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .btn-s{background:var(--s2);border:1px solid var(--border);color:var(--text);}
 .btn-s:hover{border-color:var(--accent);color:var(--accent);}
 .btn-sm{padding:4px 9px;font-size:11px;}.btn-full{width:100%;}
-a{color:var(--accent);text-decoration:none;}
-a:hover{text-decoration:underline;}
 .mgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;}
 .mcard{background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px 10px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;transition:all .18s;}
 .mcard:hover{border-color:var(--accent);transform:translateY(-1px);}
@@ -142,7 +140,6 @@ a:hover{text-decoration:underline;}
     <button class="nb" onclick="tab('club',this)">👥 ก๊วน</button>
     <button class="nb" onclick="tab('stats',this)">📈 สถิติ</button>
     <button class="nb" onclick="tab('finance',this)">💰 การเงิน</button>
-    <button class="nb" onclick="tab('webboard',this)">💬 Webboard</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
   </nav>
   <div class="header-actions">
@@ -328,19 +325,10 @@ a:hover{text-decoration:underline;}
   </div>
 </div>
 
-<!-- WEBBOARD -->
-<div id="page-webboard" class="page">
-  <div class="panel">
-    <div class="pt">💬 Webboard <button class="btn btn-y btn-sm pt-action" onclick="openPostModal()">➕ โพสต์ใหม่</button></div>
-    <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
-      หัวข้อหลักที่แนะนำ: อุปกรณ์, ท่าตี, การรักษาบาดเจ็บ<br>
-      ใช้ webboard นี้แทนการคุยในไลน์เพื่อเก็บเรื่องสำคัญไว้ และแชร์ต่อได้ง่าย
-    </div>
-    <div id="webboard-posts"><div class="empty"><div class="empty-i">💬</div><div class="empty-t">ยังไม่มีโพสต์</div></div></div>
-  </div>
 </div>
 
 <!-- MODAL ADD -->
+<div class="overlay" id="modal-add">
   <div class="modal">
     <div class="modal-t">➕ เพิ่มสมาชิกใหม่</div>
     <div class="fg"><label class="fl">ชื่อ *</label><input class="fi" id="nm-name" placeholder="ชื่อ-นามสกุล"></div>
@@ -443,48 +431,6 @@ a:hover{text-decoration:underline;}
   </div>
 </div>
 
-<!-- MODAL NEW POST -->
-<div class="overlay" id="modal-new-post">
-  <div class="modal">
-    <div class="modal-t">➕ โพสต์ใหม่</div>
-    <div class="fg"><label class="fl">หัวข้อ *</label><input class="fi" id="post-title" placeholder="หัวข้อโพสต์"></div>
-    <div class="fg"><label class="fl">เนื้อหา *</label><textarea class="fi" id="post-content" placeholder="เนื้อหาโพสต์" rows="5"></textarea></div>
-    <div class="fg"><label class="fl">ผู้โพสต์</label><select class="fs" id="post-author"><option value="">-- เลือกสมาชิก --</option></select></div>
-    <div class="modal-act">
-      <button class="btn btn-y btn-full" onclick="addPost()">✅ โพสต์</button>
-      <button class="btn btn-s" onclick="closeModal('modal-new-post')">ยกเลิก</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL EDIT POST -->
-<div class="overlay" id="modal-edit-post">
-  <div class="modal">
-    <div class="modal-t">✏️ แก้ไขโพสต์</div>
-    <input type="hidden" id="edit-post-id">
-    <div class="fg"><label class="fl">หัวข้อ *</label><input class="fi" id="edit-post-title" placeholder="หัวข้อโพสต์"></div>
-    <div class="fg"><label class="fl">เนื้อหา *</label><textarea class="fi" id="edit-post-content" placeholder="เนื้อหาโพสต์" rows="5"></textarea></div>
-    <div class="modal-act">
-      <button class="btn btn-y btn-full" onclick="savePostEdit()">✅ บันทึก</button>
-      <button class="btn btn-s" onclick="closeModal('modal-edit-post')">ยกเลิก</button>
-    </div>
-  </div>
-</div>
-
-<!-- MODAL REPLY -->
-<div class="overlay" id="modal-reply">
-  <div class="modal">
-    <div class="modal-t">💬 ตอบกลับโพสต์</div>
-    <input type="hidden" id="reply-post-id">
-    <div class="fg"><label class="fl">เนื้อหา *</label><textarea class="fi" id="reply-content" placeholder="เนื้อหาคำตอบ" rows="3"></textarea></div>
-    <div class="fg"><label class="fl">ผู้ตอบ</label><select class="fs" id="reply-author"><option value="">-- เลือกสมาชิก --</option></select></div>
-    <div class="modal-act">
-      <button class="btn btn-y btn-full" onclick="addReply()">✅ ตอบกลับ</button>
-      <button class="btn btn-s" onclick="closeModal('modal-reply')">ยกเลิก</button>
-    </div>
-  </div>
-</div>
-
 <div class="overlay" id="modal-confirm-delete">
   <div class="modal" style="max-width:320px;">
     <div class="modal-t">⚠️ ยืนยันการลบ</div>
@@ -555,7 +501,7 @@ a:hover{text-decoration:underline;}
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[], finance:[], webboard:[] };
+let S = { members:[], matches:[], finance:[] };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
 const gi = n => n.charAt(0).toUpperCase();
@@ -708,7 +654,7 @@ function recordMatch(){
 // ===== RENDER =====
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
-  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderWebboard();
+  renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance();
 }
 
 function renderStats(){
@@ -899,41 +845,6 @@ function renderFinance(){
   }).join('');
 }
 
-function renderWebboard(){
-  const el = document.getElementById('webboard-posts');
-  const posts = S.webboard || [];
-  if (!posts.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-i">💬</div><div class="empty-t">ยังไม่มีโพสต์</div></div>';
-    return;
-  }
-  el.innerHTML = posts.slice().reverse().map(p => {
-    const authorName = gm(p.author)?.name || 'ไม่ระบุ';
-    const t = new Date(p.time);
-    const ts = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
-    const replies = p.replies || [];
-    const repliesHtml = replies.map(r => {
-      const replyAuthorName = gm(r.author)?.name || 'ไม่ระบุ';
-      const rt = new Date(r.time);
-      const rts = `${rt.getDate()}/${rt.getMonth()+1}/${rt.getFullYear()} ${rt.getHours().toString().padStart(2,'0')}:${rt.getMinutes().toString().padStart(2,'0')}`;
-      return `<div style="margin-left:20px;margin-top:10px;padding:10px;background:var(--s2);border-radius:8px;border-left:3px solid var(--accent);">
-        <div style="font-size:13px;color:var(--text);white-space:pre-wrap;">${r.content}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:5px;">โดย ${replyAuthorName} · ${rts}</div>
-      </div>`;
-    }).join('');
-    return `<div class="panel" style="padding:16px;margin-bottom:10px;">
-      <div style="font-size:16px;font-weight:700;margin-bottom:8px;">${p.title}</div>
-      <div style="font-size:14px;color:var(--text);margin-bottom:10px;white-space:pre-wrap;">${p.content}</div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">โดย ${authorName} · ${ts}</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;">
-        <button class="btn btn-s btn-sm" onclick="openReplyModal(${p.id})">💬 ตอบกลับ</button>
-        <button class="btn btn-s btn-sm" onclick="editPost(${p.id})">✏️ แก้ไข</button>
-        <button class="btn btn-r btn-sm" onclick="deletePost(${p.id})">🗑 ลบ</button>
-      </div>
-      ${repliesHtml}
-    </div>`;
-  }).join('');
-}
-
 function renderFinanceOptions(){
   const members=S.members||[];
   ['f-booker','f-shuttle-user-1','f-shuttle-user-2','f-shuttle-user-3'].forEach(id=>{
@@ -1095,114 +1006,6 @@ function saveFinanceSession(){
     S.finance.push(sessionObj);
   }
   save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว');
-}
-
-function renderPostAuthorOptions(){
-  const el = document.getElementById('post-author');
-  if (!el) return;
-  const lastAuthor = localStorage.getItem('lastWebboardAuthor');
-  el.innerHTML = '<option value="">-- เลือกสมาชิก --</option>' + S.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  // Check if lastAuthor is still a valid member
-  if (lastAuthor && S.members.some(m => m.id == lastAuthor)) {
-    el.value = lastAuthor;
-  } else {
-    el.value = '';
-    localStorage.removeItem('lastWebboardAuthor');
-  }
-}
-
-function renderReplyAuthorOptions(){
-  const el = document.getElementById('reply-author');
-  if (!el) return;
-  const lastAuthor = localStorage.getItem('lastWebboardAuthor');
-  el.innerHTML = '<option value="">-- เลือกสมาชิก --</option>' + S.members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-  if (lastAuthor && S.members.some(m => m.id == lastAuthor)) {
-    el.value = lastAuthor;
-  } else {
-    el.value = '';
-  }
-}
-
-function openReplyModal(postId){
-  document.getElementById('reply-post-id').value = postId;
-  renderReplyAuthorOptions();
-  document.getElementById('modal-reply').classList.add('on');
-}
-
-function addReply(){
-  const postId = parseInt(document.getElementById('reply-post-id').value);
-  const content = document.getElementById('reply-content').value.trim();
-  const authorVal = document.getElementById('reply-author').value.trim();
-  const author = authorVal ? parseInt(authorVal) : null;
-  if (!content) { toast('กรุณากรอกเนื้อหา', '⚠️'); return; }
-  if (!author) { toast('กรุณาเลือกผู้ตอบ', '⚠️'); return; }
-  const post = S.webboard.find(p => p.id === postId);
-  if (!post) { toast('ไม่พบโพสต์นี้', '⚠️'); return; }
-  post.replies = post.replies || [];
-  post.replies.push({ id: Date.now(), content, author, time: Date.now() });
-  localStorage.setItem('lastWebboardAuthor', author);
-  save();
-  document.getElementById('reply-content').value = '';
-  document.getElementById('reply-author').value = '';
-  closeModal('modal-reply');
-  renderWebboard();
-  toast('ตอบกลับสำเร็จ', '✅');
-}
-
-function editPost(id){
-  const post = S.webboard.find(p => p.id === id);
-  if (!post) return;
-  document.getElementById('edit-post-id').value = id;
-  document.getElementById('edit-post-title').value = post.title;
-  document.getElementById('edit-post-content').value = post.content;
-  document.getElementById('modal-edit-post').classList.add('on');
-}
-
-function savePostEdit(){
-  const id = parseInt(document.getElementById('edit-post-id').value);
-  const title = document.getElementById('edit-post-title').value.trim();
-  const content = document.getElementById('edit-post-content').value.trim();
-  if (!title || !content) { toast('กรุณากรอกหัวข้อและเนื้อหา', '⚠️'); return; }
-  const post = S.webboard.find(p => p.id === id);
-  if (!post) return;
-  post.title = title;
-  post.content = content;
-  save();
-  closeModal('modal-edit-post');
-  renderWebboard();
-  toast('แก้ไขโพสต์สำเร็จ', '✅');
-}
-
-function deletePost(id){
-  if (!confirm('ลบโพสต์นี้?')) return;
-  S.webboard = S.webboard.filter(p => p.id !== id);
-  save();
-  renderWebboard();
-  toast('ลบโพสต์แล้ว', '🗑️');
-}
-
-function openPostModal(){
-  renderPostAuthorOptions();
-  document.getElementById('modal-new-post').classList.add('on');
-}
-
-function addPost(){
-  const title = document.getElementById('post-title').value.trim();
-  const content = document.getElementById('post-content').value.trim();
-  const authorVal = document.getElementById('post-author').value.trim();
-  const author = authorVal ? parseInt(authorVal) : null;
-  if (!title || !content) { toast('กรุณากรอกหัวข้อและเนื้อหา', '⚠️'); return; }
-  if (!author) { toast('กรุณาเลือกผู้โพสต์', '⚠️'); return; }
-  S.webboard = S.webboard || [];
-  S.webboard.push({ id: Date.now(), title, content, author, time: Date.now() });
-  if (author) localStorage.setItem('lastWebboardAuthor', author);
-  save();
-  document.getElementById('post-title').value = '';
-  document.getElementById('post-content').value = '';
-  document.getElementById('post-author').value = '';
-  closeModal('modal-new-post');
-  renderWebboard();
-  toast('โพสต์สำเร็จ', '✅');
 }
 
 // ===== ACTIONS =====

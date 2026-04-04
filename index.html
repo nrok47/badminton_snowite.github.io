@@ -418,6 +418,23 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 </div>
 
+<div class="overlay" id="modal-confirm-delete">
+  <div class="modal" style="max-width:320px;">
+    <div class="modal-t">⚠️ ยืนยันการลบ</div>
+    <div style="margin:16px 0;text-align:center;">
+      <div style="font-size:14px;margin-bottom:12px;">คุณแน่ใจหรือ? กรุณาบวกเลขเพื่อยืนยัน</div>
+      <div style="background:var(--s1);padding:12px;border-radius:10px;margin-bottom:12px;">
+        <div style="font-size:18px;font-weight:700;margin-bottom:8px;"><span id="del-num1">1</span> + <span id="del-num2">2</span> = ?</div>
+        <input type="number" id="del-answer" placeholder="ตอบเลข" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:8px;box-sizing:border-box;">
+      </div>
+    </div>
+    <div class="modal-act">
+      <button class="btn btn-r btn-full" onclick="verifyDelete()">🗑️ ลบเลยเถอะ</button>
+      <button class="btn btn-s" onclick="closeModal('modal-confirm-delete')">ไม่ลบ</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"><span id="ti">✅</span><span id="tm"></span></div>
 
 <script>
@@ -939,8 +956,30 @@ function addMember(){
 
 function confirmDelete(id){
   const m=gm(id);
-  if(confirm(`ลบสมาชิก "${m?.name}"?`)){ S.members=S.members.filter(x=>x.id!==id); save(); renderAll(); toast('ลบแล้ว','🗑️'); }
+  if(!m) return;
+  window.deleteTargetId=id;
+  document.getElementById('del-answer').value='';
+  const num1=Math.floor(Math.random()*9)+1;
+  const num2=Math.floor(Math.random()*9)+1;
+  document.getElementById('del-num1').textContent=num1;
+  document.getElementById('del-num2').textContent=num2;
+  window.expectedDeleteAnswer=num1+num2;
+  openModal('modal-confirm-delete');
 }
+
+function verifyDelete(){
+  const answer=parseInt(document.getElementById('del-answer').value);
+  if(answer!==window.expectedDeleteAnswer){
+    toast('คำตอบผิด ลองใหม่อีกครั้ง','❌');
+    return;
+  }
+  const id=window.deleteTargetId;
+  const m=gm(id);
+  S.members=S.members.filter(x=>x.id!==id);
+  save(); renderAll(); closeModal('modal-confirm-delete'); 
+  toast(`ลบ "${m.name}" แล้ว`,'🗑️');
+}
+
 
 function randomCourts(){
   if(S.members.length<2){ toast('ต้องการอย่างน้อย 2 คน','⚠️'); return; }

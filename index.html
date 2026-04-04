@@ -356,6 +356,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <div class="overlay" id="modal-finance">
   <div class="modal">
     <div class="modal-t">💰 บันทึกค่าใช้จ่ายสนาม</div>
+    <input type="hidden" id="f-session-id">
     <div class="fg"><label class="fl">วันที่</label><input class="fi" type="date" id="f-date"></div>
     <div class="fg"><label class="fl">ผู้จอง / ผู้จ่าย</label><select class="fs" id="f-booker"></select></div>
     <div class="g2">
@@ -746,7 +747,9 @@ function renderFinance(){
         <div style="margin-top:8px;font-weight:700;">รวม ${ (s.courtCost+s.shuttleCost).toLocaleString() } ฿</div>
         <div style="margin-top:4px;color:var(--text);">เฉลี่ยต่อคน ${perPerson} ฿</div>
         <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้เล่น: ${participants}</div>
-        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
+          <button class="btn btn-y btn-sm" onclick="openFinanceModal(${s.id})">✏️ แก้ไข</button>
+          <button class="btn btn-r btn-sm" onclick="deleteFinanceSession(${s.id})">🗑 ลบ</button>
           <button class="btn btn-s btn-sm" onclick="openFinanceSession(${s.id})">ดู session / จ่าย</button>
         </div>
       </div>
@@ -802,22 +805,42 @@ function syncFinancePaymentRows(){
   if(paidCountEl) paidCountEl.textContent = `${paidInputs.filter(i=>i.checked).length} คน`;
 }
 
-function openFinanceModal(){
+function openFinanceModal(id){
   if(!S.members.length){ toast('โปรดเพิ่มสมาชิกก่อน','⚠️'); return; }
-  document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
-  document.getElementById('f-hours').value='';
-  document.getElementById('f-rate').value='';
+  const session=id?S.finance?.find(s=>s.id===id):null;
+  document.getElementById('f-session-id').value=session?.id||'';
+  document.getElementById('f-date').value=session?.date||new Date().toISOString().slice(0,10);
+  document.getElementById('f-hours').value=session?.hours||'';
+  document.getElementById('f-rate').value=session?.ratePerHour||'';
   const participantsEl=document.getElementById('f-participants');
   if(participantsEl) participantsEl.innerHTML='';
   document.getElementById('f-per-person').value='';
   document.getElementById('f-paid-count').textContent='0 คน';
-  document.getElementById('f-shuttle-count-1').value='';
-  document.getElementById('f-shuttle-count-2').value='';
-  document.getElementById('f-shuttle-count-3').value='';
-  document.getElementById('f-shuttle-price-1').value='';
-  document.getElementById('f-shuttle-price-2').value='';
-  document.getElementById('f-shuttle-price-3').value='';
   renderFinanceOptions();
+  document.getElementById('f-booker').value=session?.booker||'';
+  document.getElementById('f-shuttle-user-1').value=session?.shuttleUsage?.[0]?.user||'';
+  document.getElementById('f-shuttle-count-1').value=session?.shuttleUsage?.[0]?.count||'';
+  document.getElementById('f-shuttle-price-1').value=session?.shuttleUsage?.[0]?.price||'';
+  document.getElementById('f-shuttle-user-2').value=session?.shuttleUsage?.[1]?.user||'';
+  document.getElementById('f-shuttle-count-2').value=session?.shuttleUsage?.[1]?.count||'';
+  document.getElementById('f-shuttle-price-2').value=session?.shuttleUsage?.[1]?.price||'';
+  document.getElementById('f-shuttle-user-3').value=session?.shuttleUsage?.[2]?.user||'';
+  document.getElementById('f-shuttle-count-3').value=session?.shuttleUsage?.[2]?.count||'';
+  document.getElementById('f-shuttle-price-3').value=session?.shuttleUsage?.[2]?.price||'';
+  if(session){
+    setTimeout(()=>{
+      session.participants.forEach(pid=>{
+        const participant=document.querySelector(`#f-participants input.f-participant[value="${pid}"]`);
+        if(participant) participant.checked=true;
+      });
+      const paidIds=session.paidParticipants||[];
+      paidIds.forEach(pid=>{
+        const paidInput=document.querySelector(`#f-participants input.f-paid[value="${pid}"]`);
+        if(paidInput) paidInput.checked=true;
+      });
+      syncFinancePaymentRows();
+    },0);
+  }
   document.getElementById('modal-finance').classList.add('on');
 }
 
@@ -861,6 +884,12 @@ function saveFinanceSessionDetail(){
   save(); renderAll(); closeModal('modal-finance-detail'); toast('อัปเดตสถานะการจ่ายแล้ว');
 }
 
+function deleteFinanceSession(id){
+  if(!confirm('ลบ session ค่าใช้จ่ายนี้?')) return;
+  S.finance=S.finance.filter(s=>s.id!==id);
+  save(); renderAll(); toast('ลบ session แล้ว','🗑️');
+}
+
 function saveFinanceSession(){
   const date=document.getElementById('f-date').value;
   const booker=parseInt(document.getElementById('f-booker').value);
@@ -878,11 +907,16 @@ function saveFinanceSession(){
   const courtCost=Math.round(hours*ratePerHour);
   const totalCost=courtCost+shuttleCost;
   const perPerson=Number((totalCost/participants.length).toFixed(2));
-  const session={
-    id:Date.now(), date, booker, hours, ratePerHour, participants, paidParticipants, shuttleUsage, shuttleCost, courtCost, perPerson
+  const sessionId=document.getElementById('f-session-id').value;
+  const sessionObj={
+    id:sessionId?parseInt(sessionId):Date.now(), date, booker, hours, ratePerHour, participants, paidParticipants, shuttleUsage, shuttleCost, courtCost, perPerson
   };
   S.finance=S.finance||[];
-  S.finance.push(session);
+  if(sessionId){
+    S.finance=S.finance.map(s=>s.id===sessionObj.id?sessionObj:s);
+  } else {
+    S.finance.push(sessionObj);
+  }
   save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว');
 }
 

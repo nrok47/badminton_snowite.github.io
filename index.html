@@ -1005,12 +1005,13 @@ function renderRecentMatches(){
     const wd=m.wDeltas?.[0]??0, ld=m.lDeltas?.[0]??0;
     const t=new Date(m.time);
     const ts=`${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
-    const sc=m.sw!==null?` ${m.sw}–${m.sl}`:'';
     const cls=m.frozen?'frozen':m.farmHit?'farm':'';
+    const scoreBadgeR=m.sw!==null?`<span style="display:inline-block;background:var(--s3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;padding:1px 8px;color:var(--text);">${m.sw} <span style="color:var(--muted);font-size:10px;">–</span> ${m.sl}</span>`:'';
     return `<div class="mlog ${cls}">
       <div style="flex:1;min-width:0;">
-        <div class="mlog-w">✅ ${wn}${sc?`<span style="color:var(--muted);font-weight:400"> (${sc})</span>`:''}</div>
-        <div class="mlog-l" style="margin-top:2px;">❌ ${ln}</div>
+        <div class="mlog-w">✅ ${wn}</div>
+        ${scoreBadgeR?`<div style="margin:4px 0;">${scoreBadgeR}</div>`:''}
+        <div class="mlog-l">❌ ${ln}</div>
         <div style="margin-top:3px;font-size:10px;color:var(--muted);">
           ${m.frozen?'🧊 Freeze streak 3 &nbsp;':''}
           ${m.halfStreak?'🧊 Streak −50% &nbsp;':''}
@@ -1108,10 +1109,12 @@ function renderMatchHistory(){
       return `${esc(gm(pid)?.name||'?')} <span class="chip chip-dn">${d.toLocaleString()}</span>${arrow}`;
     }).join(' &nbsp;'):'';
     const cls=m.frozen?'frozen':m.farmHit?'farm':'';
+    const scoreBadge=m.sw!==null?`<span style="display:inline-block;background:var(--s3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:13px;font-weight:700;padding:2px 10px;letter-spacing:.5px;color:var(--text);">${m.sw} <span style="color:var(--muted);font-size:11px;">–</span> ${m.sl}</span>`:'<span style="font-size:10px;color:var(--muted);font-style:italic;">ไม่บันทึกแต้ม</span>';
     return `<div class="mlog ${cls}">
       <div style="flex:1;min-width:0;">
-        <div class="mlog-w">✅ ${m.winners.map(id=>esc(gm(id)?.name||'?')).join(' / ')}${sc}</div>
-        <div class="mlog-l" style="margin-top:2px;">❌ ${m.losers.map(id=>esc(gm(id)?.name||'?')).join(' / ')}</div>
+        <div class="mlog-w">✅ ${m.winners.map(id=>esc(gm(id)?.name||'?')).join(' / ')}</div>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:8px;">${scoreBadge}</div>
+        <div class="mlog-l">❌ ${m.losers.map(id=>esc(gm(id)?.name||'?')).join(' / ')}</div>
         <div style="margin-top:5px;font-size:11px;color:var(--dim);line-height:1.8;">${wdStr} &nbsp; ${ldStr}</div>
         <div style="margin-top:3px;font-size:10px;color:var(--muted);">
           ${m.frozen?'🧊 Freeze &nbsp;':''}${m.halfStreak?'🧊 −50% streak &nbsp;':''}${m.farmHit?`🔥 Farm ${Math.round(m.farmMult*100)}% &nbsp;`:''}${m.margin?'🎯 Margin &nbsp;':''}${ts}

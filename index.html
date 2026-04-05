@@ -573,8 +573,8 @@ function computeDeltas(winners, losers, sw, sl){
 
   // 1. Base by tier
   let wBase, lBase;
-  if(Math.abs(diff)<=900){ wBase=1000; lBase=-1000; }
-  else if(diff<-900){ wBase=1200; lBase=-600; }
+  if(Math.abs(diff)<=2000){ wBase=1000; lBase=-1000; }
+  else if(diff<-2000){ wBase=1200; lBase=-600; }
   else { wBase=800; lBase=-1200; }
 
   // 2. Margin
@@ -606,7 +606,7 @@ function computeDeltas(winners, losers, sw, sl){
   const lCarry = antiCarry(losers, rawL);
 
   // 5. Apply farm
-  const wDeltas = wCarry.map(d => Math.round(d*farmMult));
+  const wDeltas = wCarry.map(d => Math.round(d*farmMult) + 100);
 
   // 6. Loss streak protection per loser
   const lDeltas = lCarry.map((d, i) => {
@@ -619,7 +619,7 @@ function computeDeltas(winners, losers, sw, sl){
       // 4th+ loss → 50% of original
       else { v = Math.round(d * farmMult * 0.5); streakTag = 'half'; }
     }
-    return { val: v, streakTag };
+    return { val: v + 100, streakTag };
   });
 
   const lDeltaVals = lDeltas.map(x=>x.val);

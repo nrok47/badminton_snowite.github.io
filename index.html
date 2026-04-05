@@ -31,6 +31,19 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .nb{background:none;border:none;color:var(--muted);font-family:'Kanit',sans-serif;font-size:13px;font-weight:600;
   padding:6px 12px;border-radius:6px;cursor:pointer;transition:all .18s;white-space:nowrap;}
 .nb:hover{color:var(--text);background:var(--s2);}.nb.on{color:var(--accent);background:rgba(240,192,64,.1);}
+/* bottom nav mobile */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:rgba(8,12,16,.96);backdrop-filter:blur(16px);border-top:1px solid var(--border);
+  padding:0 4px env(safe-area-inset-bottom,0);}
+.bottom-nav .nav{justify-content:space-around;flex:none;}
+.bottom-nav .nb{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 6px;
+  font-size:9px;border-radius:8px;flex:1;letter-spacing:.3px;}
+.bottom-nav .nb .nb-icon{font-size:20px;line-height:1;}
+@media(max-width:600px){
+  .header .nav{display:none;}
+  .bottom-nav{display:block;}
+  .main{padding-bottom:calc(68px + env(safe-area-inset-bottom,0));}
+}
 .main{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:20px 14px;}
 .page{display:none;animation:up .25s ease;}.page.on{display:block;}
 @keyframes up{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
@@ -192,31 +205,39 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div id="court-list"><div class="empty"><div class="empty-i">🏸</div><div class="empty-t">กด "สุ่มจัดคอร์ท"</div></div></div>
   </div>
   <div class="panel">
-    <div class="pt">📝 บันทึกผล</div>
+    <div class="pt">📝 บันทึกผล <span id="rsvp-hint" style="margin-left:4px;font-size:10px;color:var(--green);font-weight:600;text-transform:none;letter-spacing:0;"></span></div>
     <div class="g2">
       <div>
         <div style="color:var(--green);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">✅ ฝั่งชนะ</div>
-        <div class="fg"><label class="fl">ผู้เล่น 1</label><select class="fs" id="w1"><option value="">-- เลือก --</option></select></div>
-        <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="w2"><option value="">-- เลือก (คู่) --</option></select></div>
+        <div class="fg"><label class="fl">ผู้เล่น 1</label><select class="fs" id="w1" onchange="updateMatchPreview()"><option value="">-- เลือก --</option></select></div>
+        <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="w2" onchange="updateMatchPreview()"><option value="">-- เลือก (คู่) --</option></select></div>
       </div>
       <div>
         <div style="color:var(--red);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">❌ ฝั่งแพ้</div>
-        <div class="fg"><label class="fl">ผู้เล่น 1</label><select class="fs" id="l1"><option value="">-- เลือก --</option></select></div>
-        <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="l2"><option value="">-- เลือก (คู่) --</option></select></div>
+        <div class="fg"><label class="fl">ผู้เล่น 1</label><select class="fs" id="l1" onchange="updateMatchPreview()"><option value="">-- เลือก --</option></select></div>
+        <div class="fg"><label class="fl">ผู้เล่น 2</label><select class="fs" id="l2" onchange="updateMatchPreview()"><option value="">-- เลือก (คู่) --</option></select></div>
       </div>
     </div>
     <div style="margin:0 0 14px;">
       <label class="fl">แต้มในเกม (ไม่บังคับ — ใช้คำนวณ Margin Score)</label>
       <div class="score-box">
-        <input class="score-inp" id="score-w" type="number" min="0" max="30" placeholder="21">
+        <input class="score-inp" id="score-w" type="number" min="0" max="30" placeholder="21" oninput="updateMatchPreview()">
         <div class="score-dash">—</div>
-        <input class="score-inp" id="score-l" type="number" min="0" max="30" placeholder="">
+        <input class="score-inp" id="score-l" type="number" min="0" max="30" placeholder="" oninput="updateMatchPreview()">
       </div>
     </div>
+    <div id="match-preview" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:14px;font-size:12px;"></div>
     <button class="btn btn-g btn-full" onclick="recordMatch()">✅ บันทึกผลการแข่งขัน</button>
   </div>
   <div class="panel">
     <div class="pt">📜 ประวัติการแข่งขัน</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <select class="fs" id="filter-player" onchange="renderMatchHistory()" style="flex:1;min-width:120px;">
+        <option value="">👤 ผู้เล่นทั้งหมด</option>
+      </select>
+      <input type="date" class="fi" id="filter-date" onchange="renderMatchHistory()" style="flex:1;min-width:120px;">
+      <button class="btn btn-s btn-sm" onclick="clearMatchFilter()">✕ ล้าง</button>
+    </div>
     <div id="match-history"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">ยังไม่มีประวัติ</div></div></div>
   </div>
 </div>
@@ -644,6 +665,45 @@ function computeDeltas(winners, losers, sw, sl){
   return { wDeltas, lDeltas: lDeltaVals, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak };
 }
 
+// ===== MATCH PREVIEW =====
+function updateMatchPreview(){
+  const box=document.getElementById('match-preview'); if(!box) return;
+  const w1v=document.getElementById('w1').value;
+  const l1v=document.getElementById('l1').value;
+  if(!w1v||!l1v){ box.style.display='none'; return; }
+  const winners=[parseInt(w1v)];
+  const w2v=document.getElementById('w2').value; if(w2v) winners.push(parseInt(w2v));
+  const losers=[parseInt(l1v)];
+  const l2v=document.getElementById('l2').value; if(l2v) losers.push(parseInt(l2v));
+  if(winners.some(id=>losers.includes(id))){ box.style.display='none'; return; }
+  const swRaw=document.getElementById('score-w').value;
+  const slRaw=document.getElementById('score-l').value;
+  const sw=swRaw!==''?parseInt(swRaw):null;
+  const sl=slRaw!==''?parseInt(slRaw):null;
+  const { wDeltas, lDeltas, margin, diff, farmHit, farmMult } = computeDeltas(winners,losers,sw,sl);
+  const tierLabel=Math.abs(diff)<=2100?'🟰 สูสี':diff<-2100?'⬆️ เจอทีมเก่งกว่า':'⬇️ เจอทีมอ่อนกว่า';
+  const wRows=winners.map((id,i)=>{
+    const m=gm(id);
+    return `<div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:var(--green);">✅ ${esc(m?.name||'?')}</span>
+      <span style="font-family:var(--mono);font-weight:700;color:var(--green);">+${wDeltas[i].toLocaleString()}</span>
+    </div>`;
+  }).join('');
+  const lRows=losers.map((id,i)=>{
+    const m=gm(id);
+    const v=lDeltas[i];
+    return `<div style="display:flex;justify-content:space-between;align-items:center;">
+      <span style="color:var(--red);">❌ ${esc(m?.name||'?')}</span>
+      <span style="font-family:var(--mono);font-weight:700;color:${v===0?'var(--blue)':'var(--red)'};">${v===0?'🧊 0':v.toLocaleString()}</span>
+    </div>`;
+  }).join('');
+  const tags=[];
+  if(margin>0) tags.push('🎯 Margin +150');
+  if(farmHit) tags.push(`🔥 Farm ${Math.round(farmMult*100)}%`);
+  box.style.display='block';
+  box.innerHTML=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:700;">${tierLabel}${tags.length?' &nbsp;·&nbsp; '+tags.join(' &nbsp;·&nbsp; '):''}</div>${wRows}${lRows}`;
+}
+
 // ===== RECORD =====
 function recordMatch(){
   const w1v=document.getElementById('w1').value;
@@ -693,6 +753,7 @@ function recordMatch(){
   S.matches.push({ id:Date.now(), winners, losers, wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak, sw, sl, dateStr:todayStr(), time:Date.now() });
   save();
   ['w1','w2','l1','l2','score-w','score-l'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
+  const prev=document.getElementById('match-preview'); if(prev) prev.style.display='none';
   renderAll();
 
   let msg='บันทึกสำเร็จ';
@@ -801,9 +862,13 @@ function renderRSVP(){
       <span style="font-size:12px;">${esc(m.name)}</span>
     </label>`;
   }).join('');
+  // อัปเดต hint ที่หัวข้อบันทึกผล
+  const cnt=S.members.filter(m=>rsvpState[m.id]!==false).length;
+  const hint=document.getElementById('rsvp-hint');
+  if(hint) hint.textContent=cnt?`✅ ${cnt} คนมา`:'' ;
 }
 
-function toggleRSVP(id,val){ rsvpState[id]=val; renderRSVP(); }
+function toggleRSVP(id,val){ rsvpState[id]=val; renderRSVP(); renderSelects(); }
 
 function applyDecayToAbsent(){
   const absent=S.members.filter(m=>rsvpState[m.id]===false);
@@ -905,7 +970,12 @@ function renderRanking(){
     const lStreak=m.lossStreak||0;
     const wStreak=getWinStreak(m.id);
     const delta=getLastDelta(m.id);
-    const deltaHtml=delta!==null?`<span style="font-size:10px;font-weight:700;color:${delta>=0?'var(--green)':'var(--red)'};margin-left:3px;">${delta>=0?'+':''}${delta.toLocaleString()}</span>`:'';
+    // trend: last 3 matches direction
+    const recentMy=[...S.matches].filter(x=>x.winners.includes(m.id)||x.losers.includes(m.id)).slice(-3);
+    const trendScore=recentMy.reduce((s,x)=>s+(x.winners.includes(m.id)?1:-1),0);
+    const trendArrow=recentMy.length===0?'':trendScore>0?'▲':'▼';
+    const trendColor=trendScore>0?'var(--green)':trendScore<0?'var(--red)':'var(--muted)';
+    const deltaHtml=delta!==null?`<div style="font-size:11px;font-weight:700;color:${delta>=0?'var(--green)':'var(--red)'};">${delta>=0?'+':''}${delta.toLocaleString()}</div>`:'';
     return `<tr>
       <td><span class="rnk ${rc}">${medal||(i+1)}</span></td>
       <td><div style="display:flex;align-items:center;gap:8px;">
@@ -913,7 +983,10 @@ function renderRanking(){
         <div><div style="font-size:13px;font-weight:700;">${esc(m.name)}${lStreak>=2?` <span style="font-size:10px;color:var(--blue)">🧊×${lStreak}</span>`:''}${wStreak>=2?` <span style="font-size:10px;color:var(--accent)">🔥×${wStreak}</span>`:''}</div>
         <div class="wr-bar"><div class="wr-fill" style="width:${wr}%"></div></div></div>
       </div></td>
-      <td><span class="elo-val">${(m.elo??BASE).toLocaleString()}</span>${deltaHtml}</td>
+      <td><div style="display:flex;align-items:center;gap:6px;">
+        <span class="elo-val">${(m.elo??BASE).toLocaleString()}</span>
+        ${trendArrow?`<span style="font-size:14px;font-weight:900;color:${trendColor};line-height:1;">${trendArrow}</span>`:''}
+      </div>${deltaHtml}</td>
       <td><span class="badge bg-green">${m.wins||0}</span></td>
       <td><span class="badge bg-red">${m.losses||0}</span></td>
       <td><span style="font-size:12px;color:var(--dim)">${wr}%</span></td>
@@ -971,7 +1044,17 @@ function renderMemberGrid(){
 }
 
 function renderSelects(){
-  ['w1','w2','l1','l2','ew1','ew2','el1','el2','decay-player'].forEach(id=>{
+  // บันทึกผล: กรองเฉพาะ RSVP มา (ถ้ายังไม่มี RSVP ใดเลย ใช้ทั้งหมด)
+  const rsvpIds=S.members.filter(m=>rsvpState[m.id]!==false).map(m=>m.id);
+  const playersForRecord = rsvpIds.length ? S.members.filter(m=>rsvpIds.includes(m.id)) : S.members;
+  ['w1','w2','l1','l2'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const cur=el.value;
+    el.innerHTML=`<option value="">-- เลือก --</option>`+playersForRecord.map(m=>`<option value="${m.id}">${esc(m.name)} (${(m.elo??BASE).toLocaleString()})</option>`).join('');
+    if(playersForRecord.find(m=>m.id===parseInt(cur))) el.value=cur;
+  });
+  // edit modal + decay: ใช้ทั้งหมด
+  ['ew1','ew2','el1','el2','decay-player'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;
     const cur=el.value;
     el.innerHTML=`<option value="">-- เลือก --</option>`+S.members.map(m=>`<option value="${m.id}">${esc(m.name)} (${(m.elo??BASE).toLocaleString()})</option>`).join('');
@@ -979,11 +1062,33 @@ function renderSelects(){
   });
 }
 
+function clearMatchFilter(){
+  const fp=document.getElementById('filter-player'); if(fp) fp.value='';
+  const fd=document.getElementById('filter-date'); if(fd) fd.value='';
+  renderMatchHistory();
+}
+
 function renderMatchHistory(){
   const el=document.getElementById('match-history');
+  // update filter-player options
+  const fp=document.getElementById('filter-player');
+  if(fp){
+    const cur=fp.value;
+    fp.innerHTML=`<option value="">👤 ผู้เล่นทั้งหมด</option>`+S.members.map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+    fp.value=cur;
+  }
   if(!S.matches.length){ el.innerHTML='<div class="empty"><div class="empty-i">📋</div><div class="empty-t">ยังไม่มีประวัติ</div></div>'; return; }
+  const filterPid=fp?parseInt(fp.value)||null:null;
+  const filterDate=document.getElementById('filter-date')?.value||''; // yyyy-mm-dd
+  let matches=[...S.matches].reverse();
+  if(filterPid) matches=matches.filter(m=>m.winners.includes(filterPid)||m.losers.includes(filterPid));
+  if(filterDate) matches=matches.filter(m=>{
+    const d=new Date(m.time); const y=d.getFullYear(),mo=String(d.getMonth()+1).padStart(2,'0'),dy=String(d.getDate()).padStart(2,'0');
+    return `${y}-${mo}-${dy}`===filterDate;
+  });
+  if(!matches.length){ el.innerHTML='<div class="empty"><div class="empty-i">🔍</div><div class="empty-t">ไม่พบแมตช์ที่ตรงกัน</div></div>'; return; }
   const snaps=computeEloSnapshots();
-  el.innerHTML=[...S.matches].reverse().map(m=>{
+  el.innerHTML=matches.map(m=>{
     const t=new Date(m.time);
     const ts=`${t.getDate()}/${t.getMonth()+1} ${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
     const sc=m.sw!==null?` ${m.sw}–${m.sl}`:'';
@@ -1489,7 +1594,11 @@ function tab(name,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('on'));
   document.getElementById('page-'+name).classList.add('on');
-  btn.classList.add('on'); renderAll();
+  // set active on all nav buttons with same tab (header + bottom nav)
+  document.querySelectorAll('.nb').forEach(b=>{
+    if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${name}'`)) b.classList.add('on');
+  });
+  renderAll();
   if(name==='stats'){ backToStatsList(); }
 }
 function openModal(id){ document.getElementById(id).classList.add('on'); }
@@ -1606,5 +1715,16 @@ load(); renderAll();
     }
   });
 </script>
+
+<!-- BOTTOM NAV (mobile only) -->
+<div class="bottom-nav">
+  <nav class="nav">
+    <button class="nb on" onclick="tab('dashboard',this)"><span class="nb-icon">📊</span>Dashboard</button>
+    <button class="nb" onclick="tab('club',this)"><span class="nb-icon">👥</span>ก๊วน</button>
+    <button class="nb" onclick="tab('stats',this)"><span class="nb-icon">📈</span>สถิติ</button>
+    <button class="nb" onclick="tab('finance',this)"><span class="nb-icon">💰</span>การเงิน</button>
+    <button class="nb" onclick="tab('rules',this)"><span class="nb-icon">📋</span>กติกา</button>
+  </nav>
+</div>
 </body>
 </html>

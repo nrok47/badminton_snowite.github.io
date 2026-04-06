@@ -557,8 +557,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
-function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); if(typeof autoSyncToFirebase==='function') autoSyncToFirebase(); }
-function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); S.decayEvents=S.decayEvents||[]; }catch(e){} }
+function save(){ if(typeof autoSyncToFirebase==='function') autoSyncToFirebase(); }
 
 // ===== ELO ENGINE =====
 const BASE = 10000;
@@ -1651,8 +1650,8 @@ function importData(input){
       if(!data.members) throw new Error('ไฟล์ไม่ถูกต้อง');
       S = data;
       S.decayEvents = S.decayEvents||[];
-      localStorage.setItem('bcm4',JSON.stringify(S));
       renderAll();
+      if(typeof autoSyncToFirebase==='function') autoSyncToFirebase();
       toast('Import เรียบร้อย '+S.members.length+' สมาชิก','📥');
     }catch(err){ toast('Import ไม่สำเร็จ: '+err.message,'❌'); }
   };
@@ -1661,7 +1660,7 @@ function importData(input){
 }
 
 loadTheme();
-load(); renderAll();
+renderAll(); // render empty state while waiting for Firebase
 </script>
 
 <!-- Firebase RTDB setup -->
@@ -1719,7 +1718,6 @@ load(); renderAll();
         S = data;
         S.decayEvents = S.decayEvents || [];
       }
-      localStorage.setItem('bcm4', JSON.stringify(S));
       renderAll();
       if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
     } catch(e) {

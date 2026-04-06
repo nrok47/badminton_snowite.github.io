@@ -1704,22 +1704,19 @@ renderAll(); // render empty state while waiting for Firebase
     }
   }
 
+  function toArr(v){ if(!v) return []; if(Array.isArray(v)) return v; return Object.values(v); }
+
   async function loadMembersFromFirebase(silent=false) {
     try {
       const snapshot = await db.ref('state').once('value');
       const data = snapshot.val();
-      if (!data || !data.members || !data.members.length) {
-        // fallback: try old 'members' key
-        const snap2 = await db.ref('members').once('value');
-        const d2 = snap2.val();
-        if (!d2) { if(!silent) toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
-        S.members = Array.isArray(d2) ? d2 : Object.values(d2);
-      } else {
-        S = data;
-        S.decayEvents = S.decayEvents || [];
-      }
+      if (!data) { if(!silent) toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
+      S.members     = toArr(data.members);
+      S.matches     = toArr(data.matches);
+      S.finance     = toArr(data.finance);
+      S.decayEvents = toArr(data.decayEvents);
       renderAll();
-      if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
+      if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย (' + S.members.length + ' คน)', '✅');
     } catch(e) {
       if(!silent) toast('Firebase: '+(e.message||e.code||'ไม่สำเร็จ'), '❌');
       console.error('Firebase load error:', e);

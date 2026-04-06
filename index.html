@@ -193,7 +193,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- CLUB -->
 <div id="page-club" class="page">
   <div class="panel">
-    <div class="pt">👥 สมาชิก <div class="pt-action" style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">☁️ โหลด Firebase</button><button class="btn btn-s btn-sm" onclick="syncMembersToFirebase()">💾 บันทึก Firebase</button><button class="btn btn-y btn-sm" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div></div>
+    <div class="pt">👥 สมาชิก <div class="pt-action" style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">☁️ โหลด Firebase</button><button class="btn btn-s btn-sm" onclick="syncMembersToFirebase()">💾 บันทึก Firebase</button><button class="btn btn-s btn-sm" onclick="exportData()">📤 Export</button><button class="btn btn-s btn-sm" onclick="document.getElementById('import-file').click()">📥 Import</button><input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)"><button class="btn btn-y btn-sm" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div></div>
     <div id="member-grid" class="mgrid"><div class="empty" style="grid-column:1/-1"><div class="empty-i">👤</div><div class="empty-t">คลิก "เพิ่มสมาชิก"</div></div></div>
   </div>
   <div class="panel">
@@ -1634,6 +1634,32 @@ function toast(msg,icon='✅',undoFn=null){
 document.addEventListener('keydown',e=>{ if(e.key==='Escape') document.querySelectorAll('.overlay.on').forEach(o=>o.classList.remove('on')); });
 document.querySelectorAll('.overlay').forEach(o=>{ o.addEventListener('click',e=>{ if(e.target===o) o.classList.remove('on'); }); });
 
+function exportData(){
+  const blob = new Blob([JSON.stringify(S,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'badminton-data.json';
+  a.click();
+  toast('Export เรียบร้อย','📤');
+}
+function importData(input){
+  const file = input.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!data.members) throw new Error('ไฟล์ไม่ถูกต้อง');
+      S = data;
+      S.decayEvents = S.decayEvents||[];
+      localStorage.setItem('bcm4',JSON.stringify(S));
+      renderAll();
+      toast('Import เรียบร้อย '+S.members.length+' สมาชิก','📥');
+    }catch(err){ toast('Import ไม่สำเร็จ: '+err.message,'❌'); }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
 loadTheme();
 load(); renderAll();
 </script>
@@ -1674,7 +1700,7 @@ load(); renderAll();
       await db.ref('state').set(S);
       toast('บันทึกข้อมูลทั้งหมดขึ้น Firebase แล้ว', '☁️');
     } catch(e) {
-      toast('บันทึก Firebase ไม่สำเร็จ', '❌');
+      toast('Firebase: '+(e.message||e.code||'บันทึกไม่สำเร็จ'), '❌');
       console.error('Firebase sync error:', e);
     }
   }
@@ -1697,7 +1723,7 @@ load(); renderAll();
       renderAll();
       if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
     } catch(e) {
-      if(!silent) toast('โหลด Firebase ไม่สำเร็จ', '❌');
+      if(!silent) toast('Firebase: '+(e.message||e.code||'ไม่สำเร็จ'), '❌');
       console.error('Firebase load error:', e);
     }
   }

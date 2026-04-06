@@ -1393,9 +1393,12 @@ function verifyDelete(){
 
 
 function randomCourts(){
-  if(S.members.length<2){ toast('ต้องการอย่างน้อย 2 คน','⚠️'); return; }
+  // ใช้เฉพาะคนที่ tick RSVP (มา) ถ้ายังไม่มี RSVP เลยใช้ทั้งหมด
+  const rsvpIds = S.members.filter(m=>rsvpState[m.id]!==false).map(m=>m.id);
+  const pool = rsvpIds.length ? S.members.filter(m=>rsvpIds.includes(m.id)) : S.members;
+  if(pool.length<2){ toast('ต้องการอย่างน้อย 2 คน','⚠️'); return; }
   // Shuffle first (random court assignment), then balance teams within each court
-  const sh=[...S.members].sort(()=>Math.random()-.5);
+  const sh=[...pool].sort(()=>Math.random()-.5);
   const courts=[];
   for(let i=0;i+3<sh.length;i+=4){
     // Sort group of 4 by ELO desc, pair rank1+rank4 vs rank2+rank3 (most balanced)

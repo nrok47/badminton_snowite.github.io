@@ -193,7 +193,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <!-- CLUB -->
 <div id="page-club" class="page">
   <div class="panel">
-    <div class="pt">👥 สมาชิก <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div>
+    <div class="pt">👥 สมาชิก <div class="pt-action" style="display:flex;gap:6px;flex-wrap:wrap;"><button class="btn btn-s btn-sm" onclick="loadMembersFromFirebase()">☁️ โหลด Firebase</button><button class="btn btn-s btn-sm" onclick="syncMembersToFirebase()">💾 บันทึก Firebase</button><button class="btn btn-y btn-sm" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div></div>
     <div id="member-grid" class="mgrid"><div class="empty" style="grid-column:1/-1"><div class="empty-i">👤</div><div class="empty-t">คลิก "เพิ่มสมาชิก"</div></div></div>
   </div>
   <div class="panel">
@@ -557,7 +557,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
-function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); if(typeof syncMembersToFirebase==='function') syncMembersToFirebase(); }
+function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); if(typeof autoSyncToFirebase==='function') autoSyncToFirebase(); }
 function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); S.decayEvents=S.decayEvents||[]; }catch(e){} }
 
 // ===== ELO ENGINE =====
@@ -1660,37 +1660,49 @@ load(); renderAll();
   const db = firebase.database();
   const storage = firebase.storage();
 
+  async function autoSyncToFirebase() {
+    try {
+      await db.ref('state').set(S);
+      console.log('✅ Auto-synced to Firebase');
+    } catch(e) {
+      console.error('Firebase sync error:', e);
+    }
+  }
+
   async function syncMembersToFirebase() {
     try {
-      await db.ref('members').set(S.members || []);
-      console.log('✅ Auto-synced members to Firebase');
+      await db.ref('state').set(S);
+      toast('บันทึกข้อมูลทั้งหมดขึ้น Firebase แล้ว', '☁️');
     } catch(e) {
+      toast('บันทึก Firebase ไม่สำเร็จ', '❌');
       console.error('Firebase sync error:', e);
     }
   }
 
   async function loadMembersFromFirebase() {
     try {
-      const snapshot = await db.ref('members').once('value');
+      const snapshot = await db.ref('state').once('value');
       const data = snapshot.val();
-      if (!data) {
-        toast('ยังไม่มีสมาชิกใน RTDB', '⚠️');
-        return;
-      }
-      if (Array.isArray(data)) {
-        S.members = data;
+      if (!data || !data.members || !data.members.length) {
+        // fallback: try old 'members' key
+        const snap2 = await db.ref('members').once('value');
+        const d2 = snap2.val();
+        if (!d2) { toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
+        S.members = Array.isArray(d2) ? d2 : Object.values(d2);
       } else {
-        S.members = Object.values(data);
+        S = data;
+        S.decayEvents = S.decayEvents || [];
       }
-      save();
+      localStorage.setItem('bcm4', JSON.stringify(S));
       renderAll();
-      toast('โหลดสมาชิกจาก Realtime DB เรียบร้อย', '✅');
+      toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
     } catch(e) {
-      toast('เกิดข้อผิดพลาดในการโหลด Firebase', '❌');
+      toast('โหลด Firebase ไม่สำเร็จ', '❌');
       console.error('Firebase load error:', e);
     }
   }
 
+  window.autoSyncToFirebase = autoSyncToFirebase;
   window.syncMembersToFirebase = syncMembersToFirebase;
   window.loadMembersFromFirebase = loadMembersFromFirebase;
 

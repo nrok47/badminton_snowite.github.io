@@ -268,8 +268,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
       <div class="rcard"><div class="rcard-t">🎯 Margin Score</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">แต้มต่าง ≥ 9 — ต้องแพ้ไม่ต่ำกว่า 21-13<br>เช่น แพ้ 21-12 โดนชาจ / แพ้ 21-13 ปกติ</div>
-        <div class="rrow"><span>ชนะ bonus</span><span class="rval" style="color:var(--green)">+150</span></div>
-        <div class="rrow"><span>แพ้ penalty</span><span class="rval" style="color:var(--red)">−150</span></div>
+        <div class="rrow"><span>ชนะ bonus</span><span class="rval" style="color:var(--green)">+200</span></div>
+        <div class="rrow"><span>แพ้ penalty</span><span class="rval" style="color:var(--red)">−200</span></div>
       </div>
       <div class="rcard"><div class="rcard-t">🤝 Anti-Carry</div>
         <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ELO ในทีมเดียวกันต่างกัน &gt; 1,500<br>ลดรางวัลคนเก่ง เพิ่มรางวัลคนอ่อน</div>
@@ -557,7 +557,7 @@ const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>
 const gm = id => S.members.find(m => m.id===id);
 const todayStr = () => new Date().toDateString();
 
-function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); syncMembersToFirebase(); }
+function save(){ localStorage.setItem('bcm4',JSON.stringify(S)); if(typeof syncMembersToFirebase==='function') syncMembersToFirebase(); }
 function load(){ try{ const d=localStorage.getItem('bcm4'); if(d) S=JSON.parse(d); S.decayEvents=S.decayEvents||[]; }catch(e){} }
 
 // ===== ELO ENGINE =====
@@ -614,7 +614,7 @@ function computeDeltas(winners, losers, sw, sl){
 
   // 2. Margin
   let margin = 0;
-  if(sw!==null && sl!==null && (sw-sl)>=9) margin=150;
+  if(sw!==null && sl!==null && (sw-sl)>=9) margin=200;
 
   // 3. Farm multiplier
   const fc = getFarmCount(winners,losers);
@@ -698,7 +698,7 @@ function updateMatchPreview(){
     </div>`;
   }).join('');
   const tags=[];
-  if(margin>0) tags.push('🎯 Margin +150');
+  if(margin>0) tags.push('🎯 Margin +200');
   if(farmHit) tags.push(`🔥 Farm ${Math.round(farmMult*100)}%`);
   box.style.display='block';
   box.innerHTML=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:700;">${tierLabel}${tags.length?' &nbsp;·&nbsp; '+tags.join(' &nbsp;·&nbsp; '):''}</div>${wRows}${lRows}`;
@@ -1016,7 +1016,7 @@ function renderRecentMatches(){
           ${m.frozen?'🧊 Freeze streak 3 &nbsp;':''}
           ${m.halfStreak?'🧊 Streak −50% &nbsp;':''}
           ${m.farmHit?`🔥 Farm ${Math.round(m.farmMult*100)}% &nbsp;`:''}
-          ${m.margin?'🎯 Margin ±150 &nbsp;':''}
+          ${m.margin?'🎯 Margin ±200 &nbsp;':''}
           ${ts}
         </div>
       </div>
@@ -1710,9 +1710,15 @@ load(); renderAll();
   }
 
   // Listen for connection state changes
+  let _autoLoaded = false;
   db.ref('.info/connected').on('value', (snapshot) => {
     if (snapshot.val() === true) {
       updateFirebaseStatus(true);
+      // Auto-load members from Firebase on first connect if localStorage has no members
+      if (!_autoLoaded && (!S.members || S.members.length === 0)) {
+        _autoLoaded = true;
+        loadMembersFromFirebase();
+      }
     } else {
       updateFirebaseStatus(false);
     }

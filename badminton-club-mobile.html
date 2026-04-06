@@ -892,6 +892,7 @@ function showPage(p) {
   document.getElementById('page-'+p).classList.add('active');
   const tabs = ['dashboard','members','match','history','finance','rules'];
   document.querySelectorAll('.nav-tab')[tabs.indexOf(p)].classList.add('active');
+  if(p==='members') renderMembers();
   if(p==='match') renderMatchSelects();
 }
 
@@ -1000,7 +1001,7 @@ function renderMembers() {
         <div style="margin-top:4px"><span class="delta up">W:${m.wins}</span> <span class="delta down">L:${m.losses}</span></div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:18px;font-weight:800;color:var(--accent)">${m.score.toLocaleString()}</div>
+        <div style="font-size:18px;font-weight:800;color:var(--accent)">${(m.score||m.elo||0).toLocaleString()}</div>
         <div style="font-size:11px;color:var(--muted)">pts</div>
       </div>
     </div>

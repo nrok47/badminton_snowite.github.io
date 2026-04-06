@@ -1679,7 +1679,7 @@ load(); renderAll();
     }
   }
 
-  async function loadMembersFromFirebase() {
+  async function loadMembersFromFirebase(silent=false) {
     try {
       const snapshot = await db.ref('state').once('value');
       const data = snapshot.val();
@@ -1687,7 +1687,7 @@ load(); renderAll();
         // fallback: try old 'members' key
         const snap2 = await db.ref('members').once('value');
         const d2 = snap2.val();
-        if (!d2) { toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
+        if (!d2) { if(!silent) toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
         S.members = Array.isArray(d2) ? d2 : Object.values(d2);
       } else {
         S = data;
@@ -1695,9 +1695,9 @@ load(); renderAll();
       }
       localStorage.setItem('bcm4', JSON.stringify(S));
       renderAll();
-      toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
+      if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย', '✅');
     } catch(e) {
-      toast('โหลด Firebase ไม่สำเร็จ', '❌');
+      if(!silent) toast('โหลด Firebase ไม่สำเร็จ', '❌');
       console.error('Firebase load error:', e);
     }
   }
@@ -1721,15 +1721,14 @@ load(); renderAll();
     }
   }
 
-  // Listen for connection state changes
+  // Listen for connection state changes — always load from Firebase on first connect
   let _autoLoaded = false;
   db.ref('.info/connected').on('value', (snapshot) => {
     if (snapshot.val() === true) {
       updateFirebaseStatus(true);
-      // Auto-load members from Firebase on first connect if localStorage has no members
-      if (!_autoLoaded && (!S.members || S.members.length === 0)) {
+      if (!_autoLoaded) {
         _autoLoaded = true;
-        loadMembersFromFirebase();
+        loadMembersFromFirebase(true); // silent auto-load on startup
       }
     } else {
       updateFirebaseStatus(false);

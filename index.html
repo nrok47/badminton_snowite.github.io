@@ -1005,7 +1005,7 @@ function renderRecentMatches(){
     const t=new Date(m.time);
     const ts=`${t.getHours().toString().padStart(2,'0')}:${t.getMinutes().toString().padStart(2,'0')}`;
     const cls=m.frozen?'frozen':m.farmHit?'farm':'';
-    const scoreBadgeR=m.sw!==null?`<span style="display:inline-block;background:var(--s3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;padding:1px 8px;color:var(--text);">${m.sw} <span style="color:var(--muted);font-size:10px;">–</span> ${m.sl}</span>`:'';
+    const scoreBadgeR=m.sw!=null?`<span style="display:inline-block;background:var(--s3);border:1px solid var(--border);border-radius:6px;font-family:var(--mono);font-size:12px;font-weight:700;padding:1px 8px;color:var(--text);">${m.sw} <span style="color:var(--muted);font-size:10px;">–</span> ${m.sl}</span>`:'';
     return `<div class="mlog ${cls}">
       <div style="flex:1;min-width:0;">
         <div class="mlog-w">✅ ${wn}</div>

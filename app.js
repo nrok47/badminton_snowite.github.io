@@ -1145,12 +1145,15 @@ const App = {
       <div class="rule-card">
         <div class="rule-title">⚡ กติกา 2 — คะแนนต่อเกม</div>
         <div class="rule-body">
-          คำนวณจากค่าเฉลี่ยคะแนน (Δ = |เฉลี่ยA − เฉลี่ยB|)
+          คำนวณจากค่าเฉลี่ยคะแนนของทั้งสองทีม (ต่างกัน &gt; 300 ถือว่าไม่สูสี)
           <table class="rule-table">
-            <tr><th>สถานการณ์</th><th>ชนะ</th><th>แพ้</th></tr>
-            <tr><td>🟰 สูสี (Δ ≤ 300)</td><td class="pos">+1,000</td><td class="neg">-1,000</td></tr>
-            <tr><td>⬆️ ทีมอ่อนชนะ (upset)</td><td class="pos">+1,200</td><td class="neg">-1,000</td></tr>
-            <tr><td>⬇️ ทีมเก่งชนะ (favorite)</td><td class="pos">+800</td><td class="neg">-800</td></tr>
+            <tr><th>สถานการณ์</th><th>ใคร</th><th>คะแนน</th></tr>
+            <tr><td rowspan="2">🟰 สูสี</td><td>ชนะ</td><td class="pos">+1,000</td></tr>
+            <tr><td>แพ้</td><td class="neg">-1,000</td></tr>
+            <tr><td rowspan="2">⬆️ เจอทีมเก่งกว่า</td><td>ทีมอ่อน (ชนะ)</td><td class="pos">+1,200</td></tr>
+            <tr><td>ทีมเก่ง (แพ้)</td><td class="neg">-1,000</td></tr>
+            <tr><td rowspan="2">⬇️ เจอทีมอ่อนกว่า</td><td>ทีมเก่ง (ชนะ)</td><td class="pos">+800</td></tr>
+            <tr><td>ทีมอ่อน (แพ้)</td><td class="neg">-800</td></tr>
           </table>
         </div>
       </div>

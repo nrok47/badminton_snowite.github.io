@@ -631,7 +631,7 @@ function computeDeltas(winners, losers, sw, sl){
   if(sw!==null && sl!==null && (sw-sl)>=RC.marginThreshold) margin=RC.marginBonus;
 
   // 3. Farm multiplier
-  const fc = getFarmCount(winners,losers);
+  const fc = getFarmCount(winners);
   let farmMult = 1.0;
   const _fl5=RC.farmLimit5game||5; const _fl3=RC.farmLimit3game||3;
   if(fc>=_fl5) farmMult=RC.farmLimit5;

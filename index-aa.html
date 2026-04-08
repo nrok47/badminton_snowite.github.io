@@ -532,7 +532,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px;">🔥 ฟาร์ม / 🧊 Decay</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
       <div class="fg"><label class="fl">Farm ×0.5 เริ่มเกมที่</label><input class="fi" type="number" id="rc-farmLimit3game" min="1" max="10"></div>
-      <div class="fg"><label class="fl">Farm ×0.2 เริ่มเกมที่</label><input class="fi" type="number" id="rc-farmLimit5game" min="1" max="10"></div>
+      <div class="fg"><label class="fl">Farm ×0.5 เริ่มเกมที่</label><input class="fi" type="number" id="rc-farmLimit5game" min="1" max="10"></div>
       <div class="fg"><label class="fl">Decay ต่อครั้ง</label><input class="fi" type="number" id="rc-decayAmount"></div>
       <div class="fg"><label class="fl">Decay สูงสุด (ครั้ง)</label><input class="fi" type="number" id="rc-decayMaxTimes" min="1"></div>
     </div>
@@ -559,7 +559,7 @@ let RC = {
   favorWin: 800,  favorLoss: -1200,
   marginThreshold: 9, marginBonus: 200,
   antiCarryThreshold: 1500, antiCarryHi: 0.8, antiCarryLo: 1.2,
-  farmLimit3: 0.5, farmLimit5: 0.20,
+  farmLimit3: 0.5, farmLimit5: 0.25,
   participationBonus: 100,
   dailyLossCap: -2500,
   streakFreezeAt: 2, streakHalfMult: 0.5,
@@ -1713,7 +1713,7 @@ function saveRulesConfig(){
   RC.farmLimit3game=parseInt(document.getElementById('rc-farmLimit3game').value)||3;
   RC.farmLimit5game=parseInt(document.getElementById('rc-farmLimit5game').value)||5;
   // Update farm thresholds based on game numbers
-  RC.farmLimit3=0.5; RC.farmLimit5=0.20;
+  RC.farmLimit3=0.5; RC.farmLimit5=0.25;
   RC.decayAmount=n('rc-decayAmount');
   RC.decayMaxTimes=parseInt(document.getElementById('rc-decayMaxTimes').value)||2;
   // Save RC to Firebase state

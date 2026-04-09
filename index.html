@@ -1657,17 +1657,17 @@ function renderRules(){
       <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">${RC.evenLoss.toLocaleString()}</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">⬆️ เจอทีมเก่งกว่า (|Δ| > ${RC.thresholdDiff.toLocaleString()})</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมตัวเองอ่อนกว่า — ชนะได้มากขึ้น แพ้เสียน้อยลง</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมตัวเองอ่อนกว่า — ชนะได้มากขึ้น</div>
       <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+${RC.upsetWin.toLocaleString()}</span></div>
       <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">${RC.upsetLoss.toLocaleString()}</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">⬇️ เจอทีมอ่อนกว่า (|Δ| > ${RC.thresholdDiff.toLocaleString()})</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมตัวเองเก่งกว่า — ชนะได้น้อยลง แพ้เสียมากขึ้น</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมตัวเองเก่งกว่า — ชนะได้น้อยลง</div>
       <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+${RC.favorWin.toLocaleString()}</span></div>
       <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">${RC.favorLoss.toLocaleString()}</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">🎯 Margin Score</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">แต้มต่าง ≥ ${RC.marginThreshold} — เช่น แพ้ 21-${21-RC.marginThreshold} โดนชาจ</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">แต้มขาด ≥ ${RC.marginThreshold} — เช่น แพ้ 21-${21-RC.marginThreshold} โดนชาจ</div>
       <div class="rrow"><span>ชนะ bonus</span><span class="rval" style="color:var(--green)">+${RC.marginBonus.toLocaleString()}</span></div>
       <div class="rrow"><span>แพ้ penalty</span><span class="rval" style="color:var(--red)">−${RC.marginBonus.toLocaleString()}</span></div>
     </div>
@@ -1692,8 +1692,8 @@ function renderRules(){
     </div>
     <div class="rcard"><div class="rcard-t">🧊 แพ้ติดต่อกัน (Streak)</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ปกป้องคนซวยแพ้ติดกันหลายเกม</div>
-      <div class="rrow"><span>แพ้เกมที่ 3 ติดต่อกัน</span><span class="rval" style="color:var(--blue)">ฟรีซ (0)</span></div>
-      <div class="rrow"><span>แพ้เกมที่ 4+ ติดต่อกัน</span><span class="rval" style="color:var(--accent2)">−${Math.round(RC.streakHalfMult*100)}%</span></div>
+      <div class="rrow"><span>แพ้ 2 เกมติดต่อกัน</span><span class="rval" style="color:var(--blue)">ฟรีซ (0)</span></div>
+      <div class="rrow"><span>แพ้เกมถัดไป</span><span class="rval" style="color:var(--accent2)">−${Math.round(RC.streakHalfMult*100)}%</span></div>
       <div class="rrow"><span>รีเซ็ตเมื่อ</span><span class="rval">ชนะ 1 เกม</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">🧊 Decay (ขาด session)</div>

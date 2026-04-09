@@ -220,7 +220,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     </div>
     <div style="margin:0 0 14px;">
       <label class="fl">แต้มในเกม <span style="color:var(--red);font-weight:700;">* (บังคับกรอก)</span></label>
-      <div class="score-box" style="width:120px;">
+      <div class="score-box">
         <input class="score-inp" id="score-w" type="number" min="15" max="30" placeholder="21" oninput="updateMatchPreview()">
         <div class="score-dash">—</div>
         <input class="score-inp" id="score-l" type="number" min="0" max="29" placeholder="?" oninput="updateMatchPreview()">
@@ -1680,9 +1680,9 @@ function renderRules(){
     </div>
     <div class="rcard"><div class="rcard-t">🔥 กันฟาร์ม</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมชนะเดิมเล่นซ้ำวันเดียวกัน</div>
-      <div class="rrow"><span>เกมที่ 1–${RC.farmLimit3game||3}</span><span class="rval">100%</span></div>
-      <div class="rrow"><span>เกมที่ ${RC.farmLimit3game||3}+</span><span class="rval" style="color:var(--accent2)">${f3}%</span></div>
-      <div class="rrow"><span>เกมที่ ${RC.farmLimit5game||5}+</span><span class="rval" style="color:var(--red)">${f5}%</span></div>
+      <div class="rrow"><span>เกมที่ 1–2</span><span class="rval">100%</span></div>
+      <div class="rrow"><span>เกมที่ 3</span><span class="rval" style="color:var(--accent2)">${f3}%</span></div>
+      <div class="rrow"><span>เกมที่ 4+</span><span class="rval" style="color:var(--red)">${f5}%</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">🏅 รางวัลลงเล่น</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">แค่มาลง ก็ได้แต้ม ทั้งชนะและแพ้</div>

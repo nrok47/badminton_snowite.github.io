@@ -221,9 +221,9 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div style="margin:0 0 14px;">
       <label class="fl">แต้มในเกม <span style="color:var(--red);font-weight:700;">* (บังคับกรอก)</span></label>
       <div class="score-box">
-        <input class="score-inp" id="score-w" type="number" min="0" max="30" placeholder="21" oninput="updateMatchPreview()">
+        <input class="score-inp" id="score-w" type="number" min="15" max="30" placeholder="21" oninput="updateMatchPreview()">
         <div class="score-dash">—</div>
-        <input class="score-inp" id="score-l" type="number" min="0" max="30" placeholder="?" oninput="updateMatchPreview()">
+        <input class="score-inp" id="score-l" type="number" min="0" max="29" placeholder="?" oninput="updateMatchPreview()">
       </div>
     </div>
     <div id="match-preview" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:14px;font-size:12px;"></div>
@@ -374,7 +374,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div style="margin:8px 0 14px;">
       <label class="fl">แต้มในเกม</label>
       <div class="score-box">
-        <input class="score-inp" id="escore-w" type="number" min="0" max="30" placeholder="21">
+        <input class="score-inp" id="escore-w" type="number" min="15" max="30" placeholder="21">
         <div class="score-dash">—</div>
         <input class="score-inp" id="escore-l" type="number" min="0" max="30" placeholder="?">
       </div>

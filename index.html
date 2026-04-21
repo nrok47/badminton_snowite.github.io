@@ -279,15 +279,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="pt">📜 ประวัติการแข่งขัน</div>
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;padding:7px 10px;background:var(--s2);border-radius:8px;border:1px solid var(--border);font-size:10px;">
       <span style="font-weight:700;color:var(--muted);width:100%;margin-bottom:1px;">📖 Icon</span>
-      <span>🟢 +N</span><span style="color:var(--muted);">ELO ได้</span>
-      <span style="color:var(--muted);">·</span>
-      <span>🔴 −N</span><span style="color:var(--muted);">ELO เสีย</span>
-      <span style="color:var(--muted);">·</span>
       <span>🧊</span><span style="color:var(--muted);">Freeze/ลดแพ้ติด</span>
       <span style="color:var(--muted);">·</span>
       <span>🎯</span><span style="color:var(--muted);">Margin ห่าง 9+</span>
       <span style="color:var(--muted);">·</span>
-      <span>🚫</span><span style="color:var(--muted);">Farm ชนะเยอะเกิน</span>
+      <span>🚫</span><span style="color:var(--muted);">กัน Farm</span>
     </div>
     <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
       <select class="fs" id="filter-player" onchange="renderMatchHistory()" style="flex:1;min-width:120px;">
@@ -1227,7 +1223,7 @@ function confirmAdmin(action){
 }
 
 function resetStats(){
-  if(!confirmAdmin('ล้างสถิติทั้งหมด')) return;
+  if(!confirmAdmin('ล้างสถิติทั้งหมด***อย่าลืม Export ข้อมูลก่อน')) return;
   S.matches=[];
   S.decayEvents=[];
   S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });

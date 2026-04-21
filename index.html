@@ -1217,13 +1217,13 @@ function delDecay(id){
 
 // ===== ADMIN CONFIRM =====
 function confirmAdmin(action){
-  const ans = prompt('🔐 ยืนยันการดำเนินการ:\n"' + action + '"\n\nพิมพ์ ADMIN เพื่อยืนยัน');
+  const ans = prompt('🔐 ยืนยันการดำเนินการ ***อย่าลืม Export ข้อมูลก่อน***:\n"' + action + '"\n\nพิมพ์ ADMIN เพื่อยืนยัน' *** );
   if(ans !== 'ADMIN'){ if(ans !== null) toast('ยืนยันไม่สำเร็จ — พิมพ์ ADMIN ให้ถูกต้อง','❌'); return false; }
   return true;
 }
 
 function resetStats(){
-  if(!confirmAdmin('ล้างสถิติทั้งหมด***อย่าลืม Export ข้อมูลก่อน')) return;
+  if(!confirmAdmin('ล้างสถิติทั้งหมด')) return;
   S.matches=[];
   S.decayEvents=[];
   S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });

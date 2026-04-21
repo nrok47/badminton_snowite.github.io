@@ -946,7 +946,7 @@ function renderBestPair(){
   el.innerHTML=pairs.slice(0,1).map((p,rank)=>{
     const [m1,m2]=[gm(p.ids[0]),gm(p.ids[1])];
     const idx1=S.members.indexOf(m1),idx2=S.members.indexOf(m2);
-
+    const medal=rank===0?'':rank===1?'🥈':'🥉';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(34,45,58,.5);">
       <div style="font-size:18px;width:24px;text-align:center;">${medal}</div>
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
@@ -984,7 +984,7 @@ function renderWorstPair(){
   el.innerHTML=pairs.slice(0,1).map((p,rank)=>{
     const [m1,m2]=[gm(p.ids[0]),gm(p.ids[1])];
     const idx1=S.members.indexOf(m1),idx2=S.members.indexOf(m2);
-
+    const medal=rank===0?'':rank===1?'🥈':'🥉';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(34,45,58,.5);">
       <div style="font-size:16px;width:20px;text-align:center;">${medal}</div>
       <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0;">

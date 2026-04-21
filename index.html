@@ -1696,7 +1696,7 @@ function randomCourts(){
     const avgA=Math.round(c.a.reduce((s,p)=>s+(p.elo??BASE),0)/c.a.length);
     const avgB=Math.round(c.b.reduce((s,p)=>s+(p.elo??BASE),0)/c.b.length);
     const eloDiff=Math.abs(avgA-avgB);
-    const balLabel=eloDiff<=500?'<span style="color:var(--green);font-size:11px;">✅ สูสีมาก</span>':eloDiff<=1200?'<span style="color:var(--accent2);font-size:11px;">⚖️ พอสูสี</span>':'<span style="color:var(--red);font-size:11px;">⚠️ ห่างมาก</span>';
+    const balLabel=eloDiff<RC.thresholdDiff*0.5?'<span style="color:var(--green);font-size:11px;">✅ สูสีมาก</span>':eloDiff<RC.thresholdDiff?'<span style="color:var(--accent2);font-size:11px;">⚖️ พอสูสี</span>':'<span style="color:var(--red);font-size:11px;">⚠️ ห่างมาก</span>';
     return `<div class="court-card"><div class="court-lbl">🏸 คอร์ท ${ci+1} &nbsp;${balLabel}</div>
     <div class="vs-wrap">
       <div class="team-box"><div class="team-p">${c.a.map(p=>`<div>${p.name}</div>`).join('')}</div>

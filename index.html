@@ -2506,7 +2506,7 @@ function genPersonalCoach(id, mem, stats) {
   if (avgLostMargin >= 8) {
     lines.push(`🛡️ โดนกดขาด ${Math.round(avgLostMargin)} แต้มตอนแพ้ — เกมถัดไปอย่าให้คู่แข่งตีติดกันเกิน 3 ลูก ต้องตัดลูกและเปลี่ยนจังหวะทันที`);
   } else if (avgLostMargin > 0 && avgLostMargin <= 3) {
-    lines.push(`⚔️ แพ้สูสี ${Math.round(avgLostMargin)} แต้มเฉลี่ย — เกมถัดไปช่วงท้ายเกมต้องกล้าลงลูกหน้าคอร์ท อย่าตีกลางตลอด คู่แข่งอ่านเกมได้หมดแล้ว`);
+    lines.push(`⚔️ แพ้ทีมสูสี ${Math.round(avgLostMargin)} แต้มเฉลี่ย — เกมถัดไปช่วงท้ายเกมต้องกล้าลงลูกหน้าคอร์ท อย่าตีกลางตลอด คู่แข่งอ่านเกมได้หมดแล้ว`);
   }
   if (wonMatches.length >= 2 && avgWonMargin >= 9) {
     lines.push(`💡 ชนะขาด ${Math.round(avgWonMargin)} แต้มเฉลี่ย — เกมถัดไปครองกลางคอร์ทแล้วกดรุกต่อเนื่อง จุดแข็งของคุณคือกดดันไม่หยุด`);
@@ -2516,7 +2516,7 @@ function genPersonalCoach(id, mem, stats) {
 
   // ── 4. Upset ──
   if (upsetLosses >= 2) {
-    lines.push(`⚠️ เสียให้อ่อนกว่า ${upsetLosses} ครั้ง — เกมถัดไปไม่ว่าเจอใครให้กดตั้งแต่นาทีแรก ไม่มีคู่แข่งที่ "ง่าย" ถ้าเผลอ`);
+    lines.push(`⚠️ เสียให้ทีมอ่อนกว่า ${upsetLosses} ครั้ง — เกมถัดไปไม่ว่าเจอใครให้กดตั้งแต่นาทีแรก ไม่มีคู่แข่งที่ "ง่าย" ถ้าเผลอ`);
   } else if (upsetWins >= 2) {
     lines.push(`💪 พลิกล็อกได้ ${upsetWins} ครั้ง — เกมถัดไปเจอใครก็สู้ได้ ความกล้าและจังหวะบุกของคุณทำงานได้แม้แต่กับทีมแข็งกว่า`);
   }

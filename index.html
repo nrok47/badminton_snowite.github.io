@@ -1174,7 +1174,7 @@ function renderBestPair(){
           <div style="font-size:10px;color:var(--muted);">ชนะร่วมกัน</div>
         </div>
       </div>
-      <div style="font-family:var(--mono);font-size:20px;font-weight:800;color:var(--green);flex-shrink:0;">${p.wins}<span style="font-size:10px;color:var(--muted);font-weight:500;">W</span></div>
+      <div style="font-family:var(--mono);font-size:20px;font-weight:800;color:var(--green);flex-shrink:0;">${p.wins}<span style="font-size:10px;color:var(--muted);font-weight:500;"> W</span></div>
     </div>`;
   }).join('')+'</div>';
   // fix last border
@@ -1200,7 +1200,7 @@ function renderWorstPair(){
   el.innerHTML=pairs.slice(0,1).map((p,rank)=>{
     const [m1,m2]=[gm(p.ids[0]),gm(p.ids[1])];
     const idx1=S.members.indexOf(m1),idx2=S.members.indexOf(m2);
-    const medal=rank===0?'🥇':rank===1?'🥈':'🥉';
+    const medal=rank===0?'':rank===1?'':'';
     return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(34,45,58,.5);">
       <div style="font-size:16px;width:20px;text-align:center;">${medal}</div>
       <div style="display:flex;align-items:center;gap:4px;flex:1;min-width:0;">
@@ -1212,7 +1212,7 @@ function renderWorstPair(){
           <div style="font-size:10px;color:var(--muted);">แพ้ร่วมกัน</div>
         </div>
       </div>
-      <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--red);flex-shrink:0;">${p.losses}<span style="font-size:10px;color:var(--muted);font-weight:500;">L</span></div>
+      <div style="font-family:var(--mono);font-size:18px;font-weight:800;color:var(--red);flex-shrink:0;">${p.losses}<span style="font-size:10px;color:var(--muted);font-weight:500;"> L</span></div>
     </div>`;
   }).join('');
 }

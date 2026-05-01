@@ -1162,7 +1162,7 @@ function renderBestPair(){
   el.innerHTML=pairs.slice(0,1).map((p,rank)=>{
     const [m1,m2]=[gm(p.ids[0]),gm(p.ids[1])];
     const idx1=S.members.indexOf(m1),idx2=S.members.indexOf(m2);
-    const medal=rank===0?'🥇':rank===1?'🥈':'🥉';
+    const medal=rank===0?'':rank===1?'':'';
     return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(34,45,58,.5);">
       <div style="font-size:18px;width:24px;text-align:center;">${medal}</div>
       <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:0;">
@@ -2690,7 +2690,7 @@ function genPersonalCoach(id, mem, stats) {
 
   // ── 8. BG tier — คำสั่งตามระดับ ──
   if (bgTag === 'BB') {
-    lines.push(`🩷 ระดับ BB — เกมถัดไปโฟกัสที่ footwork อย่างเดียว ถึงจุดที่ถูกก่อน แล้วค่อยตี คะแนนชนะยัง ×1.25`);
+    lines.push(`💗 ระดับ BB — เกมถัดไปโฟกัสที่ footwork อย่างเดียว ถึงจุดที่ถูกก่อน แล้วค่อยตี คะแนนชนะยัง ×1.25`);
   } else if (bgTag === 'BG1') {
     lines.push(`🟢 ระดับ BG1 — เกมถัดไปกด WR ให้เกิน 55% Ranking จะพุ่ง ชนะเรทยังเต็ม อย่าเสียแต้มฟรีๆ`);
   } else if (bgTag === 'BG2') {

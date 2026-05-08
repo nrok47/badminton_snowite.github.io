@@ -2478,7 +2478,7 @@ async function loadRulesDefault(){
     // ถ้า modal เปิดอยู่ให้ populate fields ด้วย
     const modal = document.getElementById('modal-rules-edit');
     if(modal && modal.classList.contains('on')) openRulesEdit();
-    toast('โหลด Default กติกา (รวม BG Tier) เรียบร้อย ✅', '✅');
+    toast('โหลด Default กติกา (รวม BG Tier) เรียบร้อย', '✅');
   } catch(e) {
     toast('โหลด Default ไม่สำเร็จ: '+(e.message||e), '❌');
   }

@@ -1194,7 +1194,7 @@ function recordMatch(){
     m.lossStreak=(m.lossStreak??0)+1;
   });
 
-  S.matches.push({ id:Date.now(), winners, losers, wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak, wBGTags, lBGTags, sw, sl, dateStr:todayStr(), time:Date.now() });
+  S.matches.push({ id:Date.now()+'_'+Math.random().toString(36).slice(2,8), winners, losers, wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak, wBGTags, lBGTags, sw, sl, dateStr:todayStr(), time:Date.now() });
   save();
   ['w1','w2','l1','l2','score-w','score-l'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const prev=document.getElementById('match-preview'); if(prev) prev.style.display='none';
@@ -3180,8 +3180,60 @@ renderAll(); // render empty state while waiting for Firebase
 
   async function autoSyncToFirebase() {
     try {
-      await db.ref('state').set(S);
+      await db.ref('state').transaction(serverState => {
+        if (!serverState) return S;
+
+        const serverMatches = toArr(serverState.matches || []);
+        const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
+        const newLocalMatches = S.matches.filter(m => !serverMatchIds.has(String(m.id)));
+
+        // Start from server members as the authoritative base
+        const members = JSON.parse(JSON.stringify(toArr(serverState.members || [])));
+        const memberMap = {};
+        members.forEach(m => { memberMap[m.id] = m; });
+
+        // Add members that only exist locally (e.g. newly added this session)
+        toArr(S.members).forEach(lm => {
+          if (!memberMap[lm.id]) {
+            memberMap[lm.id] = JSON.parse(JSON.stringify(lm));
+            members.push(memberMap[lm.id]);
+          }
+        });
+
+        // Apply ELO deltas for new local matches onto the server member base
+        newLocalMatches.forEach(match => {
+          (match.winners || []).forEach((id, i) => {
+            const m = memberMap[id];
+            if (!m) return;
+            m.elo = Math.max(RC.eloFloor || FLOOR, (m.elo ?? BASE) + (match.wDeltas?.[i] ?? 0));
+            m.matchCount = (m.matchCount ?? 0) + 1;
+            m.wins = (m.wins ?? 0) + 1;
+            m.lossStreak = 0;
+          });
+          (match.losers || []).forEach((id, i) => {
+            const m = memberMap[id];
+            if (!m) return;
+            m.elo = Math.max(RC.eloFloor || FLOOR, (m.elo ?? BASE) + (match.lDeltas?.[i] ?? 0));
+            m.matchCount = (m.matchCount ?? 0) + 1;
+            m.losses = (m.losses ?? 0) + 1;
+            m.lossStreak = (m.lossStreak ?? 0) + 1;
+          });
+        });
+
+        return {
+          ...serverState,
+          matches: [...serverMatches, ...newLocalMatches],
+          members,
+          finance: toArr(S.finance || []),
+          decayEvents: toArr(S.decayEvents || []),
+          seasons: toArr(S.seasons || []),
+          seasonGoal: S.seasonGoal,
+          rulesConfig: S.rulesConfig
+        };
+      });
     } catch(e) {
+      // Fallback: direct write (still better than nothing)
+      try { await db.ref('state').set(S); } catch(e2) {}
     }
   }
 
@@ -3279,6 +3331,30 @@ renderAll(); // render empty state while waiting for Firebase
     } else {
       updateFirebaseStatus(false);
     }
+  });
+
+  // Real-time listener: รับข้อมูลจากผู้ใช้อื่นแบบ real-time
+  db.ref('state').on('value', snapshot => {
+    if (_forceOffline) return;
+    if (!_autoLoaded) return; // รอให้ initial load เสร็จก่อน
+    const data = snapshot.val();
+    if (!data) return;
+
+    const serverMatches = toArr(data.matches || []);
+    const localMatchIds = new Set(S.matches.map(m => String(m.id)));
+    const hasNewMatches = serverMatches.some(m => !localMatchIds.has(String(m.id)));
+
+    if (!hasNewMatches) return; // เป็น echo จาก write ของเราเอง — ข้าม
+
+    S.members     = toArr(data.members || []);
+    S.matches     = serverMatches;
+    S.finance     = toArr(data.finance || []);
+    S.decayEvents = toArr(data.decayEvents || []);
+    S.seasons     = toArr(data.seasons || []);
+    if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
+    if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
+    if (typeof renderAll === 'function') renderAll();
+    if (typeof toast === 'function') toast('ซิงค์ข้อมูลจากผู้ใช้อื่น ☁️', '🔄');
   });
 </script>
 

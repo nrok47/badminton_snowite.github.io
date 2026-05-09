@@ -1033,12 +1033,13 @@ function computeDeltas(winners, losers, sw, sl){
   // 3. Farm multiplier
   // fc = จำนวนชนะก่อนหน้า (ไม่รวมปัจจุบัน)
   // fc>=2 → ปัจจุบันคือครั้งที่ 3 → -50%
-  // fc>=3 → ปัจจุบันคือครั้งที่ 4+ → -25%
   const fc = getFarmCount(winners);
+  const _farm3thresh = (RC.farmLimit3game||3) - 1; // fc เริ่มนับจาก 0 (ครั้งก่อน)
+  const _farm5thresh = (RC.farmLimit5game||4) - 1;
   let farmMult = 1.0;
-  if(fc>=3) farmMult=RC.farmLimit5;        // ครั้งที่ 4+ → 25%
-  else if(fc>=2) farmMult=RC.farmLimit3;   // ครั้งที่ 3 → 50%
-  const farmHit = fc>=2;
+  if(fc>=_farm5thresh) farmMult=RC.farmLimit5;
+  else if(fc>=_farm3thresh) farmMult=RC.farmLimit3;
+  const farmHit = fc>=_farm3thresh;
 
   // 4. Anti-Carry per team
   function antiCarry(ids, base, isLoss){
@@ -1194,7 +1195,7 @@ function recordMatch(){
     m.lossStreak=(m.lossStreak??0)+1;
   });
 
-  S.matches.push({ id:Date.now()+'_'+Math.random().toString(36).slice(2,8), winners, losers, wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak, wBGTags, lBGTags, sw, sl, dateStr:todayStr(), time:Date.now() });
+  S.matches.push({ id:Date.now()*1000+Math.floor(Math.random()*1000), winners, losers, wDeltas, lDeltas, streakTags, farmHit, farmMult, margin, diff, frozen, halfStreak, wBGTags, lBGTags, sw, sl, dateStr:todayStr(), time:Date.now() });
   save();
   ['w1','w2','l1','l2','score-w','score-l'].forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   const prev=document.getElementById('match-preview'); if(prev) prev.style.display='none';
@@ -1356,7 +1357,7 @@ function getEloHistory(id){
       const wi=m.winners.indexOf(id), li=m.losers.indexOf(id);
       if(wi>=0) elo=Math.max(RC.eloFloor||FLOOR,elo+(m.wDeltas[wi]??0));
       else if(li>=0) elo=Math.max(RC.eloFloor||FLOOR,elo+(m.lDeltas[li]??0));
-    } else { elo=Math.max(RC.eloFloor||FLOOR,elo-RC.decayAmount); }
+    } else { const pct=RC.decayPct??5; elo=Math.max(RC.eloFloor||FLOOR,elo-Math.round(elo*pct/100)); }
     pts.push({elo});
   });
   return pts;
@@ -3147,7 +3148,7 @@ async function endSeason(){
   // Reset members ELO + stats, keep names/icons
   S.members.forEach(m => {
     m.elo = RC.baseElo || 10000;
-    m.wins = 0; m.losses = 0; m.matchCount = 0; m.lossStreak = 0;
+    m.wins = 0; m.losses = 0; m.matchCount = 0; m.lossStreak = 0; m.decayCount = 0;
   });
   S.matches = [];
   S.decayEvents = [];

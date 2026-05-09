@@ -1424,7 +1424,15 @@ function computeEloSnapshots(){
 }
 
 // ===== RSVP =====
-let rsvpState={};
+let rsvpState=(()=>{
+  try{
+    const saved=JSON.parse(localStorage.getItem('bsw_rsvp')||'{}');
+    const today=new Date().toISOString().slice(0,10);
+    if(saved._date===today) return saved;
+  }catch(e){}
+  return {};
+})();
+function saveRSVP(){ try{ rsvpState._date=new Date().toISOString().slice(0,10); localStorage.setItem('bsw_rsvp', JSON.stringify(rsvpState)); }catch(e){} }
 function renderRSVP(){
   const el=document.getElementById('rsvp-grid'); if(!el) return;
   if(!S.members.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);">ยังไม่มีสมาชิก</div>'; return; }
@@ -1441,7 +1449,7 @@ function renderRSVP(){
   if(hint) hint.textContent=cnt?`✅ ${cnt} คนมา`:'';
 }
 
-function toggleRSVP(id,val){ rsvpState[id]=val; renderRSVP(); renderSelects(); }
+function toggleRSVP(id,val){ rsvpState[id]=val; saveRSVP(); renderRSVP(); renderSelects(); }
 
 function applyDecayToAbsent(){
   const pct = RC.decayPct ?? RC.decayAmount ?? 5;

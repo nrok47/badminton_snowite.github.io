@@ -1091,8 +1091,8 @@ function computeDeltas(winners, losers, sw, sl){
     const dAfterBG = Math.round(d * bgLossMult);
     let v = dAfterBG;
     let streakTag = null;
-    if(streak >= 2){
-      if(streak === 2){ v = 0; streakTag = 'freeze'; }
+    if(streak >= RC.streakFreezeAt){
+      if(streak === RC.streakFreezeAt){ v = 0; streakTag = 'freeze'; }
       else { v = Math.round(dAfterBG * RC.streakHalfMult); streakTag = 'half'; }
     }
     const partBonus = Math.round(RC.participationBonus * getBGPartMult(getElo(losers[i])));
@@ -1803,7 +1803,7 @@ function renderFinance(){
     const shuttleRows=s.shuttleUsage.map(u=>u.count?`<div style="font-size:12px;color:var(--muted);">${gm(u.user)?.name||'?'}: ${u.count} ลูก × ${u.price.toLocaleString()} = ${(u.count*u.price).toLocaleString()}</div>`:'').join('');
     const courtCost=s.courtCost.toLocaleString();
     const shuttleCost=s.shuttleCost.toLocaleString();
-    const perPerson=s.perPerson.toLocaleString(undefined,{maximumFractionDigits:2});
+    const perPerson=(s.perPerson??0).toLocaleString(undefined,{maximumFractionDigits:2});
     return `<div class="panel" style="padding:14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
         <div>${s.date} | ${bookerName}</div>
@@ -1916,7 +1916,7 @@ function openFinanceSession(id){
   document.getElementById('fd-date').textContent=session.date;
   document.getElementById('fd-booker').textContent=gm(session.booker)?.name||'ไม่ระบุ';
   document.getElementById('fd-total').textContent=`${(session.courtCost+session.shuttleCost).toLocaleString()} ฿`;
-  document.getElementById('fd-per-person').textContent=`${session.perPerson.toLocaleString(undefined,{maximumFractionDigits:2})} ฿`;
+  document.getElementById('fd-per-person').textContent=`${(session.perPerson??0).toLocaleString(undefined,{maximumFractionDigits:2})} ฿`;
   const participantsEl=document.getElementById('fd-participants');
   if(participantsEl){
     participantsEl.innerHTML=session.participants.map(pid=>{

@@ -3221,12 +3221,22 @@ renderAll(); // render empty state while waiting for Firebase
           });
         });
 
+        // Merge finance by ID (don't overwrite server entries added by other user)
+        const serverFinance = toArr(serverState.finance || []);
+        const serverFinanceIds = new Set(serverFinance.map(f => String(f.id)));
+        const newLocalFinance = toArr(S.finance || []).filter(f => !serverFinanceIds.has(String(f.id)));
+
+        // Merge decayEvents by ID
+        const serverDecay = toArr(serverState.decayEvents || []);
+        const serverDecayIds = new Set(serverDecay.map(d => String(d.id)));
+        const newLocalDecay = toArr(S.decayEvents || []).filter(d => !serverDecayIds.has(String(d.id)));
+
         return {
           ...serverState,
           matches: [...serverMatches, ...newLocalMatches],
           members,
-          finance: toArr(S.finance || []),
-          decayEvents: toArr(S.decayEvents || []),
+          finance: [...serverFinance, ...newLocalFinance],
+          decayEvents: [...serverDecay, ...newLocalDecay],
           seasons: toArr(S.seasons || []),
           seasonGoal: S.seasonGoal,
           rulesConfig: S.rulesConfig
@@ -3242,7 +3252,29 @@ renderAll(); // render empty state while waiting for Firebase
     if(!confirmAdmin('บันทึกข้อมูลทั้งหมดขึ้น Firebase')) return;
     try {
       S.rulesConfig = RC;
-      await db.ref('state').set(S);
+      // Use transaction to avoid overwriting concurrent changes by another user
+      await db.ref('state').transaction(serverState => {
+        if (!serverState) return S;
+        const serverMatches = toArr(serverState.matches || []);
+        const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
+        const newLocalMatches = toArr(S.matches || []).filter(m => !serverMatchIds.has(String(m.id)));
+        const serverFinance = toArr(serverState.finance || []);
+        const serverFinanceIds = new Set(serverFinance.map(f => String(f.id)));
+        const newLocalFinance = toArr(S.finance || []).filter(f => !serverFinanceIds.has(String(f.id)));
+        const serverDecay = toArr(serverState.decayEvents || []);
+        const serverDecayIds = new Set(serverDecay.map(d => String(d.id)));
+        const newLocalDecay = toArr(S.decayEvents || []).filter(d => !serverDecayIds.has(String(d.id)));
+        return {
+          ...serverState,
+          members: toArr(S.members || []),
+          matches: [...serverMatches, ...newLocalMatches],
+          finance: [...serverFinance, ...newLocalFinance],
+          decayEvents: [...serverDecay, ...newLocalDecay],
+          seasons: toArr(S.seasons || []),
+          seasonGoal: S.seasonGoal,
+          rulesConfig: S.rulesConfig
+        };
+      });
       toast('บันทึกข้อมูลขึ้น Firebase แล้ว ☁️✅');
     } catch(e) {
       toast('Firebase: '+(e.message||e.code||'บันทึกไม่สำเร็จ'), '❌');

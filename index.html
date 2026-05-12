@@ -1754,7 +1754,8 @@ async function wContinueWithGoogle() {
   _sSet('bcm_pendingFlow', 'auto');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:13px;">⏳</span> กำลังเชื่อมต่อ...'; }
   if (!window._auth) {
-    await new Promise(r => { const t = setInterval(()=>{ if(window._auth||Date.now()>Date.now()+8000){ clearInterval(t); r(); }},100); });
+    const deadline = Date.now() + 8000;
+    await new Promise(r => { const t = setInterval(()=>{ if(window._auth || Date.now()>deadline){ clearInterval(t); r(); }},100); });
   }
   const provider = new firebase.auth.GoogleAuthProvider();
   // บังคับให้ Google แสดง account picker เสมอ (สำคัญมากหลัง logout)

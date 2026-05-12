@@ -414,8 +414,6 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Guest mode: hide all write-action elements */
-body.guest-mode .guest-hidden { display: none !important; }
 /* Member mode: hide admin-only write buttons */
 body.member-mode .admin-hidden { display: none !important; }
 /* My member card highlight */
@@ -430,7 +428,7 @@ body.member-mode .admin-hidden { display: none !important; }
 // Guest flow uses sessionStorage (auto-clears on tab close)
 // ═══════════════════════════════════════════════════════
 window._session = {
-  role: null,        // 'admin' | 'user' | 'guest' | null
+  role: null,        // 'admin' | 'user' | null
   roomCode: null,    // '12345'
   myUid: null,       // Firebase UID
   adminUid: null,
@@ -526,28 +524,6 @@ function _sClear() {
           <span style="font-size:11px;color:var(--muted);white-space:nowrap;">แตะเพื่อใช้ →</span>
         </div>
       </div>
-      <!-- Room Code -->
-      <label class="welcome-label">รหัสห้อง (Room Code)</label>
-      <input class="welcome-input" id="w-room-input" type="tel"
-        placeholder="12345" maxlength="5"
-        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
-        onkeydown="if(event.key==='Enter') wContinueAsGuest()">
-      <div id="w-room-error" style="font-size:11px;color:var(--red);min-height:14px;margin-top:-8px;margin-bottom:8px;text-align:center;"></div>
-
-      <!-- Guest -->
-      <button class="welcome-btn" id="w-guest-btn" onclick="wContinueAsGuest()"
-        style="background:var(--s2);border:1.5px solid var(--border);color:var(--text);font-size:14px;margin-bottom:4px;">
-        👁️ Continue as Guest
-      </button>
-      <div style="text-align:center;font-size:10px;color:var(--muted);margin-bottom:14px;opacity:.7;">ดูได้อย่างเดียว · ไม่ต้อง sign in</div>
-
-      <!-- Divider -->
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-        <div style="flex:1;height:1px;background:var(--border);"></div>
-        <span style="font-size:10px;color:var(--muted);">OR</span>
-        <div style="flex:1;height:1px;background:var(--border);"></div>
-      </div>
-
       <!-- Google -->
       <button class="btn-google" id="w-google-btn" onclick="wContinueWithGoogle()">
         <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
@@ -613,7 +589,7 @@ function _sClear() {
 
 <header class="header">
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="logo" id="header-logo" onclick="if(!isGuest()) openClubNameModal()" title="เปลี่ยนชื่อก๊วน (เฉพาะ Admin)" style="cursor:pointer;">🏸 SwFC</div>
+    <div class="logo" id="header-logo" onclick="if(isAdmin()) openClubNameModal()" title="เปลี่ยนชื่อก๊วน (เฉพาะ Admin)" style="cursor:pointer;">🏸 SwFC</div>
     <span id="header-season-badge" class="season-badge" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,rgba(240,192,64,.18),rgba(224,120,32,.18));border:1px solid rgba(240,192,64,.35);color:var(--accent);letter-spacing:.4px;white-space:nowrap;font-family:'Kanit',sans-serif;">SEASON 1</span>
   </div>
   <nav class="nav">
@@ -705,7 +681,7 @@ function _sClear() {
 </div>
 
 <!-- SEASON PROGRESS BAR -->
-<div class="season-bar-wrap" onclick="if(!isGuest()) openSeasonGoalModal()" style="cursor:pointer;" title="คลิกเพื่อตั้งเป้าหมาย Season" id="season-bar-wrap">
+<div class="season-bar-wrap" onclick="if(isAdmin()) openSeasonGoalModal()" style="cursor:pointer;" title="คลิกเพื่อตั้งเป้าหมาย Season" id="season-bar-wrap">
   <span class="season-bar-label" id="season-bar-label">S1 PROGRESS</span>
   <div class="season-bar-track">
     <div class="season-bar-fill" id="season-bar-fill" style="width:0%"></div>
@@ -1018,6 +994,15 @@ function toggleAdminTool() {
       </div>
     </div>
     <div class="fg"><label class="fl">เบอร์โทร (ไม่บังคับ)</label><input class="fi" id="nm-phone" placeholder="08x-xxx-xxxx"></div>
+    <div class="fg">
+      <label class="fl">ระดับมือ</label>
+      <select class="fi" id="nm-tier">
+        <option value="BB">BB — ELO 10,000</option>
+        <option value="BG1">BG1 — ELO 20,001</option>
+        <option value="BG2">BG2 — ELO 35,001</option>
+        <option value="BG+">BG+ — ELO 45,001</option>
+      </select>
+    </div>
     <div class="modal-act">
       <button class="btn btn-y btn-full" onclick="addMember()">✅ เพิ่ม</button>
       <button class="btn btn-s" onclick="closeModal('modal-add')">ยกเลิก</button>
@@ -1414,7 +1399,7 @@ function bgTagBadge(elo, preTag) {
 
 
 function save(){
-  if(isGuest()) return; // Guest: read-only, no writes
+  if(!isAdmin()) return;
   // Sync to Firebase (state stored in Firebase only, not localStorage)
   if(typeof autoSyncToFirebase==='function') autoSyncToFirebase();
 }
@@ -1598,7 +1583,7 @@ function updateMatchPreview(){
 
 // ===== RECORD =====
 function recordMatch(){
-  if(isGuest()){ toast('Guest: ไม่สามารถบันทึกผลได้ 👁️','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const l1v=document.getElementById('l1').value;
   if(!w1v||!l1v){ toast('กรุณาเลือกผู้เล่นอย่างน้อยฝั่งละ 1 คน','⚠️'); return; }
   const winners=[parseInt(w1v)];
@@ -1699,55 +1684,9 @@ function wResetSession() {
 
 // ── WELCOME FLOW FUNCTIONS ──────────────────────────────────────────
 
-// Guest: กรอก room code แล้วเข้าดู (read-only)
-async function wContinueAsGuest() {
-  const codeEl = document.getElementById('w-room-input');
-  const errEl  = document.getElementById('w-room-error');
-  const code   = (codeEl?.value || '').trim();
-  if (!code || !/^\d{5}$/.test(code)) {
-    if (errEl) errEl.textContent = 'รหัสห้อง 5 หลัก (ตัวเลขเท่านั้น)';
-    codeEl?.focus();
-    return;
-  }
-  if (errEl) errEl.textContent = '';
-  const btn = document.getElementById('w-guest-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังโหลด...'; }
-  try {
-    if (!window.db) throw new Error('Firebase ยังไม่พร้อม');
-    const snap = await window.db.ref('rooms/' + code + '/state').once('value');
-    const data = snap.val();
-    if (!data) throw new Error('ไม่พบห้องรหัส ' + code);
-    const toArrG = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
-    S.members     = toArrG(data.members);
-    S.matches     = toArrG(data.matches);
-    S.finance     = toArrG(data.finance);
-    S.decayEvents = toArrG(data.decayEvents);
-    S.seasons     = toArrG(data.seasons);
-    if (data.rsvp)        S.rsvp = data.rsvp;
-    if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
-    if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
-    if (data.clubName)    { setClubName(data.clubName); _sSet('bcm_clubname', data.clubName); }
-    _sSet('bcm_role', 'guest');
-    _sSet('bcm_roomCode', code);
-    _sSet('bcm_welcomed', '1');
-    _wSaveLastRoom(code, getClubName() || data.clubName || '');
-    document.body.classList.add('guest-mode');
-    const ws = document.getElementById('welcome-screen');
-    if (ws) { ws.classList.add('hide'); setTimeout(()=>{ ws.style.display='none'; }, 420); }
-    renderAll(); renderRole(); _updateProfileAvatar();
-    toast('👁️ Guest Mode — ดูข้อมูลห้อง ' + code, '👁️');
-  } catch(e) {
-    if (errEl) errEl.textContent = e.message || 'ไม่สำเร็จ';
-    if (btn) { btn.disabled = false; btn.textContent = '👁️ Continue as Guest'; }
-  }
-}
-
 // Google: sign in แล้วให้ onAuthStateChanged จัดการ (detect room/role หรือแสดง choose)
 async function wContinueWithGoogle() {
   const btn = document.getElementById('w-google-btn');
-  // บันทึก room code ที่กรอกไว้ (ถ้ามี) เผื่อใช้ prefill join
-  const code = (document.getElementById('w-room-input')?.value || '').trim();
-  if (code.length >= 4) _sSet('bcm_pendingJoinCode', code);
   _sSet('bcm_pendingFlow', 'auto');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:13px;">⏳</span> กำลังเชื่อมต่อ...'; }
   if (!window._auth) {
@@ -1792,7 +1731,6 @@ async function wSignOutAndReset() {
 // Stubs สำหรับ backward compat
 function wStep0SignIn() { wContinueWithGoogle(); }
 let _step0SignedInDone = false;
-function wStep0GuestLogin() { wContinueAsGuest(); }
 function _wStep0SignedIn(user) { _wUser = user; _updateProfileAvatar(); }
 
 // ===== PROFILE MENU =====
@@ -1914,7 +1852,7 @@ function copyRoomCode() {
 }
 
 function profileLogout() {
-  const label = isGuest() ? 'ออกจาก Guest Mode?' : 'ออกจากระบบ?';
+  const label = 'ออกจากระบบ?';
   if (!confirm(label)) return;
   document.getElementById('profile-menu').style.display = 'none';
   _step0SignedInDone = false;
@@ -2203,7 +2141,7 @@ function isAdmin() {
   return _sGet('bcm_role') === 'admin';
 }
 function isGuest() {
-  return _sGet('bcm_role') === 'guest';
+  return false; // guest mode removed
 }
 function isMember() {
   return _sGet('bcm_role') === 'user';
@@ -2222,10 +2160,8 @@ function isMyMember(id) {
 
 function renderRole() {
   const admin = isAdmin();
-  const guest = isGuest();
   const member = isMember();
   // Toggle body classes
-  document.body.classList.toggle('guest-mode', guest);
   document.body.classList.toggle('member-mode', member);
   document.body.classList.toggle('admin-mode', admin);
   document.querySelectorAll('.admin-only').forEach(el => {
@@ -2237,32 +2173,32 @@ function renderRole() {
   // Lock club name for non-admin
   const clubInput = document.getElementById('club-name-input');
   if (clubInput) clubInput.readOnly = !admin;
-  // Show room code badge (non-guest only)
+  // Show room code badge
   const roomCode = _sGet('bcm_roomCode');
   const badge = document.getElementById('header-room-badge');
   if (badge) {
-    badge.style.display = (!guest && roomCode) ? 'block' : 'none';
+    badge.style.display = roomCode ? 'block' : 'none';
     if (roomCode) badge.textContent = roomCode;
   }
-  // Show guest badge
+  // Hide guest badge (guest mode removed)
   const guestBadge = document.getElementById('header-guest-badge');
-  if (guestBadge) guestBadge.style.display = guest ? 'block' : 'none';
+  if (guestBadge) guestBadge.style.display = 'none';
   // Profile button — แสดงเสมอ
   const profileBtn = document.getElementById('profile-btn');
   if (profileBtn) profileBtn.style.display = '';
   // Profile avatar
   const avatarFallback = document.getElementById('profile-avatar-fallback');
-  if (avatarFallback) avatarFallback.textContent = guest ? '👁️' : '👤';
-  // Profile menu sections
+  if (avatarFallback) avatarFallback.textContent = '👤';
+  // Profile menu sections — always show user section
   const guestSection = document.getElementById('profile-menu-guest-section');
   const userSection  = document.getElementById('profile-menu-user-section');
-  if (guestSection) guestSection.style.display = guest ? 'flex' : 'none';
-  if (userSection)  userSection.style.display  = guest ? 'none' : 'flex';
+  if (guestSection) guestSection.style.display = 'none';
+  if (userSection)  userSection.style.display  = 'flex';
   // Profile menu room & role
   const menuRoom = document.getElementById('profile-menu-room');
   const menuRole = document.getElementById('profile-menu-role');
   if (menuRoom && roomCode) menuRoom.textContent = roomCode;
-  if (menuRole) menuRole.textContent = guest ? '👁️ Guest (ดูได้อย่างเดียว)' : admin ? '⚙️ Admin' : '🏸 Member';
+  if (menuRole) menuRole.textContent = admin ? '⚙️ Admin' : '🏸 Member';
   // Profile menu member action buttons
   const renameBtn = document.getElementById('profile-menu-rename-btn');
   const claimBtn  = document.getElementById('profile-menu-claim-btn');
@@ -2276,7 +2212,7 @@ function renderRole() {
   }
   // Season bar cursor
   const seasonBar = document.getElementById('season-bar-wrap');
-  if (seasonBar) seasonBar.style.cursor = guest ? 'default' : 'pointer';
+  if (seasonBar) seasonBar.style.cursor = admin ? 'pointer' : 'default';
   // Refresh profile menu ELO if menu is currently open
   const _pmenu = document.getElementById('profile-menu');
   if (_pmenu && _pmenu.style.display !== 'none') _updateProfileMenu();
@@ -2512,7 +2448,7 @@ function renderRSVP(){
   if(!S.members.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);">ยังไม่มีสมาชิก</div>'; return; }
   el.innerHTML=S.members.map(m=>{
     const on=rsvpState[m.id]===true;
-    const guestAttr = isGuest() ? 'disabled style="pointer-events:none;"' : '';
+    const guestAttr = !isAdmin() ? 'disabled style="pointer-events:none;"' : '';
     return `<label class="chk-item" style="padding:6px 8px;${on?'border-color:var(--green);background:rgba(34,197,94,.07);':'opacity:.5'}">
       <input type="checkbox" ${on?'checked':''} ${guestAttr} onchange="toggleRSVP(${m.id},this.checked)">
       <span style="font-size:12px;">${esc(m.name)}</span>
@@ -2587,7 +2523,7 @@ function delDecay(id){
 
 // ===== ADMIN CONFIRM =====
 function confirmAdmin(action){
-  if(isGuest()){ toast('Guest Mode: ไม่สามารถแก้ไขได้ 👁️','🚫'); return false; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return false; }
   if(isMember()){ toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); return false; }
   const ans = prompt('🔐 ยืนยันการดำเนินการ:\n"' + action + '"\n\n⚠️ Export ข้อมูลไว้แล้วยัง? (หน้ากติกา → Export)\n\nพิมพ์ ADMIN เพื่อยืนยัน');
   if(ans !== 'ADMIN'){ if(ans !== null) toast('ยืนยันไม่สำเร็จ — พิมพ์ ADMIN ให้ถูกต้อง','❌'); return false; }
@@ -2908,8 +2844,8 @@ function renderFinance(){
         <div style="margin-top:4px;font-weight:700;font-size:15px;color:var(--green);">💵 คนละ ${perPerson} ฿</div>
         <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้เล่น: ${participants}</div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
-          ${(!isGuest())?`<button class="btn btn-y btn-sm" onclick="openFinanceModal(${s.id})">✏️ แก้ไข</button>`:''}
-          ${(!isGuest())?`<button class="btn btn-r btn-sm" onclick="deleteFinanceSession(${s.id})">🗑 ลบ</button>`:''}
+          ${isAdmin()?`<button class="btn btn-y btn-sm" onclick="openFinanceModal(${s.id})">✏️ แก้ไข</button>`:''}
+          ${isAdmin()?`<button class="btn btn-r btn-sm" onclick="deleteFinanceSession(${s.id})">🗑 ลบ</button>`:''}
           <button class="btn btn-s btn-sm" onclick="openFinanceSession(${s.id})">ดู session / จ่าย</button>
         </div>
       </div>
@@ -3025,7 +2961,7 @@ function syncFinanceDetailPaidRow(){
 }
 
 function saveFinanceSessionDetail(){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const id=parseInt(document.getElementById('finance-detail-id').value);
   const session=S.finance?.find(s=>s.id===id);
   if(!session){ toast('ไม่พบ session นี้','⚠️'); return; }
@@ -3035,14 +2971,14 @@ function saveFinanceSessionDetail(){
 }
 
 function deleteFinanceSession(id){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!confirm('ลบ session ค่าใช้จ่ายนี้?')) return;
   S.finance=S.finance.filter(s=>s.id!==id);
   save(); renderAll(); toast('ลบ session แล้ว','🗑️');
 }
 
 function saveFinanceSession(){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const date=document.getElementById('f-date').value;
   const booker=parseInt(document.getElementById('f-booker').value);
   const hours=parseFloat(document.getElementById('f-hours').value)||0;
@@ -3076,8 +3012,12 @@ function addMember(){
   if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const name=document.getElementById('nm-name').value.trim();
   if(!name){ toast('กรุณากรอกชื่อ','⚠️'); return; }
-  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:BASE, matchCount:0, wins:0, losses:0, lossStreak:0 });
+  const TIER_ELO = { 'BB': 10000, 'BG1': 20001, 'BG2': 35001, 'BG+': 45001 };
+  const tier = document.getElementById('nm-tier')?.value || 'BB';
+  const startElo = TIER_ELO[tier] ?? BASE;
+  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:startElo, matchCount:0, wins:0, losses:0, lossStreak:0 });
   save(); document.getElementById('nm-name').value=''; document.getElementById('nm-phone').value='';
+  const tierEl = document.getElementById('nm-tier'); if(tierEl) tierEl.value='BB';
   closeModal('modal-add'); renderAll(); toast(`เพิ่ม "${name}" สำเร็จ`);
 }
 
@@ -3168,7 +3108,7 @@ function verifyDelete(){
 
 
 function randomCourts(){
-  if(isGuest()){ toast('Guest: ไม่สามารถสุ่มคอร์ทได้ 👁️','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   // ใช้เฉพาะคนที่ tick RSVP (มา) ถ้ายังไม่มี RSVP เลยใช้ทั้งหมด
   const rsvpIds = S.members.filter(m=>rsvpState[m.id]===true).map(m=>m.id);
   const pool = rsvpIds.length ? S.members.filter(m=>rsvpIds.includes(m.id)) : S.members;
@@ -4358,17 +4298,7 @@ const firebaseConfig = {
   // Listen for auth state — catches redirect result on mobile too
   _auth.onAuthStateChanged(async function(user) {
     if (!user) {
-      // ไม่มี session — เช็ค guest session ก่อน
-      const guestCode = _sGet('bcm_roomCode');
-      const guestRole = _sGet('bcm_role');
-      if (guestCode && guestRole === 'guest') {
-        const ws = document.getElementById('welcome-screen');
-        if (ws) { ws.classList.add('hide'); setTimeout(()=>{ ws.style.display='none'; },420); }
-        renderAll(); renderRole(); _updateProfileAvatar();
-        if (typeof restartRealtimeSync === 'function') setTimeout(restartRealtimeSync, 300);
-        return;
-      }
-      // ไม่มีอะไรเลย → แสดง welcome screen
+      // ไม่มี session → แสดง welcome screen
       const ws = document.getElementById('welcome-screen');
       if (ws) {
         ws.style.display = '';
@@ -4850,7 +4780,7 @@ function setClubName(name){
   document.title = '🏸 ' + (name || 'SwFC') + ' Badminton';
 }
 function openClubNameModal(){
-  if(isGuest()){ toast('Guest ไม่สามารถเปลี่ยนชื่อก๊วนได้','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const inp = document.getElementById('clubname-input');
   if(inp) inp.value = getClubName();
@@ -4860,7 +4790,7 @@ function openClubNameModal(){
 async function saveClubName(){
   const val = (document.getElementById('clubname-input').value||'').trim();
   if(!val){ toast('กรุณากรอกชื่อก๊วน','⚠️'); return; }
-  if(isGuest()){ toast('Guest ไม่สามารถเปลี่ยนชื่อก๊วนได้','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   setClubName(val);
   closeModal('modal-club-name');

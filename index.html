@@ -1714,10 +1714,6 @@ async function wContinueAsGuest() {
   if (btn) { btn.disabled = true; btn.textContent = '⏳ กำลังโหลด...'; }
   try {
     if (!window.db) throw new Error('Firebase ยังไม่พร้อม');
-    // Sign in anonymously so guest gets a UID for Firebase rules
-    if (firebase.auth && !firebase.auth().currentUser) {
-      try { await firebase.auth().signInAnonymously(); } catch(e2) { /* ถ้า anonymous auth ปิด ข้ามได้ */ }
-    }
     const snap = await window.db.ref('rooms/' + code + '/state').once('value');
     const data = snap.val();
     if (!data) throw new Error('ไม่พบห้องรหัส ' + code);

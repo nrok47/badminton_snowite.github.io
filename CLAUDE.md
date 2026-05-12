@@ -2,13 +2,14 @@
 
 ## Project Overview
 
-This is a **Thai-language badminton club ranking system** — a static web app deployed on GitHub Pages. It tracks player scores across sessions using a custom ELO-style scoring engine with anti-gaming mechanics, tier classifications, and Firebase cloud sync.
+A **Thai-language badminton club ranking system** — a static single-file web app on GitHub Pages. Tracks player ELO across sessions, supports multiple clubs via a room code system, and syncs to Firebase Realtime Database.
 
 **Key facts:**
-- Pure vanilla JavaScript (no build tools, no framework, no npm)
+- Pure vanilla JavaScript — no build tools, no framework, no npm
 - All UI text is in Thai
-- Firebase Realtime Database is the primary data source
-- Designed for mobile use (bottom nav on mobile, top nav on desktop)
+- **Single file**: all HTML, CSS, and JS lives in `index.html` (~5,300+ lines)
+- Firebase Realtime Database 9.22.2 (compat build) for cloud sync
+- Designed for mobile use (responsive layout)
 
 ---
 
@@ -16,109 +17,136 @@ This is a **Thai-language badminton club ranking system** — a static web app d
 
 ```
 /
-├── index.html                  # Main app (production) — do all UI work here
-├── app.js                      # All application logic (~1,226 lines)
-├── style.css                   # All styling (~686 lines)
-├── badminton-club-mobile.html  # Mobile-optimized variant
-├── firebase_code.txt           # Firebase config/snippets (reference only)
-├── icon/                       # Icon assets
-│   └── README.md               # Icon documentation (Thai)
-├── rule กฏก๊วนแบด 10+ คน.txt  # Club rules in Thai (source of truth for scoring logic)
+├── index.html          # THE only production file — all edits go here
+├── CLAUDE.md           # This file
+├── README.md
+├── firebase_code.txt   # Firebase config reference (do not import)
+├── icon/               # Icon assets
 │
-│   — Legacy/experimental versions (do not edit) —
-├── index-v2.html
+│   — Legacy/experimental (DO NOT EDIT) —
+├── index-backup.html
+├── index-backup2.html
+├── index-backup-icon.html
+├── index-2.html
 ├── index-v3.html
 ├── index-v4.html
 ├── index_v2.html
-├── index-2.html
-└── old_index.html
+├── indexbwf.html
+├── old_index.html
+├── app.js              # Legacy (no longer used)
+└── style.css           # Legacy (no longer used)
 ```
 
-**Only edit `index.html`, `app.js`, and `style.css`** unless a new feature explicitly requires a new file.
+**Only edit `index.html`.** Legacy files exist for reference only.
 
 ---
 
 ## Architecture
 
-### Module Structure in `app.js`
+### Room System
 
-The code is organized into four object-literal modules, executed in order:
+Every club has a **room code** (5-digit string). Data is scoped per room:
 
-| Module | Purpose |
-|--------|---------|
-| `Storage` | localStorage wrapper (`KEY = 'bsw_v1'`) |
-| `Scoring` | Pure scoring engine (no side effects) |
-| `Data` | CRUD operations over stored state |
-| `App` | UI rendering and event handling |
-
-**Section headers** follow this pattern:
-```js
-// ── Section Name ────────────────────────────────────────────
+```
+Firebase: rooms/{roomCode}/state    ← full club state blob
+          rooms/{roomCode}/metadata ← createdAt, adminUid, clubName
 ```
 
-### Scoring Engine (`Scoring.calc`)
+Session keys (sessionStorage, prefix `bcm_`):
 
-The scoring system is the core logic. Understand it before modifying:
+| Key | Value |
+|-----|-------|
+| `bcm_role` | `'admin'` or `'user'` |
+| `bcm_roomCode` | 5-digit room code string |
+| `bcm_uid` | Firebase auth UID |
+| `bcm_memberId` | member ID in S.members (for non-admin) |
 
-1. **`matchType(winAvg, loseAvg)`** — determines game type (FAIR/UPHILL/DOWNHILL/etc.) based on team rating averages
-2. **`basePoints(type)`** — lookup table for win/lose base points per type
-3. **`calc(game, sessionState)`** — applies all modifiers:
-   - Base points (win/lose by match type)
-   - **Margin bonus**: ±150 if score difference ≥ 8
-   - **Anti-carry multiplier**: 0.8× for winner if diff > 1,500; 1.2× for loser
-   - **Anti-farming reduction**: 1st–2nd game = 100%, 3rd = 50%, 4th+ = 20%
-   - **Safety cap**: max −900 per game
-   - **Streak safety**: 3+ consecutive losses capped at −2,500 total
+### Role System
 
-The rules document (`rule กฏก๊วนแบด 10+ คน.txt`) is the canonical specification. If scoring behavior seems wrong, check that file first.
+| Role | How | Permissions |
+|------|-----|-------------|
+| `admin` | Google sign-in → create room | Full access |
+| `user` (member) | Google sign-in → join room | View-only + edit own name/icon |
 
-### State Management
+**No guest mode** — removed. Everyone must sign in with Google.
 
-- **Persistent state**: stored in Firebase (primary) and localStorage (fallback)
-- **Ephemeral session state**: computed by replaying game history via `Data.sessionState()`
-- **Pair counting**: tracks same-team combinations within a session for anti-farming
-- Firebase sync is semi-manual: auto-syncs on load, manual sync buttons in UI
+Role helpers:
+```js
+isAdmin()   // bcm_role === 'admin'
+isMember()  // bcm_role === 'user'
+isGuest()   // always returns false (stub kept for safety)
+```
 
-### Tab System
+### State Object `S`
 
-Five tabs rendered by `App.switchTab(tab)`:
-- `leaderboard` — player rankings + tier badges
-- `session` — active game session management
-- `players` — player CRUD
-- `history` — past sessions + game logs
-- `rules` — displays scoring rules
+All club data lives in a single `S` object, persisted to Firebase and localStorage:
+
+```js
+S = {
+  members: [...],       // { id, name, phone, elo, matchCount, wins, losses, lossStreak }
+  matches: [...],       // { id, winners[], losers[], wDeltas[], lDeltas[], ... }
+  finance: [...],       // { id, type, amount, note, date }
+  decayEvents: [...],   // { id, memberId, delta, date }
+  seasons: [...],
+  seasonGoal: null,
+  rulesConfig: RC,      // scoring config object
+}
+```
+
+### Firebase Sync
+
+**`autoSyncToFirebase()`** — uses `.transaction()` for atomic read-modify-write:
+- Merges matches/finance/decayEvents by ID (never overwrites server-side data)
+- Resolves concurrent writes from multiple users safely
+- Called on every `save()`
+
+**`_roomRef()`** — returns `db.ref('rooms/{code}/state')`
+
+### Scoring Engine
+
+ELO-style custom scoring. Key constants:
+```js
+const BASE  = 10000;  // default starting ELO (overridden by tier at member creation)
+const FLOOR = 8000;   // minimum ELO
+```
+
+`rulesConfig (RC)` holds all tunable parameters (stored in Firebase alongside state).
+
+**Match types** determined by team ELO average difference (`thresholdDiff`):
+- Even game → `evenWin` / `evenLoss`
+- Upset win (underdog wins) → `upsetWin` / `upsetLoss`
+- Favored win (favorite wins) → `favorWin` / `favorLoss`
+
+**Modifiers applied:**
+- Margin bonus if score gap ≥ `marginThreshold`
+- Anti-carry multiplier if ELO diff > `antiCarryThreshold`
+- Anti-farming reduction per pair (3rd game = 50%, 5th+ = 25%)
+- Participation bonus for playing
+- Daily loss cap (`dailyLossCap`)
+- Loss streak freeze/half (`streakFreezeAt`, `streakHalfMult`)
+- Decay for absent members (`decayPct` % per event, max `decayMaxTimes` times)
+- Per-tier multipliers (`bgMult`: win/loss/participation scale factors)
 
 ### Tier System
 
-| Tier | Threshold |
-|------|-----------|
-| Elite | ≥ 24,000 |
-| Pro | ≥ 18,000 |
-| Mid | ≥ 12,000 |
-| Beginner | < 12,000 |
+| Tier | ELO Range | Starting ELO |
+|------|-----------|--------------|
+| BB   | 0 – 20,000 | 10,000 |
+| BG1  | 20,001 – 35,000 | 20,001 |
+| BG2  | 35,001 – 45,000 | 35,001 |
+| BG+  | 45,001+ | 45,001 |
+
+Admin selects tier when adding a member (`modal-add` → `#nm-tier` dropdown).
 
 ---
 
 ## Code Conventions
 
-### JavaScript
-- `'use strict'` is always on
-- **camelCase** for variables and functions
-- **Template literals** (backticks) for all HTML generation
-- **Always use `esc(value)`** when interpolating user-supplied strings into HTML to prevent XSS
-- Null-check aggressively; alert dialogs use Thai text
-- No external dependencies — do not add npm packages or CDN imports beyond what exists
-
-### HTML
-- All user-visible text is in Thai
-- Semantic class naming: `.nb` (nav button), `.scard` (stat card), `.tier-elite`, etc.
-- Firebase scripts loaded from CDN at bottom of `<body>`
-
-### CSS
-- CSS variables for theming: `--bg`, `--accent`, `--text`, `--card`, etc.
-- Dark mode is default; light mode toggled via `.light` class on `<body>`
-- Mobile breakpoint: `@media (max-width: 600px)`
-- No preprocessors — plain CSS only
+- **Always use `esc(value)`** when interpolating user strings into HTML (XSS prevention)
+- camelCase for functions and variables
+- Template literals for all HTML generation
+- All UI text in Thai
+- No external dependencies beyond existing CDN imports
 
 ---
 
@@ -126,74 +154,76 @@ Five tabs rendered by `App.switchTab(tab)`:
 
 ### No Build Step
 
-This is a static site. To test changes:
-1. Open `index.html` directly in a browser, **or**
-2. Use any static file server (e.g., `python3 -m http.server`)
+Static site — open `index.html` in browser or serve with `python3 -m http.server`.
 
-There is no `npm install`, no compilation, and no CI/CD pipeline.
+### Git
 
-### Git Workflow
+- Production branch: **`main`**
+- Push: `git push -u origin main`
+- Use PAT if needed (stored separately, never commit credentials)
 
-- Work on feature branches (current: `claude/add-claude-documentation-DxKWf`)
-- Push to `origin/<branch-name>` with `git push -u origin <branch-name>`
-- The production branch is `main` — only push there when a feature is complete and tested
-
-### Firebase Configuration
-
-Firebase credentials are embedded directly in `index.html` (not environment variables). This is intentional for a GitHub Pages static site — the database has read/write rules configured on the Firebase console.
+### Firebase
 
 - **Project ID**: `badmintonsnowite`
 - **Database URL**: `badmintonsnowite-default-rtdb.firebaseio.com`
-- Firebase SDK version: **9.22.2 (compat build)**
+- SDK: Firebase 9.22.2 compat build (CDN, bottom of `<body>`)
+- Credentials embedded in `index.html` — intentional for GitHub Pages static site
+
+**Current Firebase Rules** (apply in Console):
+```json
+{
+  "rules": {
+    "rooms": {
+      ".indexOn": ["adminUid"],
+      "$roomCode": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "users": {
+      "$uid": {
+        ".read": "auth != null",
+        ".write": "auth != null && auth.uid == $uid"
+      }
+    }
+  }
+}
+```
 
 ---
 
 ## Key Functions Reference
 
-| Function | Location | Description |
-|----------|----------|-------------|
-| `uid()` | app.js | Generates unique IDs for players/games |
-| `esc(str)` | app.js | HTML-escapes user input — **always use for user data** |
-| `fmtNum(n)` | app.js | Formats numbers with Thai locale |
-| `todayStr()` | app.js | Returns ISO date string (YYYY-MM-DD) |
-| `Data.addGame(...)` | app.js | Records a game and persists state |
-| `Data.undoLastGame(id)` | app.js | Removes last game from session |
-| `Data.endSession(id)` | app.js | Finalizes session, applies decay to absentees |
-| `App.switchTab(tab)` | app.js | Renders a tab by name |
-| `Scoring.calc(game, state)` | app.js | Core scoring calculation |
+| Function | Description |
+|----------|-------------|
+| `isAdmin()` | true if current user is room admin |
+| `isMember()` | true if current user is a non-admin member |
+| `isGuest()` | always false (guest mode removed) |
+| `isMyMember(id)` | true if `id` matches `bcm_memberId` |
+| `esc(str)` | HTML-escape user input — always use in templates |
+| `save()` | persist S to localStorage + trigger autoSyncToFirebase |
+| `autoSyncToFirebase()` | atomic transaction merge to Firebase |
+| `_roomRef()` | returns Firebase ref for current room's state |
+| `renderAll()` | re-renders entire UI from S |
+| `toast(msg, icon)` | shows a transient notification |
+| `addMember()` | adds member with tier-based starting ELO |
+| `calcMatch(...)` | records a match + applies ELO deltas |
+| `getBGTag(elo)` | returns tier string (BB/BG1/BG2/BG+) for an ELO |
 
 ---
 
 ## Important Constraints
 
-1. **Do not remove `esc()`** from HTML-generating code — it prevents XSS
-2. **Do not add a build tool** (webpack, vite, etc.) — the project is intentionally build-free
-3. **Do not edit legacy version files** (`index-v*.html`, `old_index.html`)
-4. **Scoring rule changes must match** the rules document (`rule กฏก๊วนแบด 10+ คน.txt`)
-5. **All UI text should remain in Thai** unless the user explicitly asks to change the language
-6. **Firebase credentials in index.html are expected** — do not move them to a `.env` file (no build pipeline to consume it)
-7. **The `Storage` module key is `'bsw_v1'`** — changing it will wipe all users' local data
+1. **Do not remove `esc()`** from HTML-generating code — prevents XSS
+2. **Do not add a build tool** — project is intentionally build-free
+3. **Do not edit legacy files** (`index-v*.html`, `old_index.html`, `app.js`, `style.css`)
+4. **Do not re-introduce guest mode** — removed intentionally; everyone uses Google sign-in
+5. **Do not change `BASE` or `FLOOR` lightly** — affects all existing member ELOs
+6. **Firebase credentials in index.html are expected** — no `.env` support (no build pipeline)
+7. **All writes go through `save()`** — never write to Firebase directly without transaction merge
 
 ---
 
-## Common Tasks
+## Planned Future Features (Not Yet Implemented)
 
-### Add a new player field
-1. Update `Data.addPlayer()` in `app.js`
-2. Update `App.renderPlayers()` to display the new field
-3. Update `App.renderLeaderboard()` if it should appear in rankings
-
-### Adjust scoring rules
-1. Read `rule กฏก๊วนแบด 10+ คน.txt` to understand the intended rule
-2. Modify `Scoring.calc()` or the relevant helper in app.js
-3. Verify that the Thai rules text in `App.renderRules()` is updated to match
-
-### Add a new tab
-1. Add a nav button in `index.html` (both desktop header nav and mobile bottom nav)
-2. Add a corresponding `div.tab-content` in `index.html`
-3. Add a `render<TabName>()` method in the `App` module in `app.js`
-4. Add the case to `App.switchTab()`
-
-### Modify Firebase sync behavior
-- Firebase read/write helpers are in `index.html` (currently embedded, not in `app.js`)
-- Reference `firebase_code.txt` for patterns — it contains reusable sync snippets
+- **Pro Player tier**: ELO 50,000 start, hardmode scoring (+3000/−3000 base, margin ±100/point), sliding 10-game window (game 11 drops game 1)

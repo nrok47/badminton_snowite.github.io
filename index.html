@@ -1754,6 +1754,10 @@ async function wContinueWithGoogle() {
     const deadline = Date.now() + 8000;
     await new Promise(r => { const t = setInterval(()=>{ if(window._auth || Date.now()>deadline){ clearInterval(t); r(); }},100); });
   }
+  // ถ้ามี anonymous session อยู่ ให้ sign out ก่อน ป้องกัน conflict กับ Google sign-in
+  if (window._auth?.currentUser?.isAnonymous) {
+    try { await window._auth.signOut(); } catch(e3) {}
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   // บังคับให้ Google แสดง account picker เสมอ (สำคัญมากหลัง logout)
   provider.setCustomParameters({ prompt: 'select_account' });
@@ -4388,7 +4392,7 @@ const firebaseConfig = {
       _wSetSignedIn(user, 'choose');
       const savedCode = _sGet('bcm_pendingJoinCode');
       const flow2 = _sGet('bcm_pendingFlow');
-      if (flow2 === 'join' && savedCode) {
+      if (savedCode && (flow2 === 'join' || flow2 === 'auto')) {
         _wJoinCode = savedCode;
         wGoStep('join');
         const inp = document.getElementById('join-code-input');

@@ -6,6 +6,7 @@
 <title>🏸 SnowiteFC Badminton</title>
 
 
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg'><text y='32' font-size='32'>🏸</text></svg>">
 <meta name="theme-color" content="#0a1628">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -246,7 +247,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 .fb-status{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700;margin-left:auto;background:rgba(0,0,0,.2);cursor:pointer;transition:background .18s,opacity .18s;user-select:none;}
 .fb-status:hover{background:rgba(255,255,255,.08);opacity:.85;}
 .fb-status.force-offline{opacity:.7;}
-.fb-indicator{width:8px;height:8px;border-radius:50%;display:inline-block;animation:pulse 2s infinite;}
+.fb-indicator{width:8px;height:8px;border-radius:50%;display:inline-block;animation:pulse 2s infinite;background:#888;}
 .fb-indicator.online{background:#22c55e;box-shadow:0 0 6px rgba(34,197,94,.6);}
 .fb-indicator.offline{background:#f43f5e;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
@@ -279,13 +280,317 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 [data-theme="bwf"] #header-season-badge{background:rgba(255,255,255,.22)!important;border:1px solid rgba(255,255,255,.55)!important;color:#fff!important;}
 [data-theme="snowite"] .season-bar-fill{background:linear-gradient(90deg,#f97316,#fb923c,#f97316);background-size:200% 100%;animation:season-shimmer 2s linear infinite;}
 @media(max-width:600px){.season-bar-wrap{top:0;padding:5px 12px;}.season-bar-label{font-size:9px;}}
+
+/* ===== WELCOME SCREEN ===== */
+#welcome-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  animation:none;
+}
+#welcome-screen.hide{
+  animation:welcomeFadeOut .4s ease forwards;
+  pointer-events:none;
+}
+@keyframes welcomeFadeOut{
+  from{opacity:1;transform:scale(1);}
+  to{opacity:0;transform:scale(.97);}
+}
+.welcome-card{
+  background:var(--s1);
+  border:1px solid var(--border);
+  border-radius:20px;
+  padding:32px 24px 24px;
+  width:100%;
+  max-width:400px;
+  box-shadow:0 24px 64px rgba(0,0,0,.45);
+  animation:up .35s ease;
+}
+.welcome-logo{
+  font-size:52px;text-align:center;margin-bottom:6px;line-height:1;
+}
+.welcome-title{
+  text-align:center;font-size:22px;font-weight:900;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  margin-bottom:4px;letter-spacing:-.3px;
+}
+.welcome-sub{
+  text-align:center;font-size:12px;color:var(--muted);margin-bottom:22px;
+}
+
+/* Choice cards */
+.wc-choices{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.wc-choice{
+  background:var(--s2);border:1.5px solid var(--border);
+  border-radius:14px;padding:18px 12px 14px;cursor:pointer;
+  text-align:center;transition:all .2s;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+.wc-choice:hover{border-color:var(--accent);transform:translateY(-2px);background:var(--s3);}
+.wc-choice.selected{border-color:var(--accent);background:rgba(240,192,64,.08);}
+.wc-choice-icon{font-size:30px;line-height:1;}
+.wc-choice-title{font-size:13px;font-weight:800;color:var(--text);}
+.wc-choice-sub{font-size:10px;color:var(--muted);line-height:1.4;}
+
+/* Step panels */
+.w-step{display:none;animation:up .25s ease;}
+.w-step.on{display:block;}
+
+.welcome-label{
+  font-size:11px;font-weight:700;color:var(--dim);
+  text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;display:block;
+}
+.welcome-input{
+  width:100%;background:var(--s2);border:1.5px solid var(--border);
+  color:var(--text);font-family:'Kanit',sans-serif;font-size:16px;font-weight:600;
+  padding:11px 14px;border-radius:10px;outline:none;
+  transition:border-color .18s;margin-bottom:14px;letter-spacing:8px;
+  text-align:center;font-size:22px;
+}
+.welcome-input:focus{border-color:var(--accent);}
+
+/* Google Sign-in Button */
+.btn-google{
+  width:100%;background:#fff;border:1.5px solid #dadce0;
+  color:#3c4043;font-family:'Kanit',sans-serif;font-size:14px;font-weight:700;
+  padding:12px;border-radius:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  transition:box-shadow .18s,opacity .18s;box-shadow:0 1px 3px rgba(0,0,0,.12);
+  margin-bottom:10px;
+}
+.btn-google:hover{box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:.96;}
+.btn-google svg{flex-shrink:0;}
+.btn-google-disabled{opacity:.5;cursor:not-allowed !important;}
+
+.welcome-btn{
+  width:100%;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-family:'Kanit',sans-serif;font-size:15px;font-weight:800;
+  padding:13px;border-radius:10px;border:none;cursor:pointer;
+  transition:opacity .18s,transform .18s;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:10px;
+}
+.welcome-btn:hover{opacity:.88;transform:translateY(-1px);}
+.welcome-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;}
+.welcome-hint{
+  text-align:center;font-size:11px;color:var(--muted);margin-top:10px;opacity:.7;
+}
+.welcome-back{
+  display:flex;align-items:center;justify-content:center;gap:5px;
+  background:none;border:none;color:var(--muted);font-family:'Kanit',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;padding:6px;margin-top:4px;
+  width:100%;transition:color .18s;
+}
+.welcome-back:hover{color:var(--text);}
+
+/* Room code display */
+.room-code-display{
+  text-align:center;padding:18px;background:var(--s2);border:1.5px solid var(--accent);
+  border-radius:14px;margin:14px 0;
+}
+.room-code-val{
+  font-family:'IBM Plex Mono',monospace;font-size:38px;font-weight:900;
+  letter-spacing:10px;color:var(--accent);margin-bottom:4px;
+  text-shadow:0 0 20px rgba(240,192,64,.3);
+  padding-left:10px; /* offset for letter-spacing */
+}
+.room-code-label{font-size:11px;color:var(--muted);}
+
+/* User info chip */
+.user-chip{
+  display:flex;align-items:center;gap:10px;padding:10px 12px;
+  background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:14px;
+}
+.user-chip-avatar{width:32px;height:32px;border-radius:50%;object-fit:cover;}
+.user-chip-name{font-size:13px;font-weight:700;flex:1;}
+.user-chip-email{font-size:10px;color:var(--muted);}
+.user-chip-logout{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px;transition:color .18s;}
+.user-chip-logout:hover{color:var(--red);}
+
+/* Loading spinner */
+.w-spinner{display:inline-block;width:18px;height:18px;border:2px solid rgba(0,0,0,.15);
+  border-top-color:#000;border-radius:50%;animation:spin .6s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Member mode: hide admin-only write buttons */
+body.member-mode .admin-hidden { display: none !important; }
+/* My member card highlight */
+.my-member-card { border-color: rgba(240,192,64,.4) !important; box-shadow: 0 0 0 1.5px rgba(240,192,64,.2); }
 </style>
-</head>
 <body>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// SESSION — in-memory store (replaces localStorage for auth data)
+// Only bcm_theme stays in localStorage (user preference)
+// Guest flow uses sessionStorage (auto-clears on tab close)
+// ═══════════════════════════════════════════════════════
+window._session = {
+  role: null,        // 'admin' | 'user' | null
+  roomCode: null,    // '12345'
+  myUid: null,       // Firebase UID
+  adminUid: null,
+  adminName: null,
+  adminEmail: null,
+  adminPhoto: null,
+  clubName: null,
+  welcomed: false,
+  pendingFlow: null,
+  pendingJoinCode: null,
+  user: null,        // { uid, name, email, photo }
+};
+
+function _sGet(key) {
+  if (key === 'bcm_role')           return window._session.role;
+  if (key === 'bcm_roomCode')       return window._session.roomCode;
+  if (key === 'bcm_myUid')          return window._session.myUid;
+  if (key === 'bcm_adminUid')       return window._session.adminUid;
+  if (key === 'bcm_adminName')      return window._session.adminName;
+  if (key === 'bcm_adminEmail')     return window._session.adminEmail;
+  if (key === 'bcm_adminPhoto')     return window._session.adminPhoto;
+  if (key === 'bcm_clubname')       return window._session.clubName;
+  if (key === 'bcm_welcomed')       return window._session.welcomed ? '1' : null;
+  if (key === 'bcm_pendingFlow')    return window._session.pendingFlow || sessionStorage.getItem('bcm_pendingFlow');
+  if (key === 'bcm_pendingJoinCode') return window._session.pendingJoinCode || sessionStorage.getItem('bcm_pendingJoinCode');
+  if (key === 'bcm_user')           return window._session.user ? JSON.stringify(window._session.user) : null;
+  if (key === 'bcm_state')          return null; // no longer cached locally
+  return null;
+}
+
+function _sSet(key, value) {
+  if (key === 'bcm_role')           { window._session.role = value; return; }
+  if (key === 'bcm_roomCode')       { window._session.roomCode = value; return; }
+  if (key === 'bcm_myUid')          { window._session.myUid = value; return; }
+  if (key === 'bcm_adminUid')       { window._session.adminUid = value; return; }
+  if (key === 'bcm_adminName')      { window._session.adminName = value; return; }
+  if (key === 'bcm_adminEmail')     { window._session.adminEmail = value; return; }
+  if (key === 'bcm_adminPhoto')     { window._session.adminPhoto = value; return; }
+  if (key === 'bcm_clubname')       { window._session.clubName = value; return; }
+  if (key === 'bcm_welcomed')       { window._session.welcomed = true; return; }
+  if (key === 'bcm_pendingFlow')    { window._session.pendingFlow = value; sessionStorage.setItem('bcm_pendingFlow', value); return; }
+  if (key === 'bcm_pendingJoinCode'){ window._session.pendingJoinCode = value; sessionStorage.setItem('bcm_pendingJoinCode', value); return; }
+  if (key === 'bcm_user')           { try { window._session.user = JSON.parse(value); } catch(e){} return; }
+  if (key === 'bcm_state')          return; // no longer cached locally
+}
+
+function _sRemove(key) {
+  _sSet(key, null);
+  if (key === 'bcm_welcomed') window._session.welcomed = false;
+  sessionStorage.removeItem(key);
+}
+
+function _sClear() {
+  // Reset all session fields (keep theme in localStorage untouched)
+  window._session = { role:null,roomCode:null,myUid:null,adminUid:null,
+    adminName:null,adminEmail:null,adminPhoto:null,clubName:null,
+    welcomed:false,pendingFlow:null,pendingJoinCode:null,user:null };
+  sessionStorage.clear();
+  // Clean up any old bcm_ keys in localStorage (migration cleanup)
+  Object.keys(localStorage).filter(k => k.startsWith('bcm_') && k !== 'bcm_theme')
+    .forEach(k => localStorage.removeItem(k));
+}
+
+</script>
+
+<!-- ===== WELCOME SCREEN ===== -->
+<div id="welcome-screen">
+  <div class="welcome-card">
+    <div class="welcome-logo">🏸</div>
+    <div class="welcome-title" id="welcome-title">Badminton Club</div>
+    <div class="welcome-sub" id="welcome-sub">ระบบจัดการก๊วนแบดมินตัน</div>
+
+    <!-- ── LOADING: auth check ── -->
+    <div class="w-step on" id="ws-step-loading">
+      <div style="text-align:center;padding:28px 0 20px;">
+        <div style="display:inline-block;width:26px;height:26px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px;"></div>
+        <div style="font-size:12px;color:var(--muted);">กำลังตรวจสอบ...</div>
+      </div>
+    </div>
+
+    <!-- ── MAIN: single screen, no session ── -->
+    <div class="w-step" id="ws-step-main">
+      <!-- Last room hint -->
+      <div id="w-last-room-hint" style="display:none;margin-bottom:14px;padding:10px 14px;background:var(--s2);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:background .18s;"
+        onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='var(--s2)'"
+        onclick="_wFillLastRoom()">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">🕐 เข้าล่าสุด</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+          <div>
+            <div id="w-last-club-name" style="font-size:13px;font-weight:800;color:var(--text);"></div>
+            <div id="w-last-room-code" style="font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--accent);font-weight:700;"></div>
+          </div>
+          <span style="font-size:11px;color:var(--muted);white-space:nowrap;">แตะเพื่อใช้ →</span>
+        </div>
+      </div>
+      <!-- Google -->
+      <button class="btn-google" id="w-google-btn" onclick="wContinueWithGoogle()">
+        <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        Continue with Google
+      </button>
+      <div style="text-align:center;font-size:10px;color:var(--muted);margin-top:6px;opacity:.7;">สมาชิก หรือ Admin</div>
+
+      <div style="text-align:center;margin-top:18px;">
+        <button onclick="wResetSession()" style="background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;opacity:0.5;">↺ ล้างข้อมูล / เริ่มใหม่</button>
+      </div>
+    </div>
+
+    <!-- ── AFTER GOOGLE: ไม่พบห้อง → เลือก Join หรือ Create ── -->
+    <div class="w-step" id="ws-step-choose">
+      <div id="w-user-chip" style="margin-bottom:16px;"></div>
+      <div class="wc-choices">
+        <div class="wc-choice" onclick="wGoStep('join')">
+          <div class="wc-choice-icon">🏸</div>
+          <div class="wc-choice-title">เข้าร่วมก๊วน</div>
+          <div class="wc-choice-sub">มีรหัสห้องอยู่แล้ว</div>
+        </div>
+        <div class="wc-choice" onclick="wStartAsAdmin()">
+          <div class="wc-choice-icon">⚙️</div>
+          <div class="wc-choice-title">สร้างก๊วน</div>
+          <div class="wc-choice-sub">เป็น Admin ของก๊วน</div>
+        </div>
+      </div>
+      <div id="w-room-list" style="margin-top:16px;width:100%;"></div>
+      <button class="welcome-back" onclick="wSignOutAndReset()">← ออกจากระบบ</button>
+    </div>
+
+    <!-- ── JOIN: กรอก Room Code (Google signed in แล้ว) ── -->
+    <div class="w-step" id="ws-step-join">
+      <div id="w-join-user-chip" style="margin-bottom:14px;"></div>
+      <label class="welcome-label">รหัสห้อง (Room Code)</label>
+      <input class="welcome-input" id="join-code-input" type="tel"
+        placeholder="12345" maxlength="5"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+        onkeydown="if(event.key==='Enter') wJoinNext()">
+      <button class="welcome-btn" id="join-next-btn" onclick="wJoinNext()">🏸 เข้าร่วมก๊วน</button>
+      <button class="welcome-back" onclick="wGoStep('choose')">← กลับ</button>
+    </div>
+
+    <!-- ── CREATED: แสดง Room Code ใหม่ ── -->
+    <div class="w-step" id="ws-step-created">
+      <div id="created-user-chip-2" style="margin-bottom:14px;"></div>
+      <div style="font-size:12px;color:var(--muted);text-align:center;margin-bottom:8px;">รหัสห้องของก๊วนคุณ</div>
+      <div class="room-code-display">
+        <div class="room-code-val" id="display-room-code">---</div>
+        <div class="room-code-label">แชร์รหัสนี้ให้สมาชิกในก๊วน</div>
+      </div>
+      <label class="welcome-label" style="margin-top:14px;">ชื่อก๊วน</label>
+      <input class="welcome-input" id="created-club-name" type="text"
+        placeholder="เช่น SnowiteFC..." maxlength="30"
+        style="letter-spacing:0;text-transform:none;text-align:left;"
+        onkeydown="if(event.key==='Enter') wFinishCreate()">
+      <button class="welcome-btn" onclick="wFinishCreate()">🚀 เริ่มใช้งาน</button>
+      <div class="welcome-hint">บันทึกรหัสห้องไว้ เพื่อบอกสมาชิกในก๊วน</div>
+    </div>
+
+  </div>
+</div>
+
 
 <header class="header">
   <div style="display:flex;align-items:center;gap:8px;">
-    <div class="logo">🏸 SwFC</div>
+    <div class="logo" id="header-logo" onclick="if(isAdmin()) openClubNameModal()" title="เปลี่ยนชื่อก๊วน (เฉพาะ Admin)" style="cursor:pointer;">🏸 SwFC</div>
     <span id="header-season-badge" class="season-badge" style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:linear-gradient(135deg,rgba(240,192,64,.18),rgba(224,120,32,.18));border:1px solid rgba(240,192,64,.35);color:var(--accent);letter-spacing:.4px;white-space:nowrap;font-family:'Kanit',sans-serif;">SEASON 1</span>
   </div>
   <nav class="nav">
@@ -295,17 +600,91 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <button class="nb" onclick="tab('finance',this)">💰 การเงิน</button>
     <button class="nb" onclick="tab('rules',this)">📋 กติกา</button>
     <button class="nb" onclick="tab('trophy',this)">🏆 Trophy</button>
+    <button class="nb" onclick="tab('pro',this)">⚡ Pro</button>
+    <button class="nb super-admin-only" onclick="tab('superadmin',this)" style="display:none;">🛡️ Super</button>
   </nav>
   <div class="header-actions">
-    <div class="fb-status" onclick="toggleFirebaseMode()" title="คลิกเพื่อ switch Online/Offline">
+    <div class="fb-status" onclick="toggleFirebaseMode()" title="คลิกเพื่อ switch Online/Offline" style="display:none;">
       <span class="fb-indicator" id="fb-indicator"></span>
-      <span id="fb-text">Firebase</span>
+      <span id="fb-text">กำลังเชื่อมต่อ...</span>
     </div>
+    <div id="header-room-badge" style="display:none;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.3);color:var(--accent);font-family:'IBM Plex Mono',monospace;cursor:pointer;" title="รหัสห้อง" onclick="_showRoomCode()"></div>
+    <div id="header-guest-badge" style="display:none;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:800;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.3);color:var(--blue);font-family:'Kanit',sans-serif;">👁️ GUEST</div>
+    <!-- Profile Button (แสดงทั้ง guest และ member/admin) -->
+    <button id="profile-btn" onclick="toggleProfileMenu(event)" style="background:none;border:none;cursor:pointer;padding:0;position:relative;display:flex;align-items:center;">
+      <div id="profile-avatar" style="width:34px;height:34px;border-radius:50%;overflow:hidden;border:2px solid var(--accent);background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.35);">
+        <img id="profile-avatar-img" src="" style="width:100%;height:100%;object-fit:cover;display:none;" referrerpolicy="no-referrer">
+        <span id="profile-avatar-fallback" style="line-height:1;color:var(--dim);">👤</span>
+      </div>
+    </button>
   </div>
 </header>
 
+<!-- Profile Dropdown Menu -->
+<div id="profile-menu" style="display:none;position:fixed;top:54px;right:12px;z-index:9999;
+  background:var(--s2);border:1px solid var(--border);border-radius:14px;
+  box-shadow:0 8px 32px rgba(0,0,0,.5);min-width:220px;overflow:hidden;">
+  <!-- Guest Info (แสดงเฉพาะ guest mode) -->
+  <div id="profile-menu-guest-section" style="display:none;padding:14px 16px 10px;border-bottom:1px solid var(--border);display:none;align-items:center;gap:10px;">
+    <div style="width:38px;height:38px;border-radius:50%;background:rgba(56,189,248,.15);border:1.5px solid rgba(56,189,248,.3);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">👁️</div>
+    <div style="min-width:0;">
+      <div style="font-size:13px;font-weight:700;color:var(--text);">Guest Mode</div>
+      <div style="font-size:10px;color:var(--muted);">ดูได้อย่างเดียว</div>
+    </div>
+  </div>
+  <!-- User Info (แสดงเฉพาะ member/admin) -->
+  <div id="profile-menu-user-section" style="padding:14px 16px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;">
+    <div style="width:38px;height:38px;border-radius:50%;overflow:hidden;flex-shrink:0;background:var(--surface);display:flex;align-items:center;justify-content:center;">
+      <img id="profile-menu-photo" src="" style="width:100%;height:100%;object-fit:cover;display:none;" referrerpolicy="no-referrer">
+      <span id="profile-menu-fallback" style="font-size:20px;">👤</span>
+    </div>
+    <div style="min-width:0;">
+      <div id="profile-menu-name" style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+      <div id="profile-menu-email" style="font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">—</div>
+    </div>
+  </div>
+  <!-- Room Info -->
+  <div style="padding:10px 16px;border-bottom:1px solid var(--border);">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:4px;">ห้อง</div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <span id="profile-menu-room" style="font-size:13px;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--accent);">—</span>
+      <button onclick="copyRoomCode()" style="background:none;border:none;cursor:pointer;font-size:11px;color:var(--muted);padding:2px 6px;border-radius:6px;border:1px solid var(--border);">คัดลอก</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:6px;">สถานะ</div>
+    <div id="profile-menu-role" style="font-size:12px;font-weight:600;margin-top:2px;">—</div>
+    <div id="profile-menu-elo" style="display:none;align-items:center;margin-top:6px;flex-wrap:wrap;gap:2px;"></div>
+  </div>
+  <!-- Actions -->
+  <div style="padding:6px;">
+    <!-- Member: แก้ชื่อตัวเอง -->
+    <div id="profile-menu-rename-btn" style="display:none;">
+      <button onclick="openRenameSelf(); document.getElementById('profile-menu').style.display='none';" style="width:100%;background:none;border:none;cursor:pointer;
+        padding:9px 12px;border-radius:9px;text-align:left;font-size:13px;color:var(--text);
+        font-family:'Kanit',sans-serif;display:flex;align-items:center;gap:8px;
+        transition:background .15s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">
+        <span>✏️</span> เปลี่ยนชื่อในเกม
+      </button>
+    </div>
+    <!-- Member: claim ตัวเอง (ถ้ายังไม่ได้ผูก) -->
+    <div id="profile-menu-claim-btn" style="display:none;">
+      <button onclick="openClaimModal(isAdmin()); document.getElementById('profile-menu').style.display='none';" style="width:100%;background:none;border:none;cursor:pointer;
+        padding:9px 12px;border-radius:9px;text-align:left;font-size:13px;color:var(--accent);
+        font-family:'Kanit',sans-serif;display:flex;align-items:center;gap:8px;
+        transition:background .15s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">
+        <span>👤</span> เลือกตัวเองในก๊วน
+      </button>
+    </div>
+    <button onclick="profileLogout()" style="width:100%;background:none;border:none;cursor:pointer;
+      padding:9px 12px;border-radius:9px;text-align:left;font-size:13px;color:#ef4444;
+      font-family:'Kanit',sans-serif;display:flex;align-items:center;gap:8px;
+      transition:background .15s;" onmouseover="this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.background='none'">
+      <span>🚪</span> ออกจากระบบ
+    </button>
+  </div>
+</div>
+
 <!-- SEASON PROGRESS BAR -->
-<div class="season-bar-wrap" onclick="openSeasonGoalModal()" style="cursor:pointer;" title="คลิกเพื่อตั้งเป้าหมาย Season">
+<div class="season-bar-wrap" onclick="if(isAdmin()) openSeasonGoalModal()" style="cursor:pointer;" title="คลิกเพื่อตั้งเป้าหมาย Season" id="season-bar-wrap">
   <span class="season-bar-label" id="season-bar-label">S1 PROGRESS</span>
   <div class="season-bar-track">
     <div class="season-bar-fill" id="season-bar-fill" style="width:0%"></div>
@@ -365,10 +744,14 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
     <div class="rsvp-grid" id="rsvp-grid"></div>
   </div>
   <div class="panel">
-    <div class="pt">🎯 จัดคอร์ท <button class="btn btn-sm btn-s pt-action" onclick="randomCourts()">🎲 สุ่มจัดคอร์ท</button></div>
+    <div class="pt">🎯 จัดคอร์ท <button class="btn btn-sm btn-s pt-action guest-hidden" onclick="randomCourts()">🎲 สุ่มจัดคอร์ท</button></div>
     <div id="court-list"><div class="empty"><div class="empty-i">🏸</div><div class="empty-t">กด "สุ่มจัดคอร์ท"</div></div></div>
   </div>
-  <div class="panel">
+  <div id="freemium-warn-banner" style="display:none;background:linear-gradient(135deg,#f59e0b22,#ef444422);border:1px solid #f59e0b66;border-radius:10px;padding:12px 16px;margin:0 0 10px;font-size:12px;color:var(--text);">
+    <span id="freemium-warn-text"></span>
+    <span style="float:right;cursor:pointer;color:var(--muted);" onclick="openModal('modal-upgrade')">📖 ดูแพ็กเกจ</span>
+  </div>
+  <div class="panel guest-hidden">
     <div class="pt">📝 บันทึกผล <span id="rsvp-hint" style="margin-left:4px;font-size:10px;color:var(--green);font-weight:600;text-transform:none;letter-spacing:0;"></span></div>
     <div class="g2">
       <div>
@@ -391,7 +774,8 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
     </div>
     <div id="match-preview" style="display:none;background:var(--s2);border:1px solid var(--border);border-radius:9px;padding:12px 14px;margin-bottom:14px;font-size:12px;"></div>
-    <button class="btn btn-g btn-full" onclick="recordMatch()">✅ บันทึกผลการแข่งขัน</button>
+    <div id="pro-match-badge" style="display:none;background:linear-gradient(135deg,#f59e0b33,#ef444422);border:1px solid #f59e0b88;border-radius:9px;padding:10px 14px;margin-bottom:10px;font-size:12px;font-weight:700;color:var(--accent);text-align:center;">⚡ Pro Match — บันทึกด้วยระบบ Pro ELO</div>
+    <button id="record-match-btn" class="btn btn-g btn-full" onclick="recordMatch()">✅ บันทึกผลการแข่งขัน</button>
   </div>
   <div class="panel">
     <div class="pt">📜 ประวัติการแข่งขัน</div>
@@ -410,7 +794,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 <div id="page-rules" class="page">
   <div class="panel">
     <div class="pt">📋 กติการะบบคะแนน
-      <button class="btn btn-s btn-sm pt-action" onclick="openRulesEdit(); openModal('modal-rules-edit')" style="font-size:16px;padding:4px 10px;" title="แก้ไขกติกา">⚙️</button>
+      <button class="btn btn-s btn-sm pt-action guest-hidden admin-hidden" onclick="openRulesEdit(); openModal('modal-rules-edit')" style="font-size:16px;padding:4px 10px;" title="แก้ไขกติกา">⚙️</button>
     </div>
     <div id="rules-display"></div>
     <div class="divider"></div>
@@ -436,7 +820,7 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
   </div>
 
   <!-- ADMIN TOOL CARD (collapsible, minimal) -->
-  <div class="panel" style="border:1px solid var(--border);padding:0;overflow:hidden;">
+  <div class="panel admin-only" style="border:1px solid var(--border);padding:0;overflow:hidden;">
     <!-- Header / Toggle -->
     <button onclick="toggleAdminTool()" id="admin-tool-toggle"
       style="width:100%;display:flex;align-items:center;justify-content:space-between;
@@ -490,6 +874,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
       </div>
     </div>
   </div>
+
+  <!-- Developer credit -->
+  <div style="text-align:center;padding:18px 0 6px;opacity:.45;">
+    <span style="font-size:11px;color:var(--muted);font-family:var(--mono);letter-spacing:.5px;">Developed by AW.</span>
+  </div>
 </div>
 
 <script>
@@ -520,7 +909,7 @@ function toggleAdminTool() {
 <!-- STATISTICS -->
 <div id="page-stats" class="page">
   <div class="panel">
-    <div class="pt">📈 สถิติผู้เล่น <button class="btn btn-y btn-sm pt-action" onclick="openModal('modal-add')">➕ เพิ่มสมาชิก</button></div>
+    <div class="pt">📈 สถิติผู้เล่น <button class="btn btn-y btn-sm pt-action guest-hidden admin-hidden" onclick="_openAddMemberModal()">➕ เพิ่มสมาชิก</button></div>
     <div id="stats-grid" class="mgrid"></div>
   </div>
   <div id="player-details" style="display:none;">
@@ -533,9 +922,9 @@ function toggleAdminTool() {
         <div id="member-icon-display" style="width:120px;height:120px;border-radius:50%;background:var(--s1);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:48px;">👤</div>
       </div>
       <div style="text-align:center;margin-bottom:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
-        <button class="btn btn-y btn-sm" onclick="openModal('modal-icon-select')">🎨 เลือก icon</button>
-        <button class="btn btn-s btn-sm" onclick="editMemberFromStats()">✏️ แก้ไข</button>
-        <button class="btn btn-r btn-sm" onclick="deleteMemberFromStats()">🗑️ ลบ</button>
+        <button class="btn btn-y btn-sm guest-hidden admin-hidden" onclick="openModal('modal-icon-select')" style="display:none;">🎨 เลือก icon</button>
+        <button class="btn btn-s btn-sm guest-hidden" onclick="editMemberFromStats()" style="display:none;">✏️ แก้ไข</button>
+        <button class="btn btn-r btn-sm guest-hidden admin-hidden" onclick="deleteMemberFromStats()" style="display:none;">🗑️ ลบ</button>
       </div>
       <div class="g2">
         <div class="scard">
@@ -582,7 +971,7 @@ function toggleAdminTool() {
 <!-- FINANCE -->
 <div id="page-finance" class="page">
   <div class="panel">
-    <div class="pt">💰 ระบบการเงิน <button class="btn btn-y btn-sm pt-action" onclick="openFinanceModal()">➕ บันทึกค่าใช้จ่าย</button></div>
+    <div class="pt">💰 ระบบการเงิน <button class="btn btn-y btn-sm pt-action guest-hidden" onclick="openFinanceModal()">➕ บันทึกค่าใช้จ่าย</button></div>
     <div class="g4" style="margin-bottom:14px;">
       <div class="scard"><div class="scard-icon">🏸</div><div class="scard-val" id="finance-sessions">0</div><div class="scard-lbl">เซสชัน</div></div>
       <div class="scard"><div class="scard-icon">💵</div><div class="scard-val" id="finance-total">0</div><div class="scard-lbl">รวมทั้งหมด</div></div>
@@ -593,14 +982,63 @@ function toggleAdminTool() {
   </div>
 </div>
 
+<!-- PRO LEADERBOARD -->
+<div id="page-pro" class="page">
+  <div class="panel">
+    <div class="pt">⚡ Pro Leaderboard <span style="font-size:10px;font-weight:400;color:var(--muted);text-transform:none;letter-spacing:0;">— ranking ระดับโลก ทุกก๊วน</span></div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.7;">
+      ผู้เล่น Pro จากทุกก๊วนทั่วแอพ · ELO คำนวณจาก 10 เกมล่าสุด · เริ่มต้น 50,000
+    </div>
+    <div id="pro-leaderboard-content">
+      <div style="text-align:center;padding:40px;color:var(--muted);">กด "โหลด" เพื่อดู ranking</div>
+    </div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn btn-s" onclick="renderProLeaderboard()">🔄 โหลด / รีเฟรช</button>
+    </div>
+  </div>
+</div>
+
+<!-- SUPER ADMIN -->
+<div id="page-superadmin" class="page">
+  <div class="panel">
+    <div class="pt">🛡️ Super Admin Panel</div>
+    <div id="sa-stats" style="margin-bottom:14px;font-size:12px;color:var(--muted);"></div>
+    <div id="sa-room-list"></div>
+    <div style="text-align:center;margin-top:14px;">
+      <button class="btn btn-s" onclick="renderSuperAdminPanel()">🔄 รีเฟรช</button>
+    </div>
+  </div>
+</div>
+
 </div>
 
 <!-- MODAL ADD -->
 <div class="overlay" id="modal-add">
   <div class="modal">
     <div class="modal-t">➕ เพิ่มสมาชิกใหม่</div>
-    <div class="fg"><label class="fl">ชื่อ *</label><input class="fi" id="nm-name" placeholder="ชื่อ-นามสกุล"></div>
+    <div class="fg">
+      <label class="fl">ชื่อ *</label>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <input class="fi" id="nm-name" placeholder="ชื่อ-นามสกุล" style="flex:1;">
+        <button id="nm-google-fill-btn" onclick="fillNameFromGoogle()"
+          style="white-space:nowrap;padding:6px 10px;border-radius:8px;border:1px solid var(--border);
+          background:var(--surface);font-size:11px;cursor:pointer;color:var(--text);display:none;">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            width="12" height="12" style="vertical-align:middle;margin-right:3px;" referrerpolicy="no-referrer">
+          ใช้ชื่อ Google
+        </button>
+      </div>
+    </div>
     <div class="fg"><label class="fl">เบอร์โทร (ไม่บังคับ)</label><input class="fi" id="nm-phone" placeholder="08x-xxx-xxxx"></div>
+    <div class="fg">
+      <label class="fl">ระดับมือ</label>
+      <select class="fi" id="nm-tier">
+        <option value="BB">BB — ELO 10,000</option>
+        <option value="BG1">BG1 — ELO 20,001</option>
+        <option value="BG2">BG2 — ELO 35,001</option>
+        <option value="BG+">BG+ — ELO 45,001</option>
+      </select>
+    </div>
     <div class="modal-act">
       <button class="btn btn-y btn-full" onclick="addMember()">✅ เพิ่ม</button>
       <button class="btn btn-s" onclick="closeModal('modal-add')">ยกเลิก</button>
@@ -611,10 +1049,16 @@ function toggleAdminTool() {
 <!-- MODAL EDIT MEMBER -->
 <div class="overlay" id="modal-edit-member">
   <div class="modal">
-    <div class="modal-t">✏️ แก้ไขสมาชิก</div>
+    <div class="modal-t" id="edit-member-modal-title">✏️ แก้ไขสมาชิก</div>
     <input type="hidden" id="edit-member-id">
     <div class="fg"><label class="fl">ชื่อ *</label><input class="fi" id="edit-member-name" placeholder="ชื่อ-นามสกุล"></div>
-    <div class="fg"><label class="fl">เบอร์โทร</label><input class="fi" id="edit-member-phone" placeholder="08x-xxx-xxxx"></div>
+    <div class="fg" id="edit-member-phone-row"><label class="fl">เบอร์โทร</label><input class="fi" id="edit-member-phone" placeholder="08x-xxx-xxxx"></div>
+    <div class="fg" id="edit-member-pro-row" style="display:none;">
+      <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="edit-member-pro" style="width:16px;height:16px;accent-color:var(--accent);">
+        <span>⚡ Pro Tier — เปิดใช้ Pro ELO สำหรับสมาชิกคนนี้</span>
+      </label>
+    </div>
     <div class="modal-act">
       <button class="btn btn-y btn-full" onclick="saveMemberEdit()">✅ บันทึก</button>
       <button class="btn btn-s" onclick="closeModal('modal-edit-member')">ยกเลิก</button>
@@ -622,7 +1066,52 @@ function toggleAdminTool() {
   </div>
 </div>
 </div>
-<!-- MODAL EDIT MATCH -->
+<!-- MODAL UPGRADE (freemium limit reached) -->
+<div class="overlay" id="modal-upgrade">
+  <div class="modal" style="max-width:360px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:8px;">🔒</div>
+    <div class="modal-t">ครบ 15 แมทช์ฟรีแล้ว</div>
+    <div style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7;">
+      ห้องนี้ใช้โควต้าฟรีหมดแล้ว<br>
+      ติดต่อแอดมินระบบเพื่ออัปเกรดเป็น<br>
+      <strong style="color:var(--accent);">Subscribed</strong> — บันทึกแมทช์ไม่อั้น + Pro Mode
+    </div>
+    <div style="background:var(--s2);border-radius:10px;padding:14px;font-size:12px;text-align:left;margin-bottom:18px;">
+      <div style="font-weight:700;margin-bottom:8px;color:var(--accent);">✨ สิ่งที่ได้เพิ่มหลัง Subscribe</div>
+      <div>✅ บันทึกแมทช์ไม่จำกัด</div>
+      <div>✅ Pro Mode — ELO ระดับโลก</div>
+      <div>✅ Global Pro Leaderboard</div>
+      <div>✅ สถิติครบทุก season</div>
+    </div>
+    <button class="btn btn-s btn-full" onclick="closeModal('modal-upgrade')">ปิด</button>
+  </div>
+</div>
+
+<!-- MODAL CLAIM MEMBER -->
+<div class="overlay" id="modal-claim-member">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-t" id="claim-modal-title">👋 คุณคือใครในก๊วน?</div>
+    <div id="claim-modal-subtitle" style="font-size:12px;color:var(--muted);margin-bottom:16px;text-align:center;line-height:1.6;">
+      เลือกชื่อของคุณเพื่อผูกกับบัญชี Google<br>
+      <span style="font-size:10px;opacity:.7;">ทำครั้งเดียว ครั้งต่อไปจะจำอัตโนมัติ</span>
+    </div>
+    <!-- Card grid -->
+    <div id="claim-member-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:52vh;overflow-y:auto;margin-bottom:14px;padding:2px;"></div>
+    <!-- Selected preview -->
+    <div id="claim-selected-preview" style="display:none;background:var(--s3);border:1.5px solid var(--accent);border-radius:10px;padding:10px 14px;margin-bottom:12px;align-items:center;gap:10px;">
+      <span id="claim-sel-icon" style="font-size:28px;line-height:1;">👤</span>
+      <div>
+        <div id="claim-sel-name" style="font-size:14px;font-weight:800;color:var(--text);"></div>
+        <div style="font-size:10px;color:var(--muted);">กดยืนยันเพื่อผูกบัญชีนี้</div>
+      </div>
+    </div>
+    <div class="modal-act" style="flex-wrap:wrap;gap:8px;">
+      <button class="btn btn-y btn-full" id="claim-confirm-btn" onclick="doClaimMember()" disabled style="opacity:.5;">✅ ผูกกับผู้เล่นนี้</button>
+      <button class="btn btn-g btn-full" id="claim-add-new-btn" onclick="doAdminAddNewMember()" style="display:none;">➕ เพิ่มเป็นสมาชิกใหม่</button>
+      <button class="btn btn-s btn-full" id="claim-skip-btn" onclick="closeModal('modal-claim-member')">ข้ามไปก่อน</button>
+    </div>
+  </div>
+</div>
 <div class="overlay" id="modal-edit">
   <div class="modal">
     <div class="modal-t">✏️ แก้ไขแมตช์</div>
@@ -913,7 +1402,7 @@ function toggleAdminTool() {
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[], finance:[], decayEvents:[], seasons:[], seasonGoal: 100 };
+let S = { members:[], matches:[], finance:[], decayEvents:[], seasons:[], seasonGoal: 100, rsvp: {}, proMatches:[] };
 
 // ===== RULES CONFIG (editable) =====
 let RC = {
@@ -930,9 +1419,9 @@ let RC = {
   participationBonus: 300,
   dailyLossCap: -2500,
   streakFreezeAt: 2, streakHalfMult: 0.5,
-  decayPct: 5, decayMaxTimes: 5,
+  decayPct: 5, decayMaxTimes: 6,
   // BG Tier multipliers
-  bgMult: { BB: { win: 1.25, loss: 1.0, part: 1.0 }, BG1: { win: 1.0, loss: 1.0, part: 1.0 }, BG2: { win: 0.8, loss: 1.0, part: 0.8 }, 'BG+': { win: 0.5, loss: 1.0, part: 0.5 } },
+  bgMult: { BB: { win: 1.25, loss: 1.0, part: 1.0 }, BG1: { win: 1.0, loss: 1.2, part: 0.5 }, BG2: { win: 0.8, loss: 1.8, part: 0.4 }, 'BG+': { win: 0.6, loss: 2.0, part: 0.25 } },
 };
 const COLORS = ['#f0c040','#38bdf8','#22c55e','#f43f5e','#a78bfa','#fb923c','#34d399','#f472b6','#60a5fa','#facc15'];
 const gc = i => COLORS[i%COLORS.length];
@@ -943,7 +1432,7 @@ const gav = (m, i, size=30, fontSize=12) => m.icon
   : `<div class="av" style="width:${size}px;height:${size}px;font-size:${fontSize}px;background:${gc(i)}">${gi(m.name)}</div>`;
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const gm = id => S.members.find(m => m.id===id);
-const todayStr = () => new Date().toDateString();
+const todayStr = () => new Date().toISOString().slice(0,10); // YYYY-MM-DD ให้ตรงกับ m.dateStr
 
 // ===== BG TAG SYSTEM =====
 function getBGTag(elo) {
@@ -955,7 +1444,7 @@ function getBGTag(elo) {
 }
 function getBGMult(elo) {
   const tag = getBGTag(elo);
-  RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} };
+  RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} };
   return (RC.bgMult[tag] && RC.bgMult[tag].win) ?? 1.0;
 }
 function bgTagBadge(elo, preTag) {
@@ -970,7 +1459,33 @@ function bgTagBadge(elo, preTag) {
   return `<span style="display:inline-flex;align-items:center;padding:1px 5px;border-radius:4px;font-size:9px;font-weight:800;font-family:var(--mono);letter-spacing:.3px;${styles[tag]||styles.BG1}">${tag}</span>`;
 }
 
-function save(){ if(typeof autoSyncToFirebase==='function') autoSyncToFirebase(); }
+
+
+function save(){
+  if(!isAdmin()) return;
+  // Sync to Firebase (state stored in Firebase only, not localStorage)
+  if(typeof autoSyncToFirebase==='function') autoSyncToFirebase();
+}
+
+// ===== FREEMIUM + PRO CONSTANTS =====
+const FREE_MATCH_LIMIT   = 15;
+const FREE_MATCH_WARN    = 10;
+const SUPER_ADMIN_EMAILS = ['nrok47@gmail.com'];
+const PRO_BASE_ELO       = 50000;
+const PRO_WIN            = 3000;
+const PRO_LOSS           = -2100;
+const PRO_MARGIN_BONUS   = 600;
+const PRO_WINDOW         = 10;
+
+function isSuperAdmin() {
+  return SUPER_ADMIN_EMAILS.includes((_sGet('bcm_adminEmail') || '').toLowerCase().trim());
+}
+function isSubscribed() {
+  return !!(window._roomMeta && window._roomMeta.subscribed);
+}
+function freeMatchesLeft() {
+  return Math.max(0, FREE_MATCH_LIMIT - S.matches.length);
+}
 
 // ===== ELO ENGINE =====
 const BASE = 10000;
@@ -1032,9 +1547,10 @@ function computeDeltas(winners, losers, sw, sl){
 
   // 3. Farm multiplier
   // fc = จำนวนชนะก่อนหน้า (ไม่รวมปัจจุบัน)
-  // fc>=2 → ปัจจุบันคือครั้งที่ 3 → -50%
+  // farmLimit3game=3 → เริ่ม -50% ที่ครั้งที่ 3 → fc>=2
+  // farmLimit5game=4 → เริ่ม -75% ที่ครั้งที่ 4 → fc>=3
   const fc = getFarmCount(winners);
-  const _farm3thresh = (RC.farmLimit3game||3) - 1; // fc เริ่มนับจาก 0 (ครั้งก่อน)
+  const _farm3thresh = (RC.farmLimit3game||3) - 1; // fc เริ่มนับจาก 0
   const _farm5thresh = (RC.farmLimit5game||4) - 1;
   let farmMult = 1.0;
   if(fc>=_farm5thresh) farmMult=RC.farmLimit5;
@@ -1069,7 +1585,7 @@ function computeDeltas(winners, losers, sw, sl){
   // participation bonus nerf ตาม BG tier (ทั้งชนะและแพ้)
   function getBGPartMult(elo) {
     const tag = getBGTag(elo);
-    RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} };
+    RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} };
     return (RC.bgMult[tag] && RC.bgMult[tag].part != null) ? RC.bgMult[tag].part : 1.0;
   }
 
@@ -1085,7 +1601,7 @@ function computeDeltas(winners, losers, sw, sl){
   // 6. Loss streak protection per loser (NO farm mult on losers)
   const lDeltas = lCarry.map((d, i) => {
     const streak = getLossStreak(losers[i]);
-    RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} };
+    RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} };
     const bgLossMult = RC.bgMult[getBGTag(getElo(losers[i]))]?.loss ?? 1.0;
     // Apply bgLossMult to raw d first, then apply streak on top
     const dAfterBG = Math.round(d * bgLossMult);
@@ -1146,11 +1662,26 @@ function updateMatchPreview(){
   if(farmHit) tags.push(`🚫 Farm ${Math.round(farmMult*100)}%`);
   box.style.display='block';
   box.innerHTML=`<div style="font-size:10px;color:var(--muted);margin-bottom:8px;font-weight:700;">${tierLabel}${tags.length?' &nbsp;·&nbsp; '+tags.join(' &nbsp;·&nbsp; '):''}</div>${wRows}${lRows}`;
+
+  const badge = document.getElementById('pro-match-badge');
+  const btn   = document.getElementById('record-match-btn');
+  const proMode = isProMatch(winners, losers);
+  if (badge) badge.style.display = proMode ? 'block' : 'none';
+  if (btn) {
+    if (proMode) {
+      btn.textContent = '⚡ บันทึก Pro Match';
+      btn.onclick = recordProMatch;
+    } else {
+      btn.textContent = '✅ บันทึกผลการแข่งขัน';
+      btn.onclick = recordMatch;
+    }
+  }
 }
 
 // ===== RECORD =====
 function recordMatch(){
-  const w1v=document.getElementById('w1').value;
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  if(!isSubscribed() && freeMatchesLeft()<=0){ openModal('modal-upgrade'); return; }
   const l1v=document.getElementById('l1').value;
   if(!w1v||!l1v){ toast('กรุณาเลือกผู้เล่นอย่างน้อยฝั่งละ 1 คน','⚠️'); return; }
   const winners=[parseInt(w1v)];
@@ -1209,13 +1740,694 @@ function recordMatch(){
   toast(msg, frozen?'🧊':farmHit?'🚫':'✅');
 }
 
+// ===== PRO SCORING =====
+function calcProDeltas(winners, losers, sw, sl) {
+  const marginOk = sw !== null && sl !== null && (sw - sl) >= RC.marginThreshold;
+  const wDelta = PRO_WIN + (marginOk ? PRO_MARGIN_BONUS : 0);
+  const lDelta = PRO_LOSS - (marginOk ? PRO_MARGIN_BONUS : 0);
+  return {
+    wDeltas: winners.map(() => wDelta),
+    lDeltas: losers.map(() => lDelta),
+  };
+}
+
+function calcProElo(member) {
+  const deltas = (member.proMatchDeltas || []);
+  return PRO_BASE_ELO + deltas.reduce((s, d) => s + (d.delta || 0), 0);
+}
+
+function isProMatch(winners, losers) {
+  if (!isSubscribed()) return false;
+  const all = [...winners, ...losers];
+  return all.length === 4 && all.every(id => { const m = gm(id); return m && m.proTier; });
+}
+
+async function recordProMatch() {
+  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น', '🚫'); return; }
+  if (!isSubscribed()) { toast('ต้องเป็น Subscribed room', '🔒'); return; }
+
+  const w1v = document.getElementById('w1').value;
+  const l1v = document.getElementById('l1').value;
+  if (!w1v || !l1v) { toast('กรุณาเลือกผู้เล่น', '⚠️'); return; }
+  const winners = [parseInt(w1v)];
+  const w2v = document.getElementById('w2').value; if (w2v) winners.push(parseInt(w2v));
+  const losers  = [parseInt(l1v)];
+  const l2v = document.getElementById('l2').value; if (l2v) losers.push(parseInt(l2v));
+  if (winners.some(id => losers.includes(id))) { toast('ผู้เล่นซ้ำกัน', '⚠️'); return; }
+
+  const swRaw = document.getElementById('score-w').value;
+  const slRaw = document.getElementById('score-l').value;
+  const sw = swRaw !== '' ? parseInt(swRaw) : null;
+  const sl = slRaw !== '' ? parseInt(slRaw) : null;
+  if (sw === null || sl === null) { toast('กรุณากรอกคะแนน', '⚠️'); return; }
+  if (sw <= sl) { toast('คะแนนฝ่ายชนะต้องมากกว่า', '⚠️'); return; }
+
+  const { wDeltas, lDeltas } = calcProDeltas(winners, losers, sw, sl);
+  const matchId = Date.now() * 1000 + Math.floor(Math.random() * 1000);
+  const margin = sw !== null && sl !== null && (sw - sl) >= RC.marginThreshold;
+
+  winners.forEach((id, i) => {
+    const m = gm(id); if (!m) return;
+    if (!m.proMatchDeltas) m.proMatchDeltas = [];
+    m.proMatchDeltas.push({ matchId, delta: wDeltas[i] });
+    if (m.proMatchDeltas.length > PRO_WINDOW) m.proMatchDeltas.shift();
+    m.matchCount = (m.matchCount ?? 0) + 1;
+    m.wins = (m.wins ?? 0) + 1;
+  });
+  losers.forEach((id, i) => {
+    const m = gm(id); if (!m) return;
+    if (!m.proMatchDeltas) m.proMatchDeltas = [];
+    m.proMatchDeltas.push({ matchId, delta: lDeltas[i] });
+    if (m.proMatchDeltas.length > PRO_WINDOW) m.proMatchDeltas.shift();
+    m.matchCount = (m.matchCount ?? 0) + 1;
+    m.losses = (m.losses ?? 0) + 1;
+  });
+
+  S.proMatches.push({ id: matchId, winners, losers, wDeltas, lDeltas, sw, sl, margin, dateStr: todayStr(), time: Date.now() });
+  save();
+
+  const _db = window.db;
+  if (_db) {
+    const roomCode = _sGet('bcm_roomCode') || '';
+    const clubName = getClubName() || '';
+    [...winners, ...losers].forEach(id => {
+      const m = gm(id); if (!m || !m.googleUid) return;
+      _db.ref('proPlayers/' + m.googleUid).set({
+        name: m.name, photoURL: m.photoURL || '', roomCode, clubName,
+        proMatchDeltas: m.proMatchDeltas || [], lastUpdatedAt: Date.now(),
+      }).catch(() => {});
+    });
+  }
+
+  ['w1','w2','l1','l2','score-w','score-l'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+  const prev = document.getElementById('match-preview'); if (prev) prev.style.display = 'none';
+  renderAll();
+  toast('⚡ Pro Match บันทึกแล้ว' + (margin ? ' 🎯 Margin' : ''), '⚡');
+}
+
 // ===== RENDER =====
+
+
+// ===== STEP 0: SIGN IN FIRST FLOW =====
+
+// Guest login: กรอกรหัสห้อง → โหลดข้อมูล read-only
+function _wFillLastRoom() {
+  const code = localStorage.getItem('bcm_last_room_code') || '';
+  const inp = document.getElementById('w-room-input');
+  if (inp && code) inp.value = code;
+}
+
+function _wShowLastRoomHint() {
+  const code = localStorage.getItem('bcm_last_room_code');
+  const club = localStorage.getItem('bcm_last_club_name');
+  const hint = document.getElementById('w-last-room-hint');
+  if (!hint || !code) return;
+  const codeEl = document.getElementById('w-last-room-code');
+  const clubEl = document.getElementById('w-last-club-name');
+  if (codeEl) codeEl.textContent = 'รหัสห้อง: ' + code;
+  if (clubEl) clubEl.textContent = club || 'ก๊วน';
+  hint.style.display = 'block';
+}
+
+// Save last room+club after successful entry
+function _wSaveLastRoom(code, club) {
+  if (code) localStorage.setItem('bcm_last_room_code', code);
+  if (club) localStorage.setItem('bcm_last_club_name', club);
+}
+
+function wResetSession() {
+  if (!confirm('ล้างข้อมูลทั้งหมดและเริ่มใหม่?')) return;
+  _sClear();
+  if (window._auth) {
+    window._auth.signOut().then(() => location.reload()).catch(() => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
+// ── WELCOME FLOW FUNCTIONS ──────────────────────────────────────────
+
+// Google: sign in แล้วให้ onAuthStateChanged จัดการ (detect room/role หรือแสดง choose)
+async function wContinueWithGoogle() {
+  const btn = document.getElementById('w-google-btn');
+  _sSet('bcm_pendingFlow', 'auto');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span style="font-size:13px;">⏳</span> กำลังเชื่อมต่อ...'; }
+  if (!window._auth) {
+    const deadline = Date.now() + 8000;
+    await new Promise(r => { const t = setInterval(()=>{ if(window._auth || Date.now()>deadline){ clearInterval(t); r(); }},100); });
+  }
+  // ถ้ามี anonymous session อยู่ ให้ sign out ก่อน ป้องกัน conflict กับ Google sign-in
+  if (window._auth?.currentUser?.isAnonymous) {
+    try { await window._auth.signOut(); } catch(e3) {}
+  }
+  const provider = new firebase.auth.GoogleAuthProvider();
+  // บังคับให้ Google แสดง account picker เสมอ (สำคัญมากหลัง logout)
+  provider.setCustomParameters({ prompt: 'select_account' });
+  try {
+    await window._auth.signInWithPopup(provider);
+    // แสดง loading ทันที — onAuthStateChanged จะจัดการต่อ
+    if (typeof wGoStep === 'function') wGoStep('loading');
+  } catch(e) {
+    if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      // User ปิด popup เอง → reset ปุ่มกลับ ไม่ต้องทำอะไร
+      if (btn) { btn.disabled = false; btn.innerHTML = _GOOGLE_BTN_HTML; }
+    } else if (e.code === 'auth/popup-blocked' || e.code === 'auth/operation-not-supported-in-this-environment') {
+      // Popup ถูก block → ใช้ redirect แทน
+      _sSet('bcm_pendingFlow', 'auto');
+      await window._auth.signInWithRedirect(provider);
+    } else {
+      if (btn) { btn.disabled = false; btn.innerHTML = _GOOGLE_BTN_HTML; }
+      toast('❌ ' + (e.message || e.code), '');
+    }
+  }
+}
+
+const _GOOGLE_BTN_HTML = `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg> Continue with Google`;
+
+// Sign out และกลับ welcome screen
+async function wSignOutAndReset() {
+  if (window._auth) await window._auth.signOut().catch(()=>{});
+  _sClear();
+  wGoStep('main');
+}
+
+// Stubs สำหรับ backward compat
+function wStep0SignIn() { wContinueWithGoogle(); }
+let _step0SignedInDone = false;
+function _wStep0SignedIn(user) { _wUser = user; _updateProfileAvatar(); }
+
+// ===== PROFILE MENU =====
+function toggleProfileMenu(e) {
+  e.stopPropagation();
+  const menu = document.getElementById('profile-menu');
+  if (menu.style.display === 'none') {
+    _updateProfileMenu();
+    menu.style.display = 'block';
+  } else {
+    menu.style.display = 'none';
+  }
+}
+
+function _updateProfileMenu() {
+  const name    = _sGet('bcm_adminName') || _sGet('bcm_user') && JSON.parse(_sGet('bcm_user')||'{}').name || '';
+  const email   = _sGet('bcm_adminEmail') || JSON.parse(_sGet('bcm_user')||'{}').email || '';
+  const photo   = _sGet('bcm_adminPhoto') || JSON.parse(_sGet('bcm_user')||'{}').photo || '';
+  const room    = _sGet('bcm_roomCode') || '—';
+  const role    = _sGet('bcm_role') || 'user';
+  const club    = getClubName() || '—';
+  const guest   = role === 'guest';
+
+  // ── Google account name & email ──
+  const nameEl = document.getElementById('profile-menu-name');
+  const emailEl = document.getElementById('profile-menu-email');
+  if (nameEl) nameEl.textContent = name || '—';
+  if (emailEl) emailEl.textContent = email || '—';
+
+  // ── Member name (ชื่อในเกม) ──
+  const myId = (typeof getMyMemberId === 'function') ? getMyMemberId() : null;
+  const myMember = myId && (typeof gm === 'function') ? gm(myId) : null;
+  let memberNameEl = document.getElementById('profile-menu-member-name');
+  if (!memberNameEl) {
+    // สร้าง row ถ้ายังไม่มี (insert ก่อน email row)
+    memberNameEl = document.createElement('div');
+    memberNameEl.id = 'profile-menu-member-name';
+    memberNameEl.style.cssText = 'display:flex;align-items:center;gap:6px;margin-top:3px;';
+    if (emailEl && emailEl.parentNode) emailEl.parentNode.insertBefore(memberNameEl, emailEl);
+  }
+  if (myMember && !guest) {
+    memberNameEl.style.display = 'flex';
+    memberNameEl.innerHTML = `
+      <span style="font-size:11px;color:var(--green,#4ade80);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px;" title="${esc(myMember.name)}">🏸 ${esc(myMember.name)}</span>
+      <button onclick="openRenameSelf();document.getElementById('profile-menu').style.display='none';"
+        style="background:none;border:1px solid var(--border);cursor:pointer;font-size:10px;color:var(--muted);padding:1px 6px;border-radius:6px;font-family:'Kanit',sans-serif;white-space:nowrap;flex-shrink:0;transition:color .15s,border-color .15s;"
+        onmouseover="this.style.color='var(--text)';this.style.borderColor='var(--accent)'"
+        onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">✏️ แก้ชื่อ</button>`;
+  } else {
+    memberNameEl.style.display = 'none';
+  }
+
+  // ── Avatar ──
+  const photoEl = document.getElementById('profile-menu-photo');
+  const fallbackEl = document.getElementById('profile-menu-fallback');
+  const avatarImg = document.getElementById('profile-avatar-img');
+  const avatarFallback = document.getElementById('profile-avatar-fallback');
+  if (photo) {
+    if (photoEl) { photoEl.src = photo; photoEl.style.display = 'block'; }
+    if (fallbackEl) fallbackEl.style.display = 'none';
+    if (avatarImg) { avatarImg.src = photo; avatarImg.style.display = 'block'; }
+    if (avatarFallback) avatarFallback.style.display = 'none';
+  } else {
+    if (photoEl) photoEl.style.display = 'none';
+    if (fallbackEl) fallbackEl.style.display = '';
+    if (avatarImg) avatarImg.style.display = 'none';
+    if (avatarFallback) avatarFallback.style.display = '';
+  }
+
+  // ── Room ──
+  const roomEl = document.getElementById('profile-menu-room');
+  if (roomEl) roomEl.textContent = room;
+
+  // ── Role badge ──
+  const roleEl = document.getElementById('profile-menu-role');
+  if (roleEl) {
+    if (role === 'admin') {
+      roleEl.innerHTML = '<span style="color:var(--accent);">⚙️ Admin</span> · <span style="color:var(--muted);font-size:11px;">' + esc(club) + '</span>';
+    } else if (guest) {
+      roleEl.innerHTML = '<span style="color:var(--blue);">👁️ Guest</span>';
+    } else {
+      roleEl.innerHTML = '<span style="color:var(--green,#4ade80);">🏸 สมาชิก</span> · <span style="font-weight:700;font-size:12px;color:var(--accent);">' + esc(club) + '</span>';
+    }
+  }
+
+  // ── ELO + Tier ──
+  const eloEl = document.getElementById('profile-menu-elo');
+  if (eloEl) {
+    if (!guest && myMember) {
+      const BASE_ELO = (typeof BASE !== 'undefined') ? BASE : 10000;
+      const elo = myMember.elo ?? BASE_ELO;
+      const tierTag = (typeof getBGTag === 'function') ? getBGTag(elo) : '';
+      const tierColors = { BB:'#f472b6', BG1:'#22c55e', BG2:'#38bdf8', 'BG+':'#f0c040' };
+      const tc = tierColors[tierTag] || 'var(--accent)';
+      eloEl.style.display = 'flex';
+      eloEl.innerHTML = `
+        <span style="font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">${elo.toLocaleString()}</span>
+        <span style="font-size:10px;color:var(--muted);margin-left:4px;align-self:flex-end;margin-bottom:1px;">ELO</span>
+        <span style="margin-left:8px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:800;background:${tc}22;border:1px solid ${tc}55;color:${tc};">${tierTag}</span>`;
+    } else {
+      eloEl.style.display = 'none';
+    }
+  }
+
+  // ── ซ่อนปุ่ม rename-btn (ย้ายไปอยู่ใน member-name row แล้ว) ──
+  const renameBtnWrap = document.getElementById('profile-menu-rename-btn');
+  if (renameBtnWrap) renameBtnWrap.style.display = 'none';
+}
+
+function copyRoomCode() {
+  const code = _sGet('bcm_roomCode');
+  if (!code) return;
+  navigator.clipboard.writeText(code).then(() => {
+    toast('คัดลอกรหัสห้อง ' + code + ' แล้ว', '✅');
+    document.getElementById('profile-menu').style.display = 'none';
+  }).catch(() => {
+    toast(code, '🔑');
+  });
+}
+
+function profileLogout() {
+  const label = 'ออกจากระบบ?';
+  if (!confirm(label)) return;
+  document.getElementById('profile-menu').style.display = 'none';
+  _step0SignedInDone = false;
+
+  // ล้าง bcm_ keys ทั้งหมดออกให้สะอาด เพื่อป้องกัน key เก่าค้างแล้วทำให้ login loop
+  _sClear();
+
+  if (window._auth) {
+    window._auth.signOut().then(() => location.reload()).catch(() => location.reload());
+  } else {
+    location.reload();
+  }
+}
+
+// Close profile menu when clicking outside
+document.addEventListener('click', function(e) {
+  const menu = document.getElementById('profile-menu');
+  const btn = document.getElementById('profile-btn');
+  if (menu && menu.style.display !== 'none') {
+    if (!menu.contains(e.target) && !btn.contains(e.target)) {
+      menu.style.display = 'none';
+    }
+  }
+});
+
+// Update profile avatar in header after sign-in
+function _updateProfileAvatar() {
+  const photo = _sGet('bcm_adminPhoto') || JSON.parse(_sGet('bcm_user')||'{}').photo || '';
+  const avatarImg = document.getElementById('profile-avatar-img');
+  const avatarFallback = document.getElementById('profile-avatar-fallback');
+  if (photo && avatarImg) {
+    avatarImg.src = photo;
+    avatarImg.style.display = 'block';
+    if (avatarFallback) avatarFallback.style.display = 'none';
+  }
+}
+
+
+// ===== AUTO-FILL NAME FROM GOOGLE =====
+function fillNameFromGoogle() {
+  const name = _sGet('bcm_adminName')
+    || (JSON.parse(_sGet('bcm_user') || '{}').name)
+    || (_wUser && _wUser.displayName)
+    || '';
+  if (name) {
+    document.getElementById('nm-name').value = name;
+    document.getElementById('nm-name').focus();
+  } else {
+    toast('ไม่พบชื่อจาก Google', '⚠️');
+  }
+}
+
+function _openAddMemberModal() {
+  // Auto-fill ชื่อจาก Google profile ถ้าช่องว่างอยู่
+  const nameInput = document.getElementById('nm-name');
+  const phoneInput = document.getElementById('nm-phone');
+  if (nameInput) nameInput.value = '';
+  if (phoneInput) phoneInput.value = '';
+
+  const googleName = _sGet('bcm_adminName')
+    || (JSON.parse(_sGet('bcm_user') || '{}').name)
+    || (_wUser && _wUser.displayName)
+    || '';
+
+  const fillBtn = document.getElementById('nm-google-fill-btn');
+  if (googleName && fillBtn) {
+    fillBtn.style.display = '';
+    fillBtn.title = 'ใช้ชื่อ: ' + googleName;
+  }
+
+  // ถ้าเป็น user (ไม่ใช่ admin) → ใส่ชื่อ Google อัตโนมัติเลย
+  const role = _sGet('bcm_role');
+  if (role === 'user' && googleName && nameInput) {
+    nameInput.value = googleName;
+  }
+
+  openModal('modal-add');
+  setTimeout(() => { if(nameInput) nameInput.focus(); }, 200);
+}
+
+
+// ===== AUTO-ADD MEMBER FROM GOOGLE PROFILE =====
+function _autoAddMemberFromProfile(user) {
+  if (!user) return;
+  const name = (user.displayName || '').trim();
+  const email = user.email || '';
+  const uid = user.uid || '';
+  if (!name) return;
+  if (!S || !Array.isArray(S.members)) return;
+
+  // ถ้า uid ผูกกับ member คนไหนอยู่แล้ว → ไม่ต้องทำอะไร (จำได้แล้ว)
+  if (S.members.some(m => m.googleUid && m.googleUid === uid)) return;
+
+  // ถ้าเป็น Admin และมี unclaimed members → ให้เลือกก่อนว่าจะผูกกับใคร
+  if (isAdmin() && S.members.length > 0 && S.members.some(m => !m.googleUid)) {
+    setTimeout(() => openClaimModal(true), 600);
+    return;
+  }
+
+  // ถ้าเป็น member ปกติและยังมี unclaimed → triggerClaimIfNeeded จัดการ popup claim
+  if (!isAdmin() && S.members.length > 0 && S.members.some(m => !m.googleUid)) {
+    triggerClaimIfNeeded();
+    return;
+  }
+
+  // ก๊วนใหม่ (ไม่มีสมาชิกเลย) หรือทุกคนผูกหมดแล้วแต่ไม่มี uid นี้ → เพิ่มอัตโนมัติ
+  const nameExists = S.members.some(m => m.name.trim().toLowerCase() === name.toLowerCase());
+  if (nameExists) return;
+
+  S.members.push({
+    id: Date.now(),
+    name: name,
+    phone: '',
+    email: email,
+    googleUid: uid,
+    photoURL: user.photoURL || '',
+    elo: BASE,
+    matchCount: 0,
+    wins: 0,
+    losses: 0,
+    lossStreak: 0,
+  });
+  save();
+  renderAll();
+  toast('✅ เพิ่ม "' + name + '" เป็นสมาชิกอัตโนมัติ', '🏸');
+}
+
+// ===== CLAIM MEMBER =====
+let _claimSelectedId = null;
+let _claimIsAdminFlow = false;
+
+function openClaimModal(isAdminFlow) {
+  const unclaimed = S.members.filter(m => !m.googleUid);
+  if (!unclaimed.length) return;
+
+  _claimSelectedId = null;
+  _claimIsAdminFlow = !!isAdminFlow;
+
+  const grid = document.getElementById('claim-member-grid');
+  const preview = document.getElementById('claim-selected-preview');
+  const confirmBtn = document.getElementById('claim-confirm-btn');
+  const addNewBtn = document.getElementById('claim-add-new-btn');
+  const skipBtn = document.getElementById('claim-skip-btn');
+  const titleEl = document.getElementById('claim-modal-title');
+  const subtitleEl = document.getElementById('claim-modal-subtitle');
+  if (!grid) return;
+
+  if (preview) preview.style.display = 'none';
+  if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.style.opacity = '.5'; }
+
+  if (isAdminFlow) {
+    if (titleEl) titleEl.textContent = '🔗 ผูก Admin กับผู้เล่นในก๊วน';
+    if (subtitleEl) subtitleEl.innerHTML = 'คุณเป็น Admin — เลือกว่าบัญชีนี้คือผู้เล่นคนไหนในก๊วน<br><span style="font-size:10px;opacity:.7;">หรือกด "เพิ่มเป็นสมาชิกใหม่" ถ้าคุณยังไม่ได้อยู่ในรายชื่อ</span>';
+    if (addNewBtn) addNewBtn.style.display = '';
+    if (skipBtn) skipBtn.textContent = 'ข้ามไปก่อน';
+  } else {
+    if (titleEl) titleEl.textContent = '👋 คุณคือใครในก๊วน?';
+    if (subtitleEl) subtitleEl.innerHTML = 'เลือกชื่อของคุณเพื่อผูกกับบัญชี Google<br><span style="font-size:10px;opacity:.7;">ทำครั้งเดียว ครั้งต่อไปจะจำอัตโนมัติ</span>';
+    if (addNewBtn) addNewBtn.style.display = 'none';
+    if (skipBtn) skipBtn.textContent = 'ข้ามไปก่อน';
+  }
+
+  grid.innerHTML = unclaimed.map(m => {
+    const icon = m.icon || '👤';
+    const bg = getBGTag ? getBGTag(m.elo ?? BASE) : '';
+    return `<div class="mcard-sq" id="claim-card-${m.id}" onclick="selectClaimMember(${m.id})"
+      style="transition:all .18s;">
+      <div class="sq-icon">${icon}</div>
+      <div class="sq-name">${esc(m.name)}</div>
+      <div class="sq-elo">${(m.elo ?? BASE).toLocaleString()}</div>
+    </div>`;
+  }).join('');
+
+  openModal('modal-claim-member');
+}
+
+function selectClaimMember(id) {
+  _claimSelectedId = id;
+  const m = gm(id);
+  if (!m) return;
+
+  // Highlight selected card
+  document.querySelectorAll('#claim-member-grid .mcard-sq').forEach(el => {
+    el.style.borderColor = '';
+    el.style.background = '';
+    el.style.transform = '';
+  });
+  const card = document.getElementById('claim-card-' + id);
+  if (card) {
+    card.style.borderColor = 'var(--accent)';
+    card.style.background = 'rgba(240,192,64,.08)';
+    card.style.transform = 'translateY(-2px)';
+  }
+
+  // Show preview
+  const preview = document.getElementById('claim-selected-preview');
+  const selIcon = document.getElementById('claim-sel-icon');
+  const selName = document.getElementById('claim-sel-name');
+  if (preview) preview.style.display = 'flex';
+  if (selIcon) selIcon.textContent = m.icon || '👤';
+  if (selName) selName.textContent = m.name;
+
+  // Enable confirm
+  const confirmBtn = document.getElementById('claim-confirm-btn');
+  if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.style.opacity = '1'; }
+}
+
+function doClaimMember() {
+  // Admin ใช้ bcm_adminUid, member ใช้ bcm_myUid
+  const uid = isAdmin()
+    ? (_sGet('bcm_adminUid') || _sGet('bcm_myUid') || '')
+    : (_sGet('bcm_myUid') || '');
+  if (!uid) { toast('ไม่พบ UID','⚠️'); return; }
+  const id = _claimSelectedId;
+  if (!id) { toast('กรุณาเลือกสมาชิก','⚠️'); return; }
+  const m = gm(id);
+  if (!m) return;
+  // ตรวจว่า UID นี้ถูก claim ไปแล้วไหม
+  const alreadyClaimed = S.members.find(x => x.googleUid === uid);
+  if (alreadyClaimed) { toast(`ผูกกับ "${alreadyClaimed.name}" อยู่แล้ว`,'⚠️'); return; }
+  m.googleUid = uid;
+  save();
+  closeModal('modal-claim-member');
+  renderAll();
+  toast(`✅ ผูกบัญชีกับ "${m.name}" สำเร็จ 🏸`, '✅');
+}
+
+// Admin เลือก "เพิ่มเป็นสมาชิกใหม่" — auto-add จาก Google profile
+function doAdminAddNewMember() {
+  if (!_wUser) { toast('ไม่พบข้อมูลผู้ใช้','⚠️'); return; }
+  closeModal('modal-claim-member');
+  const name = (_wUser.displayName || '').trim();
+  const uid = _wUser.uid || '';
+  if (!name) { toast('ไม่พบชื่อจาก Google','⚠️'); return; }
+  // ป้องกันชื่อซ้ำ
+  if (S.members.some(m => m.name.trim().toLowerCase() === name.toLowerCase())) {
+    toast(`ชื่อ "${name}" มีอยู่แล้วในก๊วน`, '⚠️'); return;
+  }
+  S.members.push({
+    id: Date.now(),
+    name,
+    phone: '',
+    email: _wUser.email || '',
+    googleUid: uid,
+    photoURL: _wUser.photoURL || '',
+    elo: BASE,
+    matchCount: 0,
+    wins: 0,
+    losses: 0,
+    lossStreak: 0,
+  });
+  save();
+  renderAll();
+  toast(`✅ เพิ่ม "${name}" เป็นสมาชิกใหม่เรียบร้อย 🏸`);
+}
+
+// เรียกหลัง login เสร็จ — ถ้ายังไม่มี member ผูก UID นี้ให้เปิด claim modal
+function triggerClaimIfNeeded() {
+  const uid = isAdmin()
+    ? (_sGet('bcm_adminUid') || _sGet('bcm_myUid') || '')
+    : (_sGet('bcm_myUid') || '');
+  if (!uid) return;
+  // ถ้าผูกแล้ว ไม่ต้อง claim
+  if (S.members.some(m => m.googleUid === uid)) return;
+  // ไม่มีสมาชิกในก๊วนเลย → ไม่ต้อง claim (จะ auto-add แทน)
+  if (S.members.length === 0) return;
+  // ทุกคนผูก UID หมดแล้ว → ไม่มีให้เลือก claim
+  if (!S.members.some(m => !m.googleUid)) return;
+  // มี unclaimed member → เปิด popup
+  if (isAdmin()) {
+    setTimeout(() => openClaimModal(true), 600);
+  } else if (isMember()) {
+    setTimeout(openClaimModal, 600);
+  }
+}
+
+function openRenameSelf() {
+  const myId = getMyMemberId();
+  if (!myId) { openClaimModal(isAdmin()); return; }
+  editMember(myId);
+  openModal('modal-edit-member');
+}
+
+// ===== ROLE HELPERS =====
+function isAdmin() {
+  return _sGet('bcm_role') === 'admin';
+}
+function isGuest() {
+  return false; // guest mode removed
+}
+function isMember() {
+  return _sGet('bcm_role') === 'user';
+}
+// หา member ที่ผูก UID ของ user ปัจจุบัน
+function getMyMemberId() {
+  const uid = _sGet('bcm_myUid') || '';
+  if (!uid) return null;
+  const m = S.members.find(m => m.googleUid === uid);
+  return m ? m.id : null;
+}
+// เช็คว่า member id นี้คือตัวเอง
+function isMyMember(id) {
+  return getMyMemberId() === id;
+}
+
+function renderRole() {
+  const admin = isAdmin();
+  const member = isMember();
+  // Toggle body classes
+  document.body.classList.toggle('member-mode', member);
+  document.body.classList.toggle('admin-mode', admin);
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = admin ? '' : 'none';
+  });
+  document.querySelectorAll('.user-only').forEach(el => {
+    el.style.display = admin ? 'none' : '';
+  });
+  // Lock club name for non-admin
+  const clubInput = document.getElementById('club-name-input');
+  if (clubInput) clubInput.readOnly = !admin;
+  // Show room code badge
+  const roomCode = _sGet('bcm_roomCode');
+  const badge = document.getElementById('header-room-badge');
+  if (badge) {
+    badge.style.display = roomCode ? 'block' : 'none';
+    if (roomCode) badge.textContent = roomCode;
+  }
+  // Hide guest badge (guest mode removed)
+  const guestBadge = document.getElementById('header-guest-badge');
+  if (guestBadge) guestBadge.style.display = 'none';
+  // Profile button — แสดงเสมอ
+  const profileBtn = document.getElementById('profile-btn');
+  if (profileBtn) profileBtn.style.display = '';
+  // Profile avatar
+  const avatarFallback = document.getElementById('profile-avatar-fallback');
+  if (avatarFallback) avatarFallback.textContent = '👤';
+  // Profile menu sections — always show user section
+  const guestSection = document.getElementById('profile-menu-guest-section');
+  const userSection  = document.getElementById('profile-menu-user-section');
+  if (guestSection) guestSection.style.display = 'none';
+  if (userSection)  userSection.style.display  = 'flex';
+  // Profile menu room & role
+  const menuRoom = document.getElementById('profile-menu-room');
+  const menuRole = document.getElementById('profile-menu-role');
+  if (menuRoom && roomCode) menuRoom.textContent = roomCode;
+  if (menuRole) menuRole.textContent = admin ? '⚙️ Admin' : '🏸 Member';
+  // Profile menu member action buttons
+  const renameBtn = document.getElementById('profile-menu-rename-btn');
+  const claimBtn  = document.getElementById('profile-menu-claim-btn');
+  if (member) {
+    const hasClaimed = !!getMyMemberId();
+    if (renameBtn) renameBtn.style.display = hasClaimed ? '' : 'none';
+    if (claimBtn)  claimBtn.style.display  = hasClaimed ? 'none' : '';
+  } else {
+    if (renameBtn) renameBtn.style.display = 'none';
+    if (claimBtn)  claimBtn.style.display  = 'none';
+  }
+  // Season bar cursor
+  const seasonBar = document.getElementById('season-bar-wrap');
+  if (seasonBar) seasonBar.style.cursor = admin ? 'pointer' : 'default';
+  // Refresh profile menu ELO if menu is currently open
+  const _pmenu = document.getElementById('profile-menu');
+  if (_pmenu && _pmenu.style.display !== 'none') _updateProfileMenu();
+  // Show Super Admin nav
+  document.querySelectorAll('.super-admin-only').forEach(el => {
+    el.style.display = isSuperAdmin() ? '' : 'none';
+  });
+}
+
+function renderFreemiumBanner(){
+  const banner = document.getElementById('freemium-warn-banner');
+  const txt    = document.getElementById('freemium-warn-text');
+  if (!banner || !txt) return;
+  if (isSubscribed() || !isAdmin()) { banner.style.display='none'; return; }
+  const left = freeMatchesLeft();
+  if (left > FREE_MATCH_WARN) { banner.style.display='none'; return; }
+  banner.style.display = 'block';
+  if (left <= 0) {
+    txt.innerHTML = '🔒 <strong>ครบ 15 แมทช์ฟรีแล้ว</strong> — ติดต่อแอดมินระบบเพื่ออัปเกรด';
+  } else {
+    txt.innerHTML = `⚠️ เหลือโควต้าฟรีอีก <strong>${left} แมทช์</strong> — อัปเกรดเพื่อบันทึกไม่จำกัด`;
+  }
+}
+
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
   renderBestPair(); renderWorstPair(); renderDashboardStats();
   renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderDecayHistory(); renderRSVP();
   renderRules(); renderPlayerStats(); renderTrophy();
+  renderFreemiumBanner();
   updateSeasonLabels();
+  renderRole();
 }
 
 function updateSeasonLabels(){
@@ -1357,7 +2569,7 @@ function getEloHistory(id){
       const wi=m.winners.indexOf(id), li=m.losers.indexOf(id);
       if(wi>=0) elo=Math.max(RC.eloFloor||FLOOR,elo+(m.wDeltas[wi]??0));
       else if(li>=0) elo=Math.max(RC.eloFloor||FLOOR,elo+(m.lDeltas[li]??0));
-    } else { const pct=RC.decayPct??5; elo=Math.max(RC.eloFloor||FLOOR,elo-Math.round(elo*pct/100)); }
+    } else { elo=Math.max(RC.eloFloor||FLOOR,elo-RC.decayAmount); }
     pts.push({elo});
   });
   return pts;
@@ -1424,22 +2636,24 @@ function computeEloSnapshots(){
 }
 
 // ===== RSVP =====
+function _rsvpKey(){ return 'bsw_rsvp_'+(_sGet('bcm_roomCode')||'default'); }
 let rsvpState=(()=>{
   try{
-    const saved=JSON.parse(localStorage.getItem('bsw_rsvp')||'{}');
+    const saved=JSON.parse(localStorage.getItem(_rsvpKey())||'{}');
     const today=new Date().toISOString().slice(0,10);
     if(saved._date===today) return saved;
   }catch(e){}
   return {};
 })();
-function saveRSVP(){ try{ rsvpState._date=new Date().toISOString().slice(0,10); localStorage.setItem('bsw_rsvp', JSON.stringify(rsvpState)); }catch(e){} }
+function saveRSVP(){ try{ rsvpState._date=new Date().toISOString().slice(0,10); localStorage.setItem(_rsvpKey(), JSON.stringify(rsvpState)); }catch(e){} }
 function renderRSVP(){
   const el=document.getElementById('rsvp-grid'); if(!el) return;
   if(!S.members.length){ el.innerHTML='<div style="font-size:12px;color:var(--muted);">ยังไม่มีสมาชิก</div>'; return; }
   el.innerHTML=S.members.map(m=>{
     const on=rsvpState[m.id]===true;
+    const guestAttr = !isAdmin() ? 'disabled style="pointer-events:none;"' : '';
     return `<label class="chk-item" style="padding:6px 8px;${on?'border-color:var(--green);background:rgba(34,197,94,.07);':'opacity:.5'}">
-      <input type="checkbox" ${on?'checked':''} onchange="toggleRSVP(${m.id},this.checked)">
+      <input type="checkbox" ${on?'checked':''} ${guestAttr} onchange="toggleRSVP(${m.id},this.checked)">
       <span style="font-size:12px;">${esc(m.name)}</span>
     </label>`;
   }).join('');
@@ -1452,6 +2666,7 @@ function renderRSVP(){
 function toggleRSVP(id,val){ rsvpState[id]=val; saveRSVP(); renderRSVP(); renderSelects(); }
 
 function applyDecayToAbsent(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const pct = RC.decayPct ?? RC.decayAmount ?? 5;
   if(!pct){ toast('Decay ปิดอยู่ (ตั้งค่า Decay % > 0 ก่อน)','⚠️'); return; }
   const absent=S.members.filter(m=>rsvpState[m.id]!==true);
@@ -1488,19 +2703,21 @@ function renderDecayHistory(){
 }
 
 function applyDecayUI(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const sel=document.getElementById('decay-player');
   const id=parseInt(sel.value); if(!id){ toast('กรุณาเลือกผู้เล่น','⚠️'); return; }
   const m=gm(id); if(!m) return;
   const used=(S.decayEvents||[]).filter(e=>e.playerId===id).length;
   if(used>=RC.decayMaxTimes){ toast(`${esc(m.name)} ใช้ Decay ครบ ${RC.decayMaxTimes} ครั้งแล้ว`,'⚠️'); return; }
   S.decayEvents=S.decayEvents||[];
-  S.decayEvents.push({ id:Date.now(), playerId:id, time:Date.now() });
+  S.decayEvents.push({ id:Date.now()*1000+Math.floor(Math.random()*1000), playerId:id, time:Date.now() });
   replayStats();
   const pct = RC.decayPct ?? RC.decayAmount ?? 5;
   save(); renderAll(); toast(`💤 Decay -${pct}% ใส่ ${esc(m.name)} แล้ว (ครั้งที่ ${used+1}/${RC.decayMaxTimes})`);
 }
 
 function delDecay(id){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!confirm('ลบ Decay นี้? คะแนนจะถูก revert')) return;
   S.decayEvents=(S.decayEvents||[]).filter(e=>e.id!==id);
   replayStats();
@@ -1509,6 +2726,8 @@ function delDecay(id){
 
 // ===== ADMIN CONFIRM =====
 function confirmAdmin(action){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return false; }
+  if(isMember()){ toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); return false; }
   const ans = prompt('🔐 ยืนยันการดำเนินการ:\n"' + action + '"\n\n⚠️ Export ข้อมูลไว้แล้วยัง? (หน้ากติกา → Export)\n\nพิมพ์ ADMIN เพื่อยืนยัน');
   if(ans !== 'ADMIN'){ if(ans !== null) toast('ยืนยันไม่สำเร็จ — พิมพ์ ADMIN ให้ถูกต้อง','❌'); return false; }
   return true;
@@ -1639,7 +2858,10 @@ function renderMemberGrid(){
   el.innerHTML=S.members.map((m,i)=>{
     const wr=(m.wins||0)+(m.losses||0)>0?Math.round((m.wins||0)/((m.wins||0)+(m.losses||0))*100):0;
     const streak=m.lossStreak||0;
-    return `<div class="mcard" onclick="editMember(${m.id}); openModal('modal-edit-member');" style="position:relative;cursor:pointer;">
+    const canEdit = isAdmin() || (isMember() && isMyMember(m.id));
+    const myCard  = isMember() && isMyMember(m.id);
+    return `<div class="mcard${myCard?' my-member-card':''}" onclick="${canEdit ? `editMember(${m.id}); openModal('modal-edit-member');` : ''}" style="position:relative;cursor:${canEdit?'pointer':'default'};">
+      ${myCard ? `<div style="position:absolute;top:6px;right:6px;font-size:9px;font-weight:700;color:var(--accent);background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.3);border-radius:99px;padding:1px 6px;">คุณ</div>` : ''}
       ${gav(m, i, 36, 15)}
       <div class="mcard-name">${m.name}${streak>=2?` 🧊`:''}</div>
       <div class="mcard-elo">${(m.elo??BASE).toLocaleString()}</div>
@@ -1768,7 +2990,7 @@ function renderMatchHistory(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:8px;">
-        ${m.id===latestMatchId?`<button class="btn btn-r btn-sm" onclick="delMatch(${m.id})" style="min-width:36px;min-height:36px;" title="ลบแมตช์ล่าสุด">🗑</button>`:`<span style="min-width:36px;min-height:36px;display:inline-block;"></span>`}
+        ${(isAdmin() && m.id===latestMatchId)?`<button class="btn btn-r btn-sm" onclick="delMatch(${m.id})" style="min-width:36px;min-height:36px;" title="ลบแมตช์ล่าสุด">🗑</button>`:`<span style="min-width:36px;min-height:36px;display:inline-block;"></span>`}
       </div>
     </div>`;
   }).join('');
@@ -1808,9 +3030,9 @@ function renderFinance(){
     const participants=participantsArr.map(id=>gm(id)?.name||'?').join(' / ');
     const paidNames=paidArr.length ? paidArr.map(id=>gm(id)?.name||'?').join(' / ') : 'ยังไม่มีใคร';
     const unpaidNames=participantsArr.filter(id=>!paidArr.includes(id)).map(id=>gm(id)?.name||'?').join(' / ')||'ยังไม่มีใคร';
-    const shuttleRows=s.shuttleUsage.map(u=>u.count?`<div style="font-size:12px;color:var(--muted);">${gm(u.user)?.name||'?'}: ${u.count} ลูก × ${u.price.toLocaleString()} = ${(u.count*u.price).toLocaleString()}</div>`:'').join('');
-    const courtCost=s.courtCost.toLocaleString();
-    const shuttleCost=s.shuttleCost.toLocaleString();
+    const shuttleRows=(s.shuttleUsage||[]).map(u=>u.count?`<div style="font-size:12px;color:var(--muted);">${gm(u.user)?.name||'?'}: ${u.count} ลูก × ${(u.price??0).toLocaleString()} = ${(u.count*(u.price??0)).toLocaleString()}</div>`:'').join('');
+    const courtCost=(s.courtCost??0).toLocaleString();
+    const shuttleCost=(s.shuttleCost??0).toLocaleString();
     const perPerson=(s.perPerson??0).toLocaleString(undefined,{maximumFractionDigits:2});
     return `<div class="panel" style="padding:14px;margin-bottom:10px;">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
@@ -1818,15 +3040,15 @@ function renderFinance(){
         <div><span class="badge bg-gray">คนตี ${s.participants.length}</span></div>
       </div>
       <div style="margin-top:10px;font-size:13px;color:var(--text);">
-        <div>จอง ${s.hours} ชม. × ${s.ratePerHour.toLocaleString()} = ${courtCost}</div>
+        <div>จอง ${s.hours} ชม. × ${(s.ratePerHour??0).toLocaleString()} = ${courtCost}</div>
         <div>ค่าลูกแบด = ${shuttleCost}</div>
         ${shuttleRows}
-        <div style="margin-top:8px;">รวม ${ (s.courtCost+s.shuttleCost).toLocaleString() } ฿</div>
+        <div style="margin-top:8px;">รวม ${ ((s.courtCost??0)+(s.shuttleCost??0)).toLocaleString() } ฿</div>
         <div style="margin-top:4px;font-weight:700;font-size:15px;color:var(--green);">💵 คนละ ${perPerson} ฿</div>
         <div style="margin-top:10px;color:var(--text);font-weight:600;">ผู้เล่น: ${participants}</div>
         <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;flex-wrap:wrap;">
-          <button class="btn btn-y btn-sm" onclick="openFinanceModal(${s.id})">✏️ แก้ไข</button>
-          <button class="btn btn-r btn-sm" onclick="deleteFinanceSession(${s.id})">🗑 ลบ</button>
+          ${isAdmin()?`<button class="btn btn-y btn-sm" onclick="openFinanceModal(${s.id})">✏️ แก้ไข</button>`:''}
+          ${isAdmin()?`<button class="btn btn-r btn-sm" onclick="deleteFinanceSession(${s.id})">🗑 ลบ</button>`:''}
           <button class="btn btn-s btn-sm" onclick="openFinanceSession(${s.id})">ดู session / จ่าย</button>
         </div>
       </div>
@@ -1924,7 +3146,7 @@ function openFinanceSession(id){
   document.getElementById('fd-date').textContent=session.date;
   document.getElementById('fd-booker').textContent=gm(session.booker)?.name||'ไม่ระบุ';
   document.getElementById('fd-total').textContent=`${(session.courtCost+session.shuttleCost).toLocaleString()} ฿`;
-  document.getElementById('fd-per-person').textContent=`${(session.perPerson??0).toLocaleString(undefined,{maximumFractionDigits:2})} ฿`;
+  document.getElementById('fd-per-person').textContent=`${session.perPerson.toLocaleString(undefined,{maximumFractionDigits:2})} ฿`;
   const participantsEl=document.getElementById('fd-participants');
   if(participantsEl){
     participantsEl.innerHTML=session.participants.map(pid=>{
@@ -1942,6 +3164,7 @@ function syncFinanceDetailPaidRow(){
 }
 
 function saveFinanceSessionDetail(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const id=parseInt(document.getElementById('finance-detail-id').value);
   const session=S.finance?.find(s=>s.id===id);
   if(!session){ toast('ไม่พบ session นี้','⚠️'); return; }
@@ -1951,12 +3174,14 @@ function saveFinanceSessionDetail(){
 }
 
 function deleteFinanceSession(id){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!confirm('ลบ session ค่าใช้จ่ายนี้?')) return;
   S.finance=S.finance.filter(s=>s.id!==id);
   save(); renderAll(); toast('ลบ session แล้ว','🗑️');
 }
 
 function saveFinanceSession(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const date=document.getElementById('f-date').value;
   const booker=parseInt(document.getElementById('f-booker').value);
   const hours=parseFloat(document.getElementById('f-hours').value)||0;
@@ -1987,20 +3212,29 @@ function saveFinanceSession(){
 
 // ===== ACTIONS =====
 function addMember(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const name=document.getElementById('nm-name').value.trim();
   if(!name){ toast('กรุณากรอกชื่อ','⚠️'); return; }
-  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:BASE, matchCount:0, wins:0, losses:0, lossStreak:0 });
+  const TIER_ELO = { 'BB': 10000, 'BG1': 20001, 'BG2': 35001, 'BG+': 45001 };
+  const tier = document.getElementById('nm-tier')?.value || 'BB';
+  const startElo = TIER_ELO[tier] ?? BASE;
+  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:startElo, matchCount:0, wins:0, losses:0, lossStreak:0 });
   save(); document.getElementById('nm-name').value=''; document.getElementById('nm-phone').value='';
+  const tierEl = document.getElementById('nm-tier'); if(tierEl) tierEl.value='BB';
   closeModal('modal-add'); renderAll(); toast(`เพิ่ม "${name}" สำเร็จ`);
 }
 
 function editMemberFromStats(){
   const id=window.currentPlayerIdForIcon;
   if(!id) return;
+  if(!isAdmin() && !(isMember() && isMyMember(id))){
+    toast('แก้ไขได้เฉพาะข้อมูลตัวเอง','🚫'); return;
+  }
   editMember(id);
 }
 
 function deleteMemberFromStats(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const id=window.currentPlayerIdForIcon;
   if(!id) return;
   confirmDelete(id);
@@ -2009,9 +3243,27 @@ function deleteMemberFromStats(){
 function editMember(id){
   const m=gm(id);
   if(!m) return;
+  const memberSelf = isMember() && isMyMember(id);
+  const adminMode  = isAdmin();
+  if(!adminMode && !memberSelf) return; // ไม่มีสิทธิ์
   document.getElementById('edit-member-id').value=id;
   document.getElementById('edit-member-name').value=m.name;
   document.getElementById('edit-member-phone').value=m.phone||'';
+  // Member แก้ได้เฉพาะชื่อ
+  const phoneRow = document.getElementById('edit-member-phone-row');
+  const title    = document.getElementById('edit-member-modal-title');
+  const proRow = document.getElementById('edit-member-pro-row');
+  const proChk = document.getElementById('edit-member-pro');
+  if(memberSelf && !adminMode){
+    if(phoneRow) phoneRow.style.display='none';
+    if(proRow)   proRow.style.display='none';
+    if(title) title.textContent='✏️ เปลี่ยนชื่อในเกม';
+  } else {
+    if(phoneRow) phoneRow.style.display='';
+    if(proRow)   proRow.style.display = (adminMode && isSubscribed()) ? '' : 'none';
+    if(proChk)   proChk.checked = !!(m.proTier);
+    if(title) title.textContent='✏️ แก้ไขสมาชิก';
+  }
   openModal('modal-edit-member');
 }
 
@@ -2019,11 +3271,22 @@ function saveMemberEdit(){
   const id=parseInt(document.getElementById('edit-member-id').value);
   const name=document.getElementById('edit-member-name').value.trim();
   if(!name){ toast('กรุณากรอกชื่อ','⚠️'); return; }
+  // สิทธิ์: admin แก้ได้ทุกคน, member แก้ได้เฉพาะตัวเอง
+  if(!isAdmin() && !(isMember() && isMyMember(id))){
+    toast('ไม่มีสิทธิ์แก้ไขสมาชิกคนนี้','🚫'); return;
+  }
   const m=gm(id);
   if(!m) return;
   const oldName=m.name;
   m.name=name;
-  m.phone=document.getElementById('edit-member-phone').value.trim();
+  // admin เท่านั้นที่แก้ phone + proTier ได้
+  if(isAdmin()){
+    m.phone = document.getElementById('edit-member-phone').value.trim();
+    if (isSubscribed()) {
+      const proChk = document.getElementById('edit-member-pro');
+      if (proChk) m.proTier = proChk.checked;
+    }
+  }
   save(); closeModal('modal-edit-member'); renderAll(); toast(`แก้ไข "${oldName}" → "${name}" สำเร็จ`);
 }
 
@@ -2041,6 +3304,7 @@ function confirmDelete(id){
 }
 
 function verifyDelete(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const answer=parseInt(document.getElementById('del-answer').value);
   if(answer!==window.expectedDeleteAnswer){
     toast('คำตอบผิด ลองใหม่อีกครั้ง','❌');
@@ -2058,6 +3322,7 @@ function verifyDelete(){
 
 
 function randomCourts(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   // ใช้เฉพาะคนที่ tick RSVP (มา) ถ้ายังไม่มี RSVP เลยใช้ทั้งหมด
   const rsvpIds = S.members.filter(m=>rsvpState[m.id]===true).map(m=>m.id);
   const pool = rsvpIds.length ? S.members.filter(m=>rsvpIds.includes(m.id)) : S.members;
@@ -2112,6 +3377,7 @@ function replayStats(){
 }
 
 function delMatch(id){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!confirm('ลบแมตช์นี้? คะแนนจะถูก revert ด้วย')) return;
   const idx=S.matches.findIndex(m=>m.id===id);
   const deleted=S.matches[idx];
@@ -2223,6 +3489,17 @@ function renderPlayerDetails(id){
   const currentIcon=m.icon || '👤';
   iconDisplay.textContent=currentIcon;
   window.currentPlayerIdForIcon=id;
+  
+  // อัปเดต visibility ของ action buttons ตาม role
+  const isSelf    = isMember() && isMyMember(id);
+  const adminMode = isAdmin();
+  const btnIcon   = document.querySelector('#member-icon-display')?.closest('.panel')?.querySelector('button[onclick="openModal(\'modal-icon-select\')"]') ||
+                    document.querySelector('button[onclick="openModal(\'modal-icon-select\')"]');
+  const btnEdit   = document.querySelector('button[onclick="editMemberFromStats()"]');
+  const btnDel    = document.querySelector('button[onclick="deleteMemberFromStats()"]');
+  if(btnIcon) btnIcon.style.display = adminMode ? '' : 'none';
+  if(btnEdit) btnEdit.style.display = (adminMode || isSelf) ? '' : 'none';
+  if(btnDel)  btnDel.style.display  = adminMode ? '' : 'none';
   
   const h2hHtml=S.members.filter(x=>x.id!==id).map(other=>{
     const h2h=getH2HRecord(id,other.id);
@@ -2377,6 +3654,25 @@ function renderRules(){
       <div class="rrow"><span>คำนวณ tier จาก</span><span class="rval">ELO ก่อนแมตช์</span></div>
       <div class="rrow"><span>Participation bonus</span><span class="rval">ถูก nerf ตาม BG Tier</span></div>
     </div>
+    <div class="rcard" style="grid-column:1/-1;border-color:rgba(100,180,255,.3);">
+      <div class="rcard-t" style="font-size:13px;">📦 Free Tier — ข้อจำกัดห้องที่ยังไม่ Subscribe</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">ห้องฟรีสามารถบันทึกแมทช์ได้สูงสุด ${FREE_MATCH_LIMIT} แมทช์ตลอดอายุห้อง</div>
+      <div class="rrow"><span>โควต้าแมทช์ฟรี</span><span class="rval" style="color:var(--blue)">${FREE_MATCH_LIMIT} แมทช์</span></div>
+      <div class="rrow"><span>เตือนเมื่อเหลือ</span><span class="rval" style="color:var(--accent2)">${FREE_MATCH_WARN} แมทช์</span></div>
+      <div class="rrow"><span>Pro Mode</span><span class="rval" style="color:var(--muted)">ไม่รองรับ</span></div>
+      <div class="rrow"><span>อัปเกรด</span><span class="rval">ติดต่อ Admin ระบบ</span></div>
+    </div>
+    <div class="rcard" style="grid-column:1/-1;border-color:rgba(240,192,64,.4);background:rgba(240,192,64,.04);">
+      <div class="rcard-t" style="font-size:13px;">⚡ Pro Mode — เฉพาะห้อง Subscribed</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">ระบบ ELO แยกต่างหาก ใช้กับผู้เล่นที่ mark เป็น Pro Tier เท่านั้น · ranking ระดับโลกข้ามทุกก๊วน</div>
+      <div class="rrow"><span>ELO เริ่มต้น</span><span class="rval" style="color:var(--accent)">${PRO_BASE_ELO.toLocaleString()}</span></div>
+      <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+${PRO_WIN.toLocaleString()}</span></div>
+      <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">${PRO_LOSS.toLocaleString()}</span></div>
+      <div class="rrow"><span>Margin bonus/penalty</span><span class="rval" style="color:var(--accent2)">±${PRO_MARGIN_BONUS.toLocaleString()}</span></div>
+      <div class="rrow"><span>Sliding window</span><span class="rval">${PRO_WINDOW} เกมล่าสุด</span></div>
+      <div class="rrow"><span>เงื่อนไข Pro Match</span><span class="rval">ผู้เล่น 4 คน ต้องเป็น Pro Tier ทั้งหมด</span></div>
+      <div class="rrow"><span>Leaderboard</span><span class="rval">ข้ามก๊วน — ดูได้ที่แท็บ ⚡ Pro</span></div>
+    </div>
   </div>`;
 }
 
@@ -2420,24 +3716,19 @@ async function saveRulesConfig(){
   RC.farmLimit3=0.5; RC.farmLimit5=0.25;
   RC.decayPct=parseFloat(document.getElementById('rc-decayPct').value)||0;
   RC.decayMaxTimes=parseInt(document.getElementById('rc-decayMaxTimes').value)||5;
-  // Save RC to state and sync — เฉพาะ state/rulesConfig ไม่แตะ defaultRules
+  // Save RC to state and sync
   S.rulesConfig=RC;
-  save();
+  save(); // autoSyncToFirebase จะ sync rooms/{code}/state ครบ
   closeModal('modal-rules-edit');
   renderRules();
-  try {
-    if(typeof db === 'undefined') throw new Error('no db');
-    await db.ref('state/rulesConfig').set(RC);
-    toast('บันทึกกติกาเรียบร้อย ⚙️☁️');
-  } catch(e) {
-    toast('บันทึกกติกา local แล้ว (offline)', '⚙️');
-  }
+  toast('บันทึกกติกาเรียบร้อย ⚙️☁️');
 }
 
 
 async function saveRulesAsDefault(){
   if(!confirmAdmin('บันทึกกติกาชุดนี้เป็น Default (sync Firebase)')) return;
-  // อ่านจาก form fields ปัจจุบัน (ไม่ต้องกด บันทึกกติกา ก่อน)
+  const code = _sGet('bcm_roomCode');
+  if(!code){ toast('ไม่พบรหัสห้อง','⚠️'); return; }
   const n=id=>{const el=document.getElementById(id); return el?parseFloat(el.value)||0:0;};
   const draft={
     baseElo:n('rc-baseElo'), eloFloor:n('rc-eloFloor'),
@@ -2452,13 +3743,12 @@ async function saveRulesAsDefault(){
     farmLimit3:0.5, farmLimit5:0.25,
     decayPct:parseFloat(document.getElementById('rc-decayPct')?.value)||5,
     decayMaxTimes:parseInt(document.getElementById('rc-decayMaxTimes')?.value)||5,
-    // รวม BG Tier multipliers ด้วย
-    bgMult: RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} },
+    bgMult: RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} },
     savedAt: new Date().toISOString()
   };
   try {
-    if(typeof db === 'undefined') throw new Error('Firebase ยังไม่พร้อม');
-    await db.ref('defaultRules').set(draft);
+    if(!window.db) throw new Error('Firebase ยังไม่พร้อม');
+    await window.db.ref('rooms/' + code + '/defaultRules').set(draft);
     toast('บันทึก Default กติกา (รวม BG Tier) ขึ้น Firebase แล้ว ⭐', '⭐');
   } catch(e) {
     toast('บันทึก Default ไม่สำเร็จ: '+(e.message||e), '❌');
@@ -2467,27 +3757,24 @@ async function saveRulesAsDefault(){
 
 async function loadRulesDefault(){
   if(!confirmAdmin('โหลด Default กติกาจาก Firebase (จะทับค่าปัจจุบัน)')) return;
+  const code = _sGet('bcm_roomCode');
+  if(!code){ toast('ไม่พบรหัสห้อง','⚠️'); return; }
   try {
-    if(typeof db === 'undefined') throw new Error('Firebase ยังไม่พร้อม');
-    const snap = await db.ref('defaultRules').once('value');
+    if(!window.db) throw new Error('Firebase ยังไม่พร้อม');
+    const snap = await window.db.ref('rooms/' + code + '/defaultRules').once('value');
     const data = snap.val();
-    if(!data){ toast('ยังไม่มี Default กติกาใน Firebase', '⚠️'); return; }
-    // ลบ savedAt ออกก่อน assign เข้า RC (รวม bgMult ถ้ามี)
+    if(!data){ toast('ยังไม่มี Default กติกาของห้องนี้ใน Firebase', '⚠️'); return; }
     const { savedAt, ...rules } = data;
     Object.assign(RC, rules);
-    // ถ้า bgMult ไม่มีใน Firebase ให้คง RC.bgMult เดิมไว้
     if(!rules.bgMult){
-      RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} };
+      RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} };
     }
     S.rulesConfig = RC;
     save();
-    // sync state/rulesConfig ขึ้น Firebase (ไม่แตะ defaultRules)
-    try { await db.ref('state/rulesConfig').set(RC); } catch(e){}
     renderRules();
-    // ถ้า modal เปิดอยู่ให้ populate fields ด้วย
     const modal = document.getElementById('modal-rules-edit');
     if(modal && modal.classList.contains('on')) openRulesEdit();
-    toast('โหลด Default กติกา (รวม BG Tier) เรียบร้อย', '✅');
+    toast('โหลด Default กติกา (รวม BG Tier) เรียบร้อย ✅', '✅');
   } catch(e) {
     toast('โหลด Default ไม่สำเร็จ: '+(e.message||e), '❌');
   }
@@ -2504,7 +3791,9 @@ function tab(name, btn, fromPopstate=false){
   });
   _currentTab = name;
   renderAll();
-  if(name==='stats'){ backToStatsList(); }
+  if(name==='stats') backToStatsList();
+  if(name==='pro') renderProLeaderboard();
+  if(name==='superadmin') renderSuperAdminPanel();
   if(!fromPopstate) history.pushState({type:'tab', name}, '', '');
 }
 
@@ -2579,7 +3868,7 @@ function toggleTheme(){
 function loadTheme(){
   const saved=localStorage.getItem('bcm_theme');
   const valid=['dark','light','snowite','bwf'];
-  setTheme(valid.includes(saved)?saved:'dark');
+  setTheme(valid.includes(saved)?saved:'light');
 }
 function toast(msg,icon='✅',undoFn=null){
   const t=document.getElementById('toast');
@@ -2909,6 +4198,105 @@ function importData(input){
   input.value='';
 }
 
+// ===== PRO LEADERBOARD =====
+async function renderProLeaderboard() {
+  const el = document.getElementById('pro-leaderboard-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">⏳ โหลด Pro Rankings...</div>';
+  try {
+    const _db = window.db;
+    if (!_db) { el.innerHTML='<div style="text-align:center;padding:20px;color:var(--red);">ไม่สามารถเชื่อมต่อ Firebase</div>'; return; }
+    const snap = await _db.ref('proPlayers').once('value');
+    const data = snap.val() || {};
+    const players = Object.entries(data).map(([uid, p]) => ({
+      ...p, uid,
+      proElo: PRO_BASE_ELO + (p.proMatchDeltas || []).reduce((s, d) => s + (d.delta || 0), 0),
+      games: (p.proMatchDeltas || []).length,
+    })).sort((a, b) => b.proElo - a.proElo);
+
+    if (!players.length) {
+      el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);">ยังไม่มีข้อมูล Pro — เริ่มบันทึก Pro Match เพื่อขึ้น ranking</div>';
+      return;
+    }
+    el.innerHTML = players.map((p, i) => {
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--muted);">#${i+1}</span>`;
+      const diff = p.proElo - PRO_BASE_ELO;
+      const diffStr = diff>0?`<span style="color:var(--green);">+${diff.toLocaleString()}</span>`:diff<0?`<span style="color:var(--red);">${diff.toLocaleString()}</span>`:`<span style="color:var(--muted);">0</span>`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="width:32px;text-align:center;font-size:16px;">${medal}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name||'?')}</div>
+          <div style="font-size:10px;color:var(--muted);">${esc(p.clubName||'')} · ${p.games} เกม</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--mono);font-weight:700;font-size:15px;color:var(--accent);">${p.proElo.toLocaleString()}</div>
+          <div style="font-size:10px;">${diffStr}</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:20px;color:var(--red);">เกิดข้อผิดพลาด: ${esc(String(e))}</div>`;
+  }
+}
+
+// ===== SUPER ADMIN =====
+async function renderSuperAdminPanel() {
+  if (!isSuperAdmin()) return;
+  const statEl = document.getElementById('sa-stats');
+  const listEl = document.getElementById('sa-room-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">⏳ โหลดข้อมูลทุกห้อง...</div>';
+  try {
+    const _db = window.db;
+    if (!_db) { listEl.innerHTML='<div style="color:var(--red);">Firebase ไม่พร้อม</div>'; return; }
+    const snap = await _db.ref('rooms').once('value');
+    const rooms = snap.val() || {};
+    const entries = Object.entries(rooms);
+    const subCount = entries.filter(([,r]) => r.metadata && r.metadata.subscribed).length;
+    if (statEl) statEl.textContent = `ทั้งหมด ${entries.length} ห้อง · Subscribed ${subCount} ห้อง`;
+
+    if (!entries.length) { listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);">ยังไม่มีห้อง</div>'; return; }
+
+    listEl.innerHTML = entries.map(([code, room]) => {
+      const meta = room.metadata || {};
+      const st   = room.state || {};
+      const members = !st.members ? [] : Array.isArray(st.members) ? st.members : Object.values(st.members);
+      const matches = !st.matches ? [] : Array.isArray(st.matches) ? st.matches : Object.values(st.matches);
+      const subbed = !!meta.subscribed;
+      return `<div style="background:var(--s2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+          <div style="flex:1;">
+            <div style="font-weight:700;">${esc(room.clubName||code)}</div>
+            <div style="font-size:11px;color:var(--muted);">รหัส: ${esc(code)} · สมาชิก ${members.length} คน · แมทช์ ${matches.length}</div>
+          </div>
+          <span style="background:${subbed?'var(--green)':'var(--s3)'};color:${subbed?'#fff':'var(--muted)'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${subbed?'✅ Subscribed':'🔒 Free'}</span>
+        </div>
+        <button class="btn btn-sm ${subbed?'btn-r':'btn-g'}" onclick="saToggleSubscription('${code}',${!subbed})">${subbed?'❌ ยกเลิก Subscription':'✅ เปิด Subscription'}</button>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = `<div style="color:var(--red);">เกิดข้อผิดพลาด: ${esc(String(e))}</div>`;
+  }
+}
+
+async function saToggleSubscription(code, value) {
+  if (!isSuperAdmin()) return;
+  const _db = window.db;
+  if (!_db) return;
+  try {
+    await _db.ref('rooms/' + code + '/metadata/subscribed').set(value);
+    if (code === _sGet('bcm_roomCode')) {
+      if (!window._roomMeta) window._roomMeta = {};
+      window._roomMeta.subscribed = value;
+      renderAll();
+    }
+    toast(`${value?'✅ เปิด':'❌ ปิด'} Subscription: ${code}`, value?'✅':'🔒');
+    renderSuperAdminPanel();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + String(e), '⚠️');
+  }
+}
+
 // ===== TROPHY =====
 let _trpPage = 0;
 
@@ -3156,7 +4544,7 @@ async function endSeason(){
   // Reset members ELO + stats, keep names/icons
   S.members.forEach(m => {
     m.elo = RC.baseElo || 10000;
-    m.wins = 0; m.losses = 0; m.matchCount = 0; m.lossStreak = 0; m.decayCount = 0;
+    m.wins = 0; m.losses = 0; m.matchCount = 0; m.lossStreak = 0;
   });
   S.matches = [];
   S.decayEvents = [];
@@ -3169,90 +4557,287 @@ async function endSeason(){
 }
 
 loadTheme();
+// Show room code badge in header if room is set
+(function(){
+  const code = _sGet('bcm_roomCode');
+  const badge = document.getElementById('header-room-badge');
+  if(code && badge) { badge.style.display = 'block'; badge.textContent = code; }
+})();
+
+// On load - show loading spinner; onAuthStateChanged จะ handle ต่อ
+// ใช้ DOMContentLoaded เพื่อให้แน่ใจว่า wGoStep พร้อมใช้งานแล้ว
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof wGoStep === 'function') wGoStep('loading');
+  // Safety fallback: ถ้า onAuthStateChanged ค้างใน 10 วินาที → แสดง login screen
+  setTimeout(function() {
+    var loadingStep = document.getElementById('ws-step-loading');
+    var ws = document.getElementById('welcome-screen');
+    if (ws && loadingStep && loadingStep.classList.contains('on')) {
+      console.warn('[BCM] Auth/Firebase timeout — forcing login screen');
+      ws.style.display = '';
+      ws.classList.remove('hide');
+      if (typeof wGoStep === 'function') wGoStep('main');
+    }
+  }, 6000);
+});
+function _showRoomCode(){
+  const code = _sGet('bcm_roomCode') || '?';
+  const role = _sGet('bcm_role') || 'user';
+  toast('ห้อง: ' + code + ' · ' + (role === 'admin' ? '⚙️ Admin' : '🏸 User'), '🔑');
+}
+// Club name restored from Firebase (_session)
+(function(){
+  const saved = _sGet('bcm_clubname');
+  if(saved){ 
+    const logo = document.getElementById('header-logo');
+    if(logo) logo.textContent = '🏸 ' + saved;
+    document.title = '🏸 ' + saved + ' Badminton';
+  }
+})();
 renderAll(); // render empty state while waiting for Firebase
 </script>
 
 <!-- Firebase RTDB setup -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
 <script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
-    authDomain: "badmintonsnowite.firebaseapp.com",
-    databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
-    projectId: "badmintonsnowite",
-    appId: "1:278915115830:web:5aff2fbb71db4df62a6197"
-  };
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+  authDomain: "badmintonsnowite.firebaseapp.com",
+  databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+  projectId: "badmintonsnowite",
+  storageBucket: "badmintonsnowite.firebasestorage.app",
+  messagingSenderId: "278915115830",
+  appId: "1:278915115830:web:5aff2fbb71db4df62a6197",
+  measurementId: "G-RB42S3K4BZ"
+};
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
+  window.db = db; // expose globally
+  window._auth = firebase.auth();
+  _auth = window._auth;
+
+  // Listen for auth state — catches redirect result on mobile too
+  _auth.onAuthStateChanged(async function(user) {
+    if (!user) {
+      // ไม่มี session → แสดง welcome screen
+      const ws = document.getElementById('welcome-screen');
+      if (ws) {
+        ws.style.display = '';
+        ws.classList.remove('hide');
+        wGoStep('main');
+      }
+      return;
+    }
+
+    _wUser = user;
+    const ws   = document.getElementById('welcome-screen');
+    const flow = _sGet('bcm_pendingFlow');
+
+    // ✅ ดึงข้อมูล user จาก Firebase — ว่าเคยอยู่ห้องไหน (ครอบด้วย timeout 8 วินาที)
+    const _db = window.db;
+
+    // Helper: แสดง choose screen เมื่อ Firebase ไม่ตอบหรือ user ใหม่
+    function _showChooseScreen() {
+      if (ws && ws.style.display === 'none') { ws.style.display = ''; ws.classList.remove('hide'); }
+      else if (ws) { ws.style.display = ''; ws.classList.remove('hide'); }
+      _wSetSignedIn(user, 'choose');
+      const savedCode = _sGet('bcm_pendingJoinCode');
+      const flow2 = _sGet('bcm_pendingFlow');
+      if (savedCode && (flow2 === 'join' || flow2 === 'auto')) {
+        _wJoinCode = savedCode;
+        wGoStep('join');
+        const inp = document.getElementById('join-code-input');
+        if (inp) inp.value = savedCode;
+      } else {
+        wGoStep('choose');
+      }
+      _sRemove('bcm_pendingFlow');
+      _sRemove('bcm_pendingJoinCode');
+    }
+
+    if (_db) {
+      try {
+        // ครอบทุก Firebase call ด้วย timeout 8 วินาที
+        await Promise.race([
+          (async () => {
+            // 1. เช็ค users/{uid} ก่อน
+            let roomCode = null, role = null;
+            const userSnap = await _db.ref('users/' + user.uid).once('value');
+            const userData = userSnap.val();
+
+            if (userData && userData.roomCode) {
+              roomCode = userData.roomCode;
+              role = userData.role || 'user';
+            } else {
+              // 2. Fallback: หาจาก rooms ที่ metadata/adminUid === user.uid
+              try {
+                const roomsSnap = await _db.ref('rooms').orderByChild('metadata/adminUid').equalTo(user.uid).limitToFirst(1).once('value');
+                const roomsData = roomsSnap.val();
+                if (roomsData) {
+                  const code = Object.keys(roomsData)[0];
+                  roomCode = code;
+                  role = 'admin';
+                  await _db.ref('users/' + user.uid).set({
+                    roomCode: code, role: 'admin',
+                    name: user.displayName || '', email: user.email || '',
+                    joinedAt: Date.now(),
+                  });
+                  console.log('[BCM] admin fallback: found room', code, 'for uid', user.uid);
+                }
+              } catch(indexErr) {
+                console.warn('[BCM] adminUid query failed (missing index?):', indexErr?.code, indexErr?.message);
+                try {
+                  const allRoomsSnap = await _db.ref('rooms').once('value');
+                  const allRooms = allRoomsSnap.val() || {};
+                  const found = Object.entries(allRooms).find(([, r]) => r.metadata?.adminUid === user.uid);
+                  if (found) {
+                    const [code] = found;
+                    roomCode = code;
+                    role = 'admin';
+                    await _db.ref('users/' + user.uid).set({
+                      roomCode: code, role: 'admin',
+                      name: user.displayName || '', email: user.email || '',
+                      joinedAt: Date.now(),
+                    });
+                    console.log('[BCM] admin fallback (scan): found room', code);
+                  }
+                } catch(scanErr) {
+                  console.error('[BCM] room scan failed:', scanErr?.message);
+                }
+              }
+            }
+
+            if (roomCode) {
+              _sSet('bcm_roomCode', roomCode);
+              _sSet('bcm_role', role);
+              _sSet('bcm_myUid', user.uid || '');
+              _sSet('bcm_adminName', user.displayName || '');
+              _sSet('bcm_adminEmail', user.email || '');
+              _sSet('bcm_adminPhoto', user.photoURL || '');
+
+              const roomSnap = await _db.ref('rooms/' + roomCode).once('value');
+              const roomData = roomSnap.val();
+              if (roomData) {
+                const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+                if (roomData.clubName) {
+                  setClubName(roomData.clubName);
+                  _sSet('bcm_clubname', roomData.clubName);
+                  if (typeof _wSaveLastRoom === 'function') _wSaveLastRoom(roomCode, roomData.clubName);
+                }
+                const st = roomData.state || {};
+                S.members     = toArr(st.members);
+                S.matches     = toArr(st.matches);
+                S.finance     = toArr(st.finance);
+                S.decayEvents = toArr(st.decayEvents);
+                S.seasons     = toArr(st.seasons);
+                if (st.rulesConfig) Object.assign(RC, st.rulesConfig);
+                S.proMatches = toArr(st.proMatches);
+                window._roomMeta = roomData.metadata || {};
+              }
+
+              if (ws) { ws.classList.add('hide'); setTimeout(()=>{ ws.style.display='none'; },420); }
+              renderAll(); renderRole(); _updateProfileAvatar();
+              if (typeof restartRealtimeSync === 'function') setTimeout(restartRealtimeSync, 300);
+              // triggerClaimIfNeeded จะถูกเรียกอัตโนมัติหลัง first realtime sync
+            } else {
+              // ไม่พบห้อง → user ใหม่
+              _showChooseScreen();
+            }
+          })(),
+          // Timeout 8 วินาที — ถ้า Firebase ไม่ตอบ ให้แสดง choose screen แทนค้าง loading
+          new Promise((_, rej) => setTimeout(() => rej(new Error('Firebase lookup timeout')), 8000))
+        ]);
+      } catch(e) {
+        console.error('[BCM] bypass lookup error or timeout:', e?.code, e?.message);
+        // ไม่ว่าจะ error หรือ timeout → ให้ user เลือก join/create ได้เลย
+        _showChooseScreen();
+      }
+    } else {
+      // ไม่มี DB → แสดง choose screen
+      _showChooseScreen();
+    }
+  });
+
+  // Determine Firebase DB path: room-specific if available, else legacy 'state'
+  function _roomRef() {
+    const _db = window.db;
+    if (!_db) throw new Error('Firebase DB not ready');
+    const code = _sGet('bcm_roomCode');
+    if (!code) throw new Error('ยังไม่ได้เลือกห้อง');
+    return _db.ref('rooms/' + code + '/state');
+  }
 
   async function autoSyncToFirebase() {
+    const _db = window.db || null;
+    if (!_db) return;
+    const code = _sGet('bcm_roomCode');
+    if (!code) return;
+    const writeTs = Date.now();
+    const clubName = getClubName() || '';
     try {
-      await db.ref('state').transaction(serverState => {
-        if (!serverState) return S;
+      await _db.ref('rooms/' + code + '/state').transaction(serverState => {
+        if (!serverState) return JSON.parse(JSON.stringify({ ...S, clubName, rulesConfig: RC, lastUpdatedAt: writeTs }));
 
+        // Merge matches by ID — server is authoritative base
         const serverMatches = toArr(serverState.matches || []);
         const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
         const newLocalMatches = S.matches.filter(m => !serverMatchIds.has(String(m.id)));
 
-        // Start from server members as the authoritative base
+        // Merge members: start from server, add ELO deltas for new local matches
         const members = JSON.parse(JSON.stringify(toArr(serverState.members || [])));
         const memberMap = {};
         members.forEach(m => { memberMap[m.id] = m; });
-
-        // Add members that only exist locally (e.g. newly added this session)
         toArr(S.members).forEach(lm => {
-          if (!memberMap[lm.id]) {
-            memberMap[lm.id] = JSON.parse(JSON.stringify(lm));
-            members.push(memberMap[lm.id]);
-          }
+          if (!memberMap[lm.id]) { memberMap[lm.id] = JSON.parse(JSON.stringify(lm)); members.push(memberMap[lm.id]); }
         });
-
-        // Apply ELO deltas for new local matches onto the server member base
         newLocalMatches.forEach(match => {
           (match.winners || []).forEach((id, i) => {
-            const m = memberMap[id];
-            if (!m) return;
+            const m = memberMap[id]; if (!m) return;
             m.elo = Math.max(RC.eloFloor || FLOOR, (m.elo ?? BASE) + (match.wDeltas?.[i] ?? 0));
-            m.matchCount = (m.matchCount ?? 0) + 1;
-            m.wins = (m.wins ?? 0) + 1;
-            m.lossStreak = 0;
+            m.matchCount = (m.matchCount ?? 0) + 1; m.wins = (m.wins ?? 0) + 1; m.lossStreak = 0;
           });
           (match.losers || []).forEach((id, i) => {
-            const m = memberMap[id];
-            if (!m) return;
+            const m = memberMap[id]; if (!m) return;
             m.elo = Math.max(RC.eloFloor || FLOOR, (m.elo ?? BASE) + (match.lDeltas?.[i] ?? 0));
-            m.matchCount = (m.matchCount ?? 0) + 1;
-            m.losses = (m.losses ?? 0) + 1;
+            m.matchCount = (m.matchCount ?? 0) + 1; m.losses = (m.losses ?? 0) + 1;
             m.lossStreak = (m.lossStreak ?? 0) + 1;
           });
         });
 
-        // Merge finance by ID (don't overwrite server entries added by other user)
+        // Merge finance and decayEvents by ID
         const serverFinance = toArr(serverState.finance || []);
         const serverFinanceIds = new Set(serverFinance.map(f => String(f.id)));
         const newLocalFinance = toArr(S.finance || []).filter(f => !serverFinanceIds.has(String(f.id)));
 
-        // Merge decayEvents by ID
         const serverDecay = toArr(serverState.decayEvents || []);
         const serverDecayIds = new Set(serverDecay.map(d => String(d.id)));
         const newLocalDecay = toArr(S.decayEvents || []).filter(d => !serverDecayIds.has(String(d.id)));
 
-        return {
+        const serverProMatches = toArr(serverState.proMatches || []);
+        const serverProIds = new Set(serverProMatches.map(m => String(m.id)));
+        const newLocalPro = toArr(S.proMatches || []).filter(m => !serverProIds.has(String(m.id)));
+        return JSON.parse(JSON.stringify({
           ...serverState,
           matches: [...serverMatches, ...newLocalMatches],
           members,
           finance: [...serverFinance, ...newLocalFinance],
           decayEvents: [...serverDecay, ...newLocalDecay],
+          proMatches: [...serverProMatches, ...newLocalPro],
           seasons: toArr(S.seasons || []),
           seasonGoal: S.seasonGoal,
-          rulesConfig: S.rulesConfig
-        };
+          rulesConfig: RC,
+          clubName,
+          lastUpdatedAt: writeTs
+        }));
       });
+      if (typeof _lastKnownUpdatedAt !== 'undefined') _lastKnownUpdatedAt = writeTs;
     } catch(e) {
-      // Fallback: direct write (still better than nothing)
-      try { await db.ref('state').set(S); } catch(e2) {}
+      console.error('autoSync transaction error:', e);
+      if(typeof toast === 'function') toast('Sync ไม่สำเร็จ — กรุณากด "บันทึก" ด้วยตนเอง', '⚠️');
     }
   }
 
@@ -3260,9 +4845,12 @@ renderAll(); // render empty state while waiting for Firebase
     if(!confirmAdmin('บันทึกข้อมูลทั้งหมดขึ้น Firebase')) return;
     try {
       S.rulesConfig = RC;
-      // Use transaction to avoid overwriting concurrent changes by another user
-      await db.ref('state').transaction(serverState => {
-        if (!serverState) return S;
+      const _db = window.db;
+      if (!_db) { toast('Firebase ไม่พร้อม', '❌'); return; }
+      const code = _sGet('bcm_roomCode');
+      if (!code) { toast('ยังไม่ได้เลือกห้อง', '❌'); return; }
+      await _db.ref('rooms/' + code + '/state').transaction(serverState => {
+        if (!serverState) return { ...S, lastUpdatedAt: Date.now() };
         const serverMatches = toArr(serverState.matches || []);
         const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
         const newLocalMatches = toArr(S.matches || []).filter(m => !serverMatchIds.has(String(m.id)));
@@ -3280,7 +4868,8 @@ renderAll(); // render empty state while waiting for Firebase
           decayEvents: [...serverDecay, ...newLocalDecay],
           seasons: toArr(S.seasons || []),
           seasonGoal: S.seasonGoal,
-          rulesConfig: S.rulesConfig
+          rulesConfig: S.rulesConfig,
+          lastUpdatedAt: Date.now()
         };
       });
       toast('บันทึกข้อมูลขึ้น Firebase แล้ว ☁️✅');
@@ -3294,7 +4883,7 @@ renderAll(); // render empty state while waiting for Firebase
   async function loadMembersFromFirebase(silent=false) {
     if(!silent && !confirmAdmin('โหลดข้อมูลจาก Firebase (จะทับข้อมูลปัจจุบัน)')) return;
     try {
-      const snapshot = await db.ref('state').once('value');
+      const snapshot = await _roomRef().once('value');
       const data = snapshot.val();
       if (!data) { if(!silent) toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
       S.members     = toArr(data.members);
@@ -3302,16 +4891,24 @@ renderAll(); // render empty state while waiting for Firebase
       S.finance     = toArr(data.finance);
       S.decayEvents = toArr(data.decayEvents);
       S.seasons     = toArr(data.seasons);
+      if(data.rsvp)       S.rsvp = data.rsvp;
+      if(data.seasonGoal) S.seasonGoal = data.seasonGoal;
       if(data.rulesConfig) Object.assign(RC, data.rulesConfig);
-      // If no rulesConfig in state, try to load from /defaultRules
+      // If no rulesConfig in state, try to load from rooms/{code}/defaultRules
       if(!data.rulesConfig){
         try {
-          const defSnap = await db.ref('defaultRules').once('value');
-          const defData = defSnap.val();
-          if(defData) Object.assign(RC, defData);
+          const code = _sGet('bcm_roomCode');
+          if(code) {
+            const defSnap = await window.db.ref('rooms/' + code + '/defaultRules').once('value');
+            const defData = defSnap.val();
+            if(defData) Object.assign(RC, defData);
+          }
         } catch(e2) { /* ignore */ }
       }
+      // บันทึก timestamp ล่าสุดจาก server เพื่อให้ listener ข้าม echo หลัง initial load
+      if (data.lastUpdatedAt) _lastKnownUpdatedAt = data.lastUpdatedAt;
       renderAll();
+      if(typeof checkPendingDecay==='function') checkPendingDecay();
       if(!silent) toast('โหลดข้อมูลจาก Firebase เรียบร้อย (' + S.members.length + ' คน)', '✅');
     } catch(e) {
       if(!silent) toast('Firebase: '+(e.message||e.code||'ไม่สำเร็จ'), '❌');
@@ -3341,7 +4938,7 @@ renderAll(); // render empty state while waiting for Firebase
     }
   }
 
-  function updateFirebaseStatus(isConnected, forceOff) {
+  window.updateFirebaseStatus = function updateFirebaseStatus(isConnected, forceOff) {
     const indicator = document.getElementById('fb-indicator');
     const text = document.getElementById('fb-text');
     if (forceOff === true) {
@@ -3351,52 +4948,632 @@ renderAll(); // render empty state while waiting for Firebase
     } else if (isConnected) {
       indicator.classList.remove('offline');
       indicator.classList.add('online');
-      text.textContent = 'Online ✅';
+      text.textContent = 'เชื่อมต่อแล้ว ✅';
     } else {
       indicator.classList.remove('online');
       indicator.classList.add('offline');
-      text.textContent = _forceOffline ? 'Offline 🔌' : 'Firebase ❌';
+      text.textContent = _forceOffline ? 'Offline 🔌' : 'ไม่พบการเชื่อมต่อ ❌';
     }
-  }
+  };
 
-  // Listen for connection state changes — always load from Firebase on first connect
+  // Listen for connection state changes
   let _autoLoaded = false;
-  db.ref('.info/connected').on('value', (snapshot) => {
-    if (_forceOffline) return; // ถ้า force offline ไม่ต้องอัปเดต UI
+  let _realtimeListener = null;
+
+  window.db.ref('.info/connected').on('value', (snapshot) => {
+    if (_forceOffline) return;
     if (snapshot.val() === true) {
       updateFirebaseStatus(true);
       if (!_autoLoaded) {
         _autoLoaded = true;
-        loadMembersFromFirebase(true); // silent auto-load on startup
+        _startRealtimeSync(); // เริ่ม real-time listener ทันที
       }
     } else {
       updateFirebaseStatus(false);
     }
   });
 
-  // Real-time listener: รับข้อมูลจากผู้ใช้อื่นแบบ real-time
-  db.ref('state').on('value', snapshot => {
-    if (_forceOffline) return;
-    if (!_autoLoaded) return; // รอให้ initial load เสร็จก่อน
-    const data = snapshot.val();
-    if (!data) return;
+  // ===== REAL-TIME SYNC =====
+  let _lastKnownUpdatedAt = 0; // timestamp ล่าสุดที่เราเห็น ใช้ป้องกัน echo loop
 
-    const serverMatches = toArr(data.matches || []);
-    const localMatchIds = new Set(S.matches.map(m => String(m.id)));
-    const hasNewMatches = serverMatches.some(m => !localMatchIds.has(String(m.id)));
+  function _startRealtimeSync() {
+    const code = _sGet('bcm_roomCode');
+    if (!code) {
+      // ยังไม่มีรหัสห้อง — โหลดแบบครั้งเดียวก่อน
+      loadMembersFromFirebase(true);
+      return;
+    }
 
-    if (!hasNewMatches) return; // เป็น echo จาก write ของเราเอง — ข้าม
+    // ถ้ามี listener เก่าอยู่ ให้ detach ก่อน
+    if (_realtimeListener) {
+      window.db.ref('rooms/' + code + '/state').off('value', _realtimeListener);
+    }
 
-    S.members     = toArr(data.members || []);
-    S.matches     = serverMatches;
-    S.finance     = toArr(data.finance || []);
-    S.decayEvents = toArr(data.decayEvents || []);
-    S.seasons     = toArr(data.seasons || []);
-    if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
-    if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
-    if (typeof renderAll === 'function') renderAll();
-    if (typeof toast === 'function') toast('ซิงค์ข้อมูลจากผู้ใช้อื่น ☁️', '🔄');
-  });
+    let _firstSync = true;
+    _realtimeListener = window.db.ref('rooms/' + code + '/state').on('value', (snapshot) => {
+      if (_forceOffline) return;
+      const data = snapshot.val();
+      if (!data) return;
+
+      // ตรวจด้วย lastUpdatedAt — ถ้าเท่ากับที่เราเขียนเอง ข้ามได้เลย
+      // ยกเว้น first load ให้โหลดเสมอ (ป้องกัน echo loop แต่ไม่ skip first sync)
+      const serverTs = data.lastUpdatedAt || 0;
+      if (!_firstSync && serverTs > 0 && serverTs <= _lastKnownUpdatedAt) return;
+      if (serverTs > _lastKnownUpdatedAt) _lastKnownUpdatedAt = serverTs;
+
+      const toArrLocal = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+
+      // ตรวจว่ามีการเปลี่ยนแปลงจริงในส่วนใดก็ได้
+      const serverMatches  = toArrLocal(data.matches || []);
+      const serverMembers  = toArrLocal(data.members || []);
+      const serverFinance  = toArrLocal(data.finance || []);
+      const serverDecay    = toArrLocal(data.decayEvents || []);
+
+      const localMatchIds  = new Set(S.matches.map(m => String(m.id)));
+      const localFinIds    = new Set(S.finance.map(f => String(f.id)));
+      const localDecayIds  = new Set((S.decayEvents||[]).map(d => String(d.id)));
+
+      const hasNewMatches  = serverMatches.some(m => !localMatchIds.has(String(m.id)));
+      const hasNewFinance  = serverFinance.some(f => !localFinIds.has(String(f.id)));
+      const hasNewDecay    = serverDecay.some(d => !localDecayIds.has(String(d.id)));
+
+      const memberSig = m => `${m.id}|${m.name}|${m.icon||''}|${m.elo||0}`;
+      const localMemberSig = new Set(S.members.map(memberSig));
+      const hasNewMembers  = serverMembers.length !== S.members.length ||
+                             serverMembers.some(m => !localMemberSig.has(memberSig(m)));
+
+      const hasNewRules = data.rulesConfig &&
+                          JSON.stringify(data.rulesConfig) !== JSON.stringify(S.rulesConfig || RC);
+      const hasNewRsvp  = data.rsvp &&
+                          JSON.stringify(data.rsvp) !== JSON.stringify(S.rsvp || {});
+
+      const hasChanges = hasNewMatches || hasNewMembers || hasNewFinance ||
+                         hasNewDecay || hasNewRules || hasNewRsvp;
+
+      // first sync — โหลดข้อมูลและ trigger claim ก่อนเสมอ ไม่ว่า hasChanges จะเป็นอะไร
+      if (_firstSync) {
+        _firstSync = false;
+        S.members     = serverMembers;
+        S.matches     = serverMatches;
+        S.finance     = serverFinance;
+        S.decayEvents = serverDecay;
+        S.seasons     = toArrLocal(data.seasons || []);
+        if (data.rsvp)        S.rsvp = data.rsvp;
+        if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
+        if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
+        if (data.clubName) { setClubName(data.clubName); _sSet('bcm_clubname', data.clubName); }
+        renderAll();
+        if (typeof checkPendingDecay === 'function') checkPendingDecay();
+        setTimeout(() => {
+          if (typeof _wUser !== 'undefined' && _wUser) {
+            _autoAddMemberFromProfile(_wUser);
+          } else {
+            // ไม่มี _wUser (guest หรือ session เก่า) → ให้ triggerClaimIfNeeded จัดการ
+            triggerClaimIfNeeded();
+          }
+        }, 400);
+        return;
+      }
+
+      if (!hasChanges) return;
+
+      S.members     = serverMembers;
+      S.matches     = serverMatches;
+      S.finance     = serverFinance;
+      S.decayEvents = serverDecay;
+      S.seasons     = toArrLocal(data.seasons || []);
+      if (data.rsvp)        S.rsvp = data.rsvp;
+      if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
+      if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
+      if (data.clubName) {
+        setClubName(data.clubName);
+        _sSet('bcm_clubname', data.clubName);
+      }
+
+      renderAll();
+      if (typeof checkPendingDecay === 'function') checkPendingDecay();
+      if (typeof toast === 'function') toast('ซิงค์ข้อมูลจากผู้ใช้อื่น ☁️', '🔄');
+    }, (error) => {
+      console.error('Real-time sync error:', error);
+      updateFirebaseStatus(false);
+    });
+  }
+
+  // เรียก _startRealtimeSync เมื่อ roomCode เปลี่ยน (เช่นหลัง join ห้อง)
+  function restartRealtimeSync() {
+    _autoLoaded = false;
+    _startRealtimeSync();
+  }
+</script>
+
+<!-- MODAL CHANGE CLUB NAME -->
+<div class="overlay" id="modal-club-name">
+  <div class="modal" style="max-width:340px;">
+    <div class="modal-t">✏️ เปลี่ยนชื่อก๊วน</div>
+    <div class="fg">
+      <label class="fl">ชื่อก๊วน</label>
+      <input class="fi" type="text" id="clubname-input" maxlength="30" placeholder="ชื่อก๊วนของคุณ"
+        onkeydown="if(event.key==='Enter') saveClubName()">
+    </div>
+    <div class="modal-act">
+      <button class="btn btn-y" onclick="saveClubName()">💾 บันทึก</button>
+      <button class="btn btn-s" onclick="closeModal('modal-club-name')">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+<script>
+// ===== CLUB NAME =====
+function getClubName(){ return _sGet('bcm_clubname') || ''; }
+function setClubName(name){
+  _sSet('bcm_clubname', name);
+  const logo = document.getElementById('header-logo');
+  if(logo) logo.textContent = '🏸 ' + (name || 'SwFC');
+  document.title = '🏸 ' + (name || 'SwFC') + ' Badminton';
+}
+function openClubNameModal(){
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  const inp = document.getElementById('clubname-input');
+  if(inp) inp.value = getClubName();
+  openModal('modal-club-name');
+  setTimeout(()=>inp&&inp.focus(),120);
+}
+async function saveClubName(){
+  const val = (document.getElementById('clubname-input').value||'').trim();
+  if(!val){ toast('กรุณากรอกชื่อก๊วน','⚠️'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  setClubName(val);
+  closeModal('modal-club-name');
+  try {
+    const _db = window.db;
+    const code = _sGet('bcm_roomCode');
+    if (!_db || !code) throw new Error('Firebase ยังไม่พร้อม');
+    // เขียน clubName เข้า state node เดียวกับ realtime listener
+    // เพื่อให้ทุก client (รวม guest) เห็นชื่อใหม่ทันที
+    const writeTs = Date.now();
+    await _db.ref('rooms/' + code + '/state').update({
+      clubName: val,
+      lastUpdatedAt: writeTs
+    });
+    if (typeof _lastKnownUpdatedAt !== 'undefined') _lastKnownUpdatedAt = writeTs;
+    _wSaveLastRoom(code, val);
+    toast('เปลี่ยนชื่อก๊วนเป็น "'+val+'" แล้ว ☁️✅');
+  } catch(e) {
+    toast('บันทึก local แล้ว (Firebase: '+(e.message||'ไม่สำเร็จ')+')','⚠️');
+  }
+}
+document.getElementById('modal-club-name').addEventListener('click',function(e){if(e.target===this)closeModal('modal-club-name');});
+
+// ===== WELCOME SCREEN (AUTH) =====
+// ===== WELCOME SCREEN (AUTH) =====
+// (global vars declared above Firebase init block)
+
+async function _loadRoomList() {
+  const el = document.getElementById('w-room-list');
+  if (!el || !window.db) return;
+  el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">⏳ กำลังโหลดรายการห้อง...</div>';
+  try {
+    const snap = await window.db.ref('rooms').once('value');
+    const rooms = snap.val() || {};
+    const entries = Object.entries(rooms);
+    if (entries.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;letter-spacing:.5px;">ห้องที่มีอยู่</div>'
+      + entries.map(([code, room]) => {
+          const name = (room.metadata?.clubName || room.state?.clubName || '(ไม่มีชื่อ)');
+          const memberCount = Object.keys(room.state?.members || {}).length || 0;
+          return `<div onclick="document.getElementById('join-code-input').value='${code}';wGoStep('join')"
+            style="background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,.06);">
+            <div>
+              <div style="font-weight:600;font-size:14px;">${esc(name)}</div>
+              <div style="font-size:12px;color:var(--muted);">รหัส: <b style="letter-spacing:2px;">${esc(code)}</b>${memberCount ? ' · ' + memberCount + ' คน' : ''}</div>
+            </div>
+            <div style="font-size:20px;">🏸</div>
+          </div>`;
+        }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">ไม่สามารถโหลดรายการห้องได้</div>';
+  }
+}
+
+function wGoStep(id) {
+  document.querySelectorAll('.w-step').forEach(el => el.classList.remove('on'));
+  // รองรับ ws-step-X และ ws-stepX (เช่น ws-step0)
+  const el = document.getElementById('ws-step-' + id)
+          || document.getElementById('ws-step' + id.replace(/^step/, ''));
+  if(el) el.classList.add('on');
+  // แสดง hint ห้องล่าสุดเมื่อกลับหน้า main
+  if (id === 'main' && typeof _wShowLastRoomHint === 'function') {
+    setTimeout(_wShowLastRoomHint, 50);
+  }
+  // โหลดรายการห้องเมื่อแสดง choose screen
+  if (id === 'choose') {
+    setTimeout(_loadRoomList, 100);
+  }
+}
+
+function wSelectRole(role) {
+  _wRole = role;
+  document.querySelectorAll('.wc-choice').forEach(c => c.classList.remove('selected'));
+  document.getElementById('choice-' + (role === 'join' ? 'join' : 'create')).classList.add('selected');
+  setTimeout(() => {
+    wGoStep(role);
+    // ถ้า sign in แล้ว ซ่อนปุ่ม Google และแสดง user chip ในหน้าถัดไปเลย
+    if (_wUser) {
+      const googleBtn = document.getElementById(role === 'join' ? 'join-google-btn' : 'create-google-btn');
+      const chipId = role === 'join' ? 'join-user-chip' : 'create-user-chip';
+      if (googleBtn) googleBtn.style.display = 'none';
+      _renderUserChip(chipId, _wUser, role);
+      // Enable start button
+      const startBtn = document.getElementById(role === 'join' ? 'join-start-btn' : 'create-start-btn');
+      if (startBtn) startBtn.disabled = false;
+    }
+  }, 120);
+}
+
+async function wJoinNext() {
+  const code = (document.getElementById('join-code-input').value || '').trim();
+  if (!code || code.length < 5 || !/^\d{5}$/.test(code)) {
+    const inp = document.getElementById('join-code-input');
+    inp.style.borderColor = 'var(--red)';
+    setTimeout(() => inp.style.borderColor = '', 1200);
+    return;
+  }
+  // Check room exists in Firebase
+  const btn = document.getElementById('join-next-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="w-spinner"></span>';
+  try {
+    let roomExists = false;
+    const _db2 = window.db || null;
+    if (_db2) {
+      try {
+        const snap = await Promise.race([
+          _db2.ref('rooms/' + code).once('value'),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 5000))
+        ]);
+        roomExists = snap.exists();
+      } catch(e) { roomExists = true; }
+    } else {
+      roomExists = true;
+    }
+    if (!roomExists) {
+      toast('ไม่พบรหัสห้อง "' + code + '" กรุณาตรวจสอบอีกครั้ง', '❌');
+      btn.disabled = false;
+      btn.innerHTML = '🏸 เข้าร่วมก๊วน';
+      return;
+    }
+    _wJoinCode = code;
+    btn.disabled = false;
+    btn.innerHTML = '🏸 เข้าร่วมก๊วน';
+    // user sign in แล้ว → เข้าได้เลย
+    await wStartAsUser();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + e.message, '❌');
+    btn.disabled = false;
+    btn.innerHTML = 'ถัดไป →';
+  }
+}
+
+const _GOOGLE_SVG = `<svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.08 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-3.59-13.46-8.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>`;
+
+function _wSetSignedIn(user, flow) {
+  _wUser = user;
+  _sSet('bcm_user', JSON.stringify({
+    uid: user.uid, name: user.displayName, email: user.email, photo: user.photoURL
+  }));
+  if (typeof _updateProfileAvatar === 'function') _updateProfileAvatar();
+  if (typeof _renderUserChip === 'function') {
+    _renderUserChip('w-user-chip', user, 'choose');
+    _renderUserChip('w-join-user-chip', user, 'join');
+  }
+}
+
+async function wGoogleSignIn(flow) {
+  // Wait up to 5s for _auth to be ready
+  if (!_auth) {
+    let waited = 0;
+    while (!_auth && waited < 5000) {
+      await new Promise(r => setTimeout(r, 200));
+      waited += 200;
+    }
+  }
+  if (!_auth) {
+    toast('Firebase Auth โหลดไม่สำเร็จ — ลอง refresh หน้าใหม่', '❌');
+    return;
+  }
+
+  const btnId = flow === 'join' ? 'join-google-btn' : 'create-google-btn';
+  const btn = document.getElementById(btnId);
+  btn.disabled = true;
+  btn.innerHTML = '<span class="w-spinner" style="border-top-color:#4285F4;border-color:rgba(0,0,0,.12);"></span> กำลังเชื่อมต่อ...';
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  // Try popup first
+  try {
+    const result = await _auth.signInWithPopup(provider);
+    _wSetSignedIn(result.user, flow);
+    return;
+  } catch(e) {
+    const popupErrors = [
+      'auth/popup-blocked',
+      'auth/popup-closed-by-user',
+      'auth/cancelled-popup-request',
+      'auth/operation-not-supported-in-this-environment',
+      'auth/unauthorized-domain',
+    ];
+    if (!popupErrors.includes(e.code)) {
+      btn.disabled = false;
+      btn.innerHTML = _GOOGLE_SVG + ' เข้าสู่ระบบด้วย Google';
+      toast('❌ ' + _authErrMsg(e) + ' [' + (e.code||'?') + ']', '');
+      return;
+    }
+    // Popup failed — fallback to redirect
+    toast('Popup ไม่ได้ กำลังใช้ Redirect แทน...', '🔄');
+  }
+
+  // Redirect fallback
+  try {
+    _sSet('bcm_pendingFlow', flow);
+    if (flow === 'join') {
+      _sSet('bcm_pendingJoinCode', document.getElementById('join-code-input')?.value || _wJoinCode || '');
+    }
+    btn.innerHTML = '<span class="w-spinner" style="border-top-color:#4285F4;border-color:rgba(0,0,0,.12);"></span> กำลังเปิดหน้า Google...';
+    await _auth.signInWithRedirect(provider);
+  } catch(e2) {
+    btn.disabled = false;
+    btn.innerHTML = _GOOGLE_SVG + ' เข้าสู่ระบบด้วย Google';
+    toast('❌ ' + _authErrMsg(e2) + ' [' + (e2.code||'?') + ']', '');
+  }
+}
+
+function _authErrMsg(e) {
+  const map = {
+    'auth/unauthorized-domain': 'Domain นี้ยังไม่ได้ Authorize ใน Firebase Console\n→ ไปที่ Authentication › Authorized domains แล้วเพิ่ม domain ปัจจุบัน',
+    'auth/operation-not-allowed': 'ยังไม่ได้เปิด Google Sign-in ใน Firebase Console\n→ Authentication › Sign-in method › Google',
+    'auth/network-request-failed': 'ไม่มีอินเทอร์เน็ต กรุณาตรวจสอบการเชื่อมต่อ',
+    'auth/internal-error': 'Firebase Internal Error — ลองใหม่อีกครั้ง',
+  };
+  return map[e.code] || (e.message || e.code || 'เกิดข้อผิดพลาด');
+}
+
+// Handle redirect result on page load
+async function _checkRedirectResult() {
+  if (!_auth) return;
+  try {
+    const result = await _auth.getRedirectResult();
+    if (!result || !result.user) return;
+    // onAuthStateChanged จะ handle route ต่อ — แต่เผื่อ redirect ช้า ให้ _wSetSignedIn ก่อน
+    _wSetSignedIn(result.user, 'choose');
+    const savedCode = _sGet('bcm_pendingJoinCode');
+    const flow = _sGet('bcm_pendingFlow');
+    if (savedCode && flow === 'join') {
+      _wJoinCode = savedCode;
+      wGoStep('join');
+      const inp = document.getElementById('join-code-input');
+      if (inp) inp.value = savedCode;
+    }
+    // ล้าง pending — onAuthStateChanged จะจัดการต่อ
+    _sRemove('bcm_pendingFlow');
+    _sRemove('bcm_pendingJoinCode');
+  } catch(e) {
+    if (e.code && e.code !== 'auth/no-auth-event') {
+      toast('❌ ' + _authErrMsg(e), '');
+    }
+  }
+}
+
+function _renderUserChip(containerId, user, flow) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.style.display = 'block';
+  el.innerHTML = `<div class="user-chip">
+    ${user.photoURL ? `<img class="user-chip-avatar" src="${user.photoURL}" referrerpolicy="no-referrer">` : `<div class="user-chip-avatar" style="background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:14px;">👤</div>`}
+    <div style="flex:1;min-width:0;">
+      <div class="user-chip-name">${esc(user.displayName || 'User')}</div>
+      <div class="user-chip-email">${esc(user.email || '')}</div>
+    </div>
+    <button class="user-chip-logout" title="ออกจากระบบ" onclick="wLogout('${flow}')">✕</button>
+  </div>`;
+}
+
+function wLogout(flow) {
+  if (_auth) _auth.signOut().catch(()=>{});
+  _wUser = null;
+  _sRemove('bcm_user');
+  const chipId = flow === 'join' ? 'join-user-chip' : 'create-user-chip';
+  const el = document.getElementById(chipId);
+  if(el) { el.style.display = 'none'; el.innerHTML = ''; }
+  const btnId = flow === 'join' ? 'join-google-btn' : 'create-google-btn';
+  const btn = document.getElementById(btnId);
+  if(btn) {
+    btn.style.display = 'flex';
+    btn.disabled = false;
+    btn.innerHTML = _GOOGLE_SVG + ' เข้าสู่ระบบด้วย Google';
+  }
+  const startBtn = document.getElementById(flow === 'join' ? 'join-start-btn' : 'create-start-btn');
+  if(startBtn) startBtn.disabled = true;
+}
+
+function _generateRoomCode() {
+  // 5-digit numeric room code, e.g. "38271"
+  return String(Math.floor(10000 + Math.random() * 90000));
+}
+
+async function wStartAsUser() {
+  if (!_wUser) { toast('กรุณา Sign in ก่อน', '⚠️'); return; }
+  if (!_wJoinCode) { toast('ไม่พบรหัสห้อง', '⚠️'); return; }
+  // Load data from that room
+  _sSet('bcm_roomCode', _wJoinCode);
+  _sSet('bcm_role', 'user');
+  _sSet('bcm_welcomed', '1');
+  // Save user profile
+  if (_wUser) {
+    _sSet('bcm_myUid', _wUser.uid || '');
+    _sSet('bcm_adminPhoto', _wUser.photoURL || '');
+    _sSet('bcm_adminName', _wUser.displayName || '');
+    _sSet('bcm_adminEmail', _wUser.email || '');
+    // บันทึก user record ใน Firebase — ใช้ bypass welcome ครั้งถัดไป
+    const _db2 = window.db;
+    if (_db2) {
+      try {
+        await _db2.ref('users/' + _wUser.uid).set({
+          roomCode: _wJoinCode,
+          role: 'user',
+          name: _wUser.displayName || '',
+          email: _wUser.email || '',
+          joinedAt: Date.now(),
+        });
+        console.log('[BCM] users/' + _wUser.uid + ' saved OK');
+      } catch(e) {
+        console.error('[BCM] save user error:', e?.code, e?.message);
+        // ถ้าบันทึกไม่ได้ — แจ้ง user ว่าอาจต้อง sign in ใหม่ครั้งหน้า
+        toast('⚠️ บันทึก session ไม่ได้ — ครั้งหน้าต้องกรอกรหัสห้องใหม่', '');
+      }
+    }
+  }
+  // Try load room data
+  const _db = window.db || null;
+  if (_db) {
+    try {
+      const snap = await _db.ref('rooms/' + _wJoinCode + '/state').once('value');
+      const data = snap.val();
+      if (data) {
+        const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+        S.members = toArr(data.members);
+        S.matches = toArr(data.matches);
+        S.finance = toArr(data.finance);
+        S.decayEvents = toArr(data.decayEvents);
+        S.seasons = toArr(data.seasons);
+        if(data.rulesConfig) Object.assign(RC, data.rulesConfig);
+        if(data.clubName) setClubName(data.clubName);
+      }
+    } catch(e) { /* silent */ }
+  }
+  if(!_sGet('bcm_clubname')) _sSet('bcm_clubname', getClubName() || 'ก๊วนของฉัน');
+  _wSaveLastRoom(_wJoinCode, getClubName() || _sGet('bcm_clubname') || '');
+  _hideWelcome();
+  renderAll();
+  renderRole();
+  _updateProfileAvatar();
+  // เริ่ม real-time sync หลัง join ห้อง
+  if (typeof restartRealtimeSync === 'function') restartRealtimeSync();
+  // triggerClaimIfNeeded จะถูกเรียกอัตโนมัติหลัง first realtime sync
+  toast('👋 ยินดีต้อนรับ ' + (_wUser?.displayName || '') + ' · ห้อง ' + _wJoinCode, '🏸');
+}
+
+async function wStartAsAdmin() {
+  if (!_wUser) { toast('กรุณา Sign in ก่อน', '⚠️'); return; }
+  try {
+    let code, tries = 0;
+    do {
+      code = _generateRoomCode();
+      tries++;
+      if (tries > 10) break;
+      if (window.db) {
+        const snap = await window.db.ref('rooms/' + code).once('value');
+        if (!snap.exists()) break;
+      } else { break; }
+    } while(true);
+    _wNewCode = code;
+    document.getElementById('display-room-code').textContent = code;
+    // render user chip ใน created step
+    const chip2 = document.getElementById('created-user-chip-2');
+    const chipSrc = document.getElementById('w-user-chip');
+    if (chip2 && chipSrc) chip2.innerHTML = chipSrc.innerHTML;
+    wGoStep('created');
+    setTimeout(() => { document.getElementById('created-club-name')?.focus(); }, 200);
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + (e.message || e), '❌');
+  }
+}
+
+async function wFinishCreate() {
+  const name = (document.getElementById('created-club-name').value || '').trim();
+  if (!name) {
+    const ni = document.getElementById('created-club-name');
+    ni.style.borderColor = 'var(--red)';
+    setTimeout(() => ni.style.borderColor = '', 1200);
+    ni.focus();
+    return;
+  }
+  setClubName(name);
+  _sSet('bcm_roomCode', _wNewCode);
+  _sSet('bcm_role', 'admin');
+  _sSet('bcm_welcomed', '1');
+  _wSaveLastRoom(_wNewCode, name);
+  // Save admin profile to _session
+  if (_wUser) {
+    _sSet('bcm_adminUid', _wUser.uid);
+    _sSet('bcm_adminName', _wUser.displayName || '');
+    _sSet('bcm_adminEmail', _wUser.email || '');
+    _sSet('bcm_adminPhoto', _wUser.photoURL || '');
+  }
+  // Save room + user record to Firebase
+  const _db = window.db || null;
+  if (_db && _wUser) {
+    try {
+      await _db.ref('rooms/' + _wNewCode + '/metadata').set({
+        createdAt: Date.now(),
+        adminUid: _wUser.uid,
+        adminName: _wUser.displayName || '',
+        clubName: name,
+      });
+      await _db.ref('rooms/' + _wNewCode + '/state').set({
+        ...S,
+        clubName: name,
+        lastUpdatedAt: Date.now(),
+      });
+      // บันทึก user record — ใช้ bypass welcome ครั้งถัดไป
+      await _db.ref('users/' + _wUser.uid).set({
+        roomCode: _wNewCode,
+        role: 'admin',
+        name: _wUser.displayName || '',
+        email: _wUser.email || '',
+        joinedAt: Date.now(),
+      });
+    } catch(e) { console.error('save room error:', e); }
+  }
+  _hideWelcome();
+  renderAll();
+  renderRole();
+  _updateProfileAvatar();
+  if (typeof restartRealtimeSync === 'function') restartRealtimeSync();
+  // Auto-add admin as member
+  setTimeout(() => _autoAddMemberFromProfile(_wUser), 500);
+  toast('🎉 สร้างก๊วน "' + name + '" เรียบร้อย! รหัสห้อง: ' + _wNewCode, '✅');
+}
+
+function _hideWelcome() {
+  const ws = document.getElementById('welcome-screen');
+  ws.classList.add('hide');
+  setTimeout(() => { ws.style.display = 'none'; }, 420);
+}
+
+// Compat: old startApp function for any remaining references
+function startApp(){
+  const val = (document.getElementById('welcome-club-input')?.value || '').trim();
+  if(val) setClubName(val);
+  _sSet('bcm_welcomed','1');
+  _hideWelcome();
+}
+
+// On load: if already set up, skip welcome
+(function(){
+  const name = getClubName();
+  const welcomed = _sGet('bcm_welcomed');
+  if(name && welcomed){
+    setClubName(name);
+    document.getElementById('welcome-screen').style.display='none';
+  }
+  // Check if previously logged in user
+  try {
+    const saved = _sGet('bcm_user');
+    if(saved) { /* restore if needed */ }
+  } catch(e) {}
+})();
 </script>
 
 <!-- BOTTOM NAV (mobile only) -->
@@ -3408,6 +5585,8 @@ renderAll(); // render empty state while waiting for Firebase
     <button class="nb" onclick="tab('finance',this)"><span class="nb-icon">💰</span>การเงิน</button>
     <button class="nb" onclick="tab('rules',this)"><span class="nb-icon">📋</span>กติกา</button>
     <button class="nb" onclick="tab('trophy',this)"><span class="nb-icon">🏆</span>Trophy</button>
+    <button class="nb" onclick="tab('pro',this)"><span class="nb-icon">⚡</span>Pro</button>
+    <button class="nb super-admin-only" onclick="tab('superadmin',this)" style="display:none;"><span class="nb-icon">🛡️</span>Super</button>
   </nav>
 </div>
 
@@ -3487,7 +5666,7 @@ let _editingBGTag = null;
 function openBGTierEdit(tag) {
   _editingBGTag = tag;
   document.getElementById('bgtier-edit-tag').textContent = tag;
-  RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.0,part:1.0}, BG2:{win:0.8,loss:1.0,part:0.8}, 'BG+':{win:0.5,loss:1.0,part:0.5} };
+  RC.bgMult = RC.bgMult || { BB:{win:1.25,loss:1.0,part:1.0}, BG1:{win:1.0,loss:1.2,part:0.5}, BG2:{win:0.8,loss:1.8,part:0.4}, 'BG+':{win:0.6,loss:2.0,part:0.25} };
   const bm = RC.bgMult[tag] || {win:1,loss:1,part:1};
   document.getElementById('bgtier-win').value  = bm.win;
   document.getElementById('bgtier-loss').value = bm.loss;
@@ -3505,13 +5684,8 @@ async function saveBGTierEdit() {
   S.rulesConfig = RC;
   closeModal('modal-bgtier-edit');
   renderRules();
-  try {
-    if(typeof db === 'undefined') throw new Error('Firebase ยังไม่พร้อม');
-    await db.ref('state').set(S);
-    toast(`บันทึก BG Tier ${_editingBGTag} เรียบร้อย ⚙️☁️`);
-  } catch(e) {
-    toast('บันทึก local แล้ว (Firebase: '+(e.message||'ไม่สำเร็จ')+')', '⚠️');
-  }
+  save();
+  toast(`บันทึก BG Tier ${_editingBGTag} เรียบร้อย ⚙️☁️`);
 }
 // Bind click-outside for new modal (runs after DOM ready)
 document.getElementById('modal-bgtier-edit').addEventListener('click', function(e){ if(e.target===this) closeModal('modal-bgtier-edit'); });

@@ -1694,6 +1694,7 @@ function updateMatchPreview(){
 function recordMatch(){
   if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   if(!isSubscribed() && freeMatchesLeft()<=0){ openModal('modal-upgrade'); return; }
+  const w1v=document.getElementById('w1').value;
   const l1v=document.getElementById('l1').value;
   if(!w1v||!l1v){ toast('กรุณาเลือกผู้เล่นอย่างน้อยฝั่งละ 1 คน','⚠️'); return; }
   const winners=[parseInt(w1v)];
@@ -4741,14 +4742,14 @@ renderAll(); // render empty state while waiting for Firebase
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
-  authDomain: "badmintonsnowite.firebaseapp.com",
-  databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
-  projectId: "badmintonsnowite",
-  storageBucket: "badmintonsnowite.firebasestorage.app",
-  messagingSenderId: "278915115830",
-  appId: "1:278915115830:web:5aff2fbb71db4df62a6197",
-  measurementId: "G-RB42S3K4BZ"
+  apiKey: "AIzaSyA0TUx-zAD4jGqAlr6o672HXVOAl38FF6I",
+  authDomain: "snowite-badminton-v2.firebaseapp.com",
+  databaseURL: "https://snowite-badminton-v2-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "snowite-badminton-v2",
+  storageBucket: "snowite-badminton-v2.firebasestorage.app",
+  messagingSenderId: "236219873586",
+  appId: "1:236219873586:web:a31a85d33bec13550fff2b",
+  measurementId: "G-FFN14RRST7"
 };
 
   firebase.initializeApp(firebaseConfig);

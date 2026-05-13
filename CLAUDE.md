@@ -2,13 +2,13 @@
 
 ## Project Overview
 
-This is a **Thai-language badminton club ranking system** — a static web app deployed on GitHub Pages. It tracks player scores across sessions using a custom ELO-style scoring engine with anti-gaming mechanics, tier classifications, and Firebase cloud sync.
+A **Thai-language badminton club ranking system** — a static single-file web app deployed on GitHub Pages. Tracks player ELO across sessions with anti-gaming mechanics, tier classifications, Firebase cloud sync, freemium gating, and a cross-room Pro Mode leaderboard.
 
 **Key facts:**
-- Pure vanilla JavaScript (no build tools, no framework, no npm)
+- Pure vanilla JavaScript — all logic in **`index.html`** (~5,700 lines, no build tools, no framework)
 - All UI text is in Thai
-- Firebase Realtime Database is the primary data source
-- Designed for mobile use (bottom nav on mobile, top nav on desktop)
+- Firebase Realtime Database for persistence (Realtime Sync + manual transactions)
+- Mobile-first (bottom nav on mobile, top nav on desktop)
 
 ---
 
@@ -16,184 +16,253 @@ This is a **Thai-language badminton club ranking system** — a static web app d
 
 ```
 /
-├── index.html                  # Main app (production) — do all UI work here
-├── app.js                      # All application logic (~1,226 lines)
-├── style.css                   # All styling (~686 lines)
-├── badminton-club-mobile.html  # Mobile-optimized variant
-├── firebase_code.txt           # Firebase config/snippets (reference only)
-├── icon/                       # Icon assets
-│   └── README.md               # Icon documentation (Thai)
-├── rule กฏก๊วนแบด 10+ คน.txt  # Club rules in Thai (source of truth for scoring logic)
+├── index.html          ← THE ONLY FILE TO EDIT (production app, ~5,700 lines)
+├── CLAUDE.md           ← this file
+├── workflow.md         ← app workflow / ops guide
+├── firebase_code.txt   ← Firebase config snippets (reference only)
+├── icon/               ← Icon assets
 │
-│   — Legacy/experimental versions (do not edit) —
-├── index-v2.html
-├── index-v3.html
-├── index-v4.html
-├── index_v2.html
-├── index-2.html
-└── old_index.html
+│   — Legacy versions (do NOT edit) —
+├── index-v*.html
+├── old_index.html
+└── app.js / style.css  ← obsolete split versions, not used in production
 ```
-
-**Only edit `index.html`, `app.js`, and `style.css`** unless a new feature explicitly requires a new file.
 
 ---
 
-## Architecture
+## Architecture (inside `index.html`)
 
-### Module Structure in `app.js`
-
-The code is organized into four object-literal modules, executed in order:
-
-| Module | Purpose |
-|--------|---------|
-| `Storage` | localStorage wrapper (`KEY = 'bsw_v1'`) |
-| `Scoring` | Pure scoring engine (no side effects) |
-| `Data` | CRUD operations over stored state |
-| `App` | UI rendering and event handling |
-
-**Section headers** follow this pattern:
+### Section markers
 ```js
-// ── Section Name ────────────────────────────────────────────
+// ===== SECTION NAME =====
 ```
 
-### Scoring Engine (`Scoring.calc`)
+### Core globals
 
-The scoring system is the core logic. Understand it before modifying:
+| Symbol | Line | Description |
+|--------|------|-------------|
+| `S` | ~1343 | App state: `{ members, matches, finance, decayEvents, seasons, seasonGoal, rsvp, proMatches }` |
+| `RC` | ~1346 | Rules config (editable by admin) |
+| `BASE`, `FLOOR` | ~1452 | ELO base (10,000) and floor (8,000) |
+| `FREE_MATCH_LIMIT` | ~1433 | 15 — max matches for free rooms |
+| `FREE_MATCH_WARN` | ~1434 | 10 — warning threshold |
+| `SUPER_ADMIN_EMAILS` | ~1435 | `['nrok47@gmail.com']` |
+| `PRO_BASE_ELO` | ~1436 | 50,000 — Pro ELO starting point |
+| `PRO_WIN / PRO_LOSS` | ~1437 | ±3000 / -2100 base Pro deltas |
+| `PRO_WINDOW` | ~1440 | 10 — sliding window size |
+| `window._roomMeta` | loaded on login | Firebase `rooms/{code}/metadata` (has `.subscribed` flag) |
 
-1. **`matchType(winAvg, loseAvg)`** — determines game type (FAIR/UPHILL/DOWNHILL/etc.) based on team rating averages
-2. **`basePoints(type)`** — lookup table for win/lose base points per type
-3. **`calc(game, sessionState)`** — applies all modifiers:
-   - Base points (win/lose by match type)
-   - **Margin bonus**: ±150 if score difference ≥ 8
-   - **Anti-carry multiplier**: 0.8× for winner if diff > 1,500; 1.2× for loser
-   - **Anti-farming reduction**: 1st–2nd game = 100%, 3rd = 50%, 4th+ = 20%
-   - **Safety cap**: max −900 per game
-   - **Streak safety**: 3+ consecutive losses capped at −2,500 total
+### Key helper functions
 
-The rules document (`rule กฏก๊วนแบด 10+ คน.txt`) is the canonical specification. If scoring behavior seems wrong, check that file first.
-
-### State Management
-
-- **Persistent state**: stored in Firebase (primary) and localStorage (fallback)
-- **Ephemeral session state**: computed by replaying game history via `Data.sessionState()`
-- **Pair counting**: tracks same-team combinations within a session for anti-farming
-- Firebase sync is semi-manual: auto-syncs on load, manual sync buttons in UI
-
-### Tab System
-
-Five tabs rendered by `App.switchTab(tab)`:
-- `leaderboard` — player rankings + tier badges
-- `session` — active game session management
-- `players` — player CRUD
-- `history` — past sessions + game logs
-- `rules` — displays scoring rules
-
-### Tier System
-
-| Tier | Threshold |
-|------|-----------|
-| Elite | ≥ 24,000 |
-| Pro | ≥ 18,000 |
-| Mid | ≥ 12,000 |
-| Beginner | < 12,000 |
+| Function | Description |
+|----------|-------------|
+| `isSuperAdmin()` | True if `bcm_adminEmail` ∈ `SUPER_ADMIN_EMAILS` |
+| `isSubscribed()` | True if `window._roomMeta.subscribed === true` |
+| `freeMatchesLeft()` | `max(0, 15 - S.matches.length)` |
+| `isAdmin()` | `bcm_role === 'admin'` |
+| `isMember()` | `bcm_role === 'user'` |
+| `gm(id)` | Get member by ID |
+| `esc(str)` | HTML-escape user input — **always use when interpolating user data into HTML** |
+| `todayStr()` | Returns `YYYY-MM-DD` |
+| `save()` | Persist S to localStorage + trigger autoSyncToFirebase |
 
 ---
 
-## Code Conventions
+## Freemium Model
 
-### JavaScript
-- `'use strict'` is always on
-- **camelCase** for variables and functions
-- **Template literals** (backticks) for all HTML generation
-- **Always use `esc(value)`** when interpolating user-supplied strings into HTML to prevent XSS
-- Null-check aggressively; alert dialogs use Thai text
-- No external dependencies — do not add npm packages or CDN imports beyond what exists
+| Tier | Matches | Pro Mode | Notes |
+|------|---------|----------|-------|
+| Free | 0–15 | ❌ | Warning at 10, hard lock at 15 |
+| Subscribed | Unlimited | ✅ | Super Admin toggles `metadata.subscribed` |
 
-### HTML
-- All user-visible text is in Thai
-- Semantic class naming: `.nb` (nav button), `.scard` (stat card), `.tier-elite`, etc.
-- Firebase scripts loaded from CDN at bottom of `<body>`
+**Guard in `recordMatch()`** (line ~1607):
+```js
+if(!isSubscribed() && freeMatchesLeft()<=0){ openModal('modal-upgrade'); return; }
+```
 
-### CSS
-- CSS variables for theming: `--bg`, `--accent`, `--text`, `--card`, etc.
-- Dark mode is default; light mode toggled via `.light` class on `<body>`
-- Mobile breakpoint: `@media (max-width: 600px)`
-- No preprocessors — plain CSS only
+**Warning banner** (`#freemium-warn-banner`) is shown in page-club when `freeMatchesLeft() <= FREE_MATCH_WARN` and admin is logged in. Rendered by `renderFreemiumBanner()`.
+
+---
+
+## Pro Mode
+
+A **separate ELO track** for serious competitive players. Independent from the regular ELO — the two never mix.
+
+### Data model
+
+**Per member** (stored in `S.members[i]`):
+```js
+member.proTier         // boolean — admin can toggle (subscribed rooms only)
+member.proMatchDeltas  // [{matchId, delta}, ...] — sliding window, max 10
+```
+
+**Per room** (stored in `S.proMatches`):
+```js
+{ id, winners, losers, wDeltas, lDeltas, sw, sl, margin, dateStr, time }
+```
+
+**Global Firebase node** (written by `recordProMatch()`):
+```
+proPlayers/{googleUid}:
+  name, photoURL, roomCode, clubName, proMatchDeltas, lastUpdatedAt
+```
+
+### Pro scoring
+
+```
+proElo = 50,000 + Σ(proMatchDeltas.delta)   // sliding 10-game window
+wDelta = +3,000 [+600 if margin]
+lDelta = -2,100 [-600 if margin]
+```
+
+### Pro Match detection (automatic)
+
+`isProMatch(winners, losers)` returns true if:
+- Room is subscribed
+- All 4 selected players have `member.proTier === true`
+
+When detected: `updateMatchPreview()` shows `#pro-match-badge` and changes the record button to call `recordProMatch()` instead of `recordMatch()`.
+
+### Global Pro Leaderboard (`page-pro`)
+
+- Tab ⚡ Pro visible to everyone (no subscription required to VIEW)
+- `renderProLeaderboard()` reads `proPlayers/` from Firebase
+- Cross-room, sorted by proElo descending
+- Shows: rank, name, club, proElo, games in window
+
+---
+
+## Super Admin
+
+### Role
+
+`isSuperAdmin()` checks `bcm_adminEmail` against `SUPER_ADMIN_EMAILS = ['nrok47@gmail.com']`.
+
+To add a second Super Admin: append their email to the array in `index.html` ~line 1435.
+
+### UI
+
+- Nav button `🛡️ Super` (`.super-admin-only` class) — hidden by default, shown by `renderRole()` for super admins
+- `page-superadmin` tab — lists all rooms with member count, match count, subscription status
+- `saToggleSubscription(code, value)` — writes `rooms/{code}/metadata/subscribed` to Firebase
+
+### Firebase rules needed
+
+```json
+"rooms": {
+  "$roomCode": {
+    "metadata": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+},
+"proPlayers": {
+  ".read": "auth != null",
+  "$uid": { ".write": "auth != null" }
+}
+```
+
+---
+
+## ELO Engine (regular)
+
+`computeDeltas(winners, losers, sw, sl)` at line ~1495. Applies:
+- Match type by avg ELO diff (`evenWin/Loss`, `upsetWin/Loss`, `favorWin/Loss`)
+- Margin bonus (±`marginBonus` if score diff ≥ `marginThreshold`)
+- Anti-carry multiplier (ELO gap within team)
+- Anti-farming reduction (same winner team repeat today)
+- Streak freeze (3 consecutive losses → 0 points; then −50%)
+- Participation bonus (`participationBonus` per game)
+- Daily loss cap (`dailyLossCap` max net loss per day)
+- BG Tier multipliers (`RC.bgMult`)
+
+All config lives in `RC` object (editable in admin Rules modal).
+
+---
+
+## Firebase Data Structure
+
+```
+/rooms/{roomCode}/
+  clubName: string
+  metadata/
+    subscribed: boolean        ← Super Admin toggles
+    createdAt: timestamp
+  state/
+    members: [...]             ← includes proTier, proMatchDeltas
+    matches: [...]
+    proMatches: [...]
+    finance: [...]
+    decayEvents: [...]
+    seasons: [...]
+    seasonGoal: number
+    rulesConfig: {...}
+    lastUpdatedAt: timestamp
+
+/proPlayers/{googleUid}/      ← global Pro rankings
+  name, photoURL, roomCode, clubName
+  proMatchDeltas: [{matchId, delta}, ...]
+  lastUpdatedAt: timestamp
+```
+
+---
+
+## Key Functions Reference
+
+| Function | Line | Description |
+|----------|------|-------------|
+| `recordMatch()` | ~1607 | Record regular match (freemium-guarded) |
+| `recordProMatch()` | ~1666 | Record Pro match + write to global proPlayers/ |
+| `computeDeltas()` | ~1495 | Regular ELO delta calculation |
+| `calcProDeltas()` | ~1667 | Pro ELO delta calculation |
+| `calcProElo(member)` | ~1679 | `PRO_BASE_ELO + sum(proMatchDeltas)` |
+| `isProMatch(w,l)` | ~1683 | True if all 4 players are proTier + subscribed |
+| `autoSyncToFirebase()` | ~4455 | Background Firebase transaction sync |
+| `renderRole()` | ~2314 | Sets body classes + shows/hides admin UI + Super Admin nav |
+| `renderFreemiumBanner()` | ~2373 | Shows warning banner when approaching free limit |
+| `renderProLeaderboard()` | ~4180 | Loads global proPlayers/ and renders rank list |
+| `renderSuperAdminPanel()` | ~4220 | Lists all rooms for Super Admin |
+| `saToggleSubscription()` | ~4265 | Toggle subscribed flag for a room |
+| `renderRules()` | ~3560 | Renders scoring rules page (includes Free Tier + Pro sections) |
+| `tab(name, btn)` | ~3766 | Switch tab (calls renderProLeaderboard/renderSuperAdminPanel) |
+| `renderAll()` | ~2374 | Full re-render (called after every state change) |
 
 ---
 
 ## Development Workflow
 
 ### No Build Step
-
-This is a static site. To test changes:
-1. Open `index.html` directly in a browser, **or**
-2. Use any static file server (e.g., `python3 -m http.server`)
-
-There is no `npm install`, no compilation, and no CI/CD pipeline.
+Open `index.html` directly in a browser. No `npm install`, no compilation.
 
 ### Git Workflow
+- Feature branches: `claude/<name>`
+- Current branch: `claude/fix-data-conflicts-wK5V8`
+- `main` branch = production
 
-- Work on feature branches (current: `claude/add-claude-documentation-DxKWf`)
-- Push to `origin/<branch-name>` with `git push -u origin <branch-name>`
-- The production branch is `main` — only push there when a feature is complete and tested
-
-### Firebase Configuration
-
-Firebase credentials are embedded directly in `index.html` (not environment variables). This is intentional for a GitHub Pages static site — the database has read/write rules configured on the Firebase console.
-
-- **Project ID**: `badmintonsnowite`
-- **Database URL**: `badmintonsnowite-default-rtdb.firebaseio.com`
-- Firebase SDK version: **9.22.2 (compat build)**
-
----
-
-## Key Functions Reference
-
-| Function | Location | Description |
-|----------|----------|-------------|
-| `uid()` | app.js | Generates unique IDs for players/games |
-| `esc(str)` | app.js | HTML-escapes user input — **always use for user data** |
-| `fmtNum(n)` | app.js | Formats numbers with Thai locale |
-| `todayStr()` | app.js | Returns ISO date string (YYYY-MM-DD) |
-| `Data.addGame(...)` | app.js | Records a game and persists state |
-| `Data.undoLastGame(id)` | app.js | Removes last game from session |
-| `Data.endSession(id)` | app.js | Finalizes session, applies decay to absentees |
-| `App.switchTab(tab)` | app.js | Renders a tab by name |
-| `Scoring.calc(game, state)` | app.js | Core scoring calculation |
+### Firebase Config
+Credentials embedded in `index.html` — intentional for GitHub Pages.
+- Project: `badmintonsnowite`
+- DB URL: `badmintonsnowite-default-rtdb.firebaseio.com`
+- SDK: Firebase 9.22.2 compat build
 
 ---
 
 ## Important Constraints
 
-1. **Do not remove `esc()`** from HTML-generating code — it prevents XSS
-2. **Do not add a build tool** (webpack, vite, etc.) — the project is intentionally build-free
-3. **Do not edit legacy version files** (`index-v*.html`, `old_index.html`)
-4. **Scoring rule changes must match** the rules document (`rule กฏก๊วนแบด 10+ คน.txt`)
-5. **All UI text should remain in Thai** unless the user explicitly asks to change the language
-6. **Firebase credentials in index.html are expected** — do not move them to a `.env` file (no build pipeline to consume it)
-7. **The `Storage` module key is `'bsw_v1'`** — changing it will wipe all users' local data
+1. **`esc()`** must be used for all user-supplied strings in HTML templates
+2. **No build tools** — vanilla JS only, no npm
+3. **Do not edit legacy files** (`index-v*.html`, `old_index.html`, `app.js`, `style.css`)
+4. **`RC` is the single source for scoring config** — do not hardcode scoring values elsewhere
+5. **All UI text in Thai** unless explicitly asked to change
+6. **Firebase credentials in index.html are expected** — do not move to `.env`
+7. **localStorage key is `'bcm_v1'`** — changing it wipes all local state
+8. **`S.proMatches` syncs via `autoSyncToFirebase`** — do not manually write it to Firebase elsewhere (handled automatically)
 
 ---
 
-## Common Tasks
+## Future Roadmap (do NOT implement now)
 
-### Add a new player field
-1. Update `Data.addPlayer()` in `app.js`
-2. Update `App.renderPlayers()` to display the new field
-3. Update `App.renderLeaderboard()` if it should appear in rankings
-
-### Adjust scoring rules
-1. Read `rule กฏก๊วนแบด 10+ คน.txt` to understand the intended rule
-2. Modify `Scoring.calc()` or the relevant helper in app.js
-3. Verify that the Thai rules text in `App.renderRules()` is updated to match
-
-### Add a new tab
-1. Add a nav button in `index.html` (both desktop header nav and mobile bottom nav)
-2. Add a corresponding `div.tab-content` in `index.html`
-3. Add a `render<TabName>()` method in the `App` module in `app.js`
-4. Add the case to `App.switchTab()`
-
-### Modify Firebase sync behavior
-- Firebase read/write helpers are in `index.html` (currently embedded, not in `app.js`)
-- Reference `firebase_code.txt` for patterns — it contains reusable sync snippets
+- **1v1 Singles Mode**: match type toggle (2v2 / 1v1), singles ELO track, Pro 1v1 global ranking
+- **Payment gateway**: PromptPay / Stripe — current flow is Super Admin manual toggle after payment
+- **Second Super Admin**: append email to `SUPER_ADMIN_EMAILS` array

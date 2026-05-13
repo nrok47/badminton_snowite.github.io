@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Migration Tool — 44525 → 92921</title>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+<style>
+  body { font-family: sans-serif; max-width: 540px; margin: 40px auto; padding: 0 20px; background: #111; color: #eee; }
+  h2 { color: #f0c040; }
+  .card { background: #1e1e1e; border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .label { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .val { font-size: 14px; margin-bottom: 12px; }
+  button { background: #f0c040; color: #111; border: none; border-radius: 8px; padding: 12px 24px; font-size: 15px; font-weight: 700; cursor: pointer; width: 100%; margin-top: 8px; }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  button.danger { background: #e74c3c; color: #fff; }
+  #log { background: #0a0a0a; border-radius: 8px; padding: 14px; font-size: 12px; font-family: monospace; min-height: 80px; white-space: pre-wrap; color: #aaa; margin-top: 12px; }
+  .ok { color: #2ecc71; }
+  .err { color: #e74c3c; }
+  .warn { color: #f39c12; }
+</style>
+</head>
+<body>
+<h2>🏸 Migration Tool</h2>
+<p style="color:#aaa;font-size:13px;">ย้ายข้อมูลจากห้อง <b style="color:#f0c040">44525</b> (snowitefc) → ห้อง <b style="color:#f0c040">92921</b> (badmintonsnowite)</p>
+
+<div class="card">
+  <div id="status-area">
+    <div class="label">ขั้นตอน</div>
+    <div class="val" id="step-label">1. เชื่อมต่อ Firebase ทั้งสองโปรเจกต์...</div>
+  </div>
+  <div id="preview" style="display:none">
+    <div class="label">ข้อมูลที่จะย้าย (จาก 44525)</div>
+    <div class="val" id="preview-text"></div>
+  </div>
+  <button id="btn-migrate" disabled onclick="doMigrate()">⏳ กำลังโหลด...</button>
+  <div id="log"></div>
+</div>
+
+<script>
+const SRC_CODE = '44525';
+const DST_CODE = '92921';
+
+const SRC_CONFIG = {
+  apiKey: "AIzaSyCC1AYaGR9bkOglz5CNA5gWoOshsQB9-cU",
+  authDomain: "snowitefc.firebaseapp.com",
+  databaseURL: "https://snowitefc-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "snowitefc",
+};
+const DST_CONFIG = {
+  apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+  authDomain: "badmintonsnowite.firebaseapp.com",
+  databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+  projectId: "badmintonsnowite",
+};
+
+let srcDb, dstDb, dstAuth;
+let srcState = null;
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<span class="${cls}">${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+function setStep(txt) { document.getElementById('step-label').textContent = txt; }
+
+async function init() {
+  try {
+    const srcApp = firebase.initializeApp(SRC_CONFIG, 'src');
+    srcDb = firebase.database(srcApp);
+    log('✅ เชื่อมต่อ snowitefc สำเร็จ', 'ok');
+  } catch(e) { log('❌ snowitefc: ' + e.message, 'err'); return; }
+
+  try {
+    const dstApp = firebase.initializeApp(DST_CONFIG, 'dst');
+    dstDb = firebase.database(dstApp);
+    dstAuth = firebase.auth(dstApp);
+    log('✅ เชื่อมต่อ badmintonsnowite สำเร็จ', 'ok');
+  } catch(e) { log('❌ badmintonsnowite: ' + e.message, 'err'); return; }
+
+  // Sign in to badmintonsnowite (target DB needs auth to write)
+  log('🔑 กำลัง Sign in กับ badmintonsnowite...', 'warn');
+  const provider = new firebase.auth.GoogleAuthProvider(firebase.app('dst'));
+  try {
+    await dstAuth.signInWithPopup(provider);
+    log('✅ Sign in สำเร็จ: ' + dstAuth.currentUser.displayName, 'ok');
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') log('⚠️ Sign in ล้มเหลว (อาจเป็นแค่ warning): ' + e.message, 'warn');
+  }
+
+  // Read source data
+  setStep('2. ดึงข้อมูลจากห้อง 44525...');
+  log('📥 กำลังดึงข้อมูลห้อง 44525...', 'warn');
+  try {
+    const snap = await srcDb.ref('rooms/' + SRC_CODE).once('value');
+    const roomData = snap.val();
+    if (!roomData) { log('❌ ไม่พบห้อง 44525 ใน snowitefc', 'err'); return; }
+
+    const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+    srcState = roomData.state || roomData; // support both nested and flat structure
+    const members = toArr(srcState.members || []);
+    const matches = toArr(srcState.matches || []);
+    const finance = toArr(srcState.finance || []);
+
+    log(`✅ พบข้อมูล: สมาชิก ${members.length} คน, แมทช์ ${matches.length} เกม, การเงิน ${finance.length} รายการ`, 'ok');
+
+    document.getElementById('preview').style.display = 'block';
+    document.getElementById('preview-text').innerHTML =
+      `👥 สมาชิก: <b>${members.length} คน</b> (${members.map(m=>m.name||'?').slice(0,5).join(', ')}${members.length>5?'...':''})<br>` +
+      `🏸 แมทช์: <b>${matches.length} เกม</b><br>` +
+      `💰 การเงิน: <b>${finance.length} รายการ</b>`;
+
+    setStep('3. พร้อมย้ายข้อมูล → กดปุ่มด้านล่าง');
+    const btn = document.getElementById('btn-migrate');
+    btn.disabled = false;
+    btn.textContent = `🚀 ย้ายข้อมูลไปห้อง ${DST_CODE}`;
+    btn.className = 'danger';
+  } catch(e) {
+    log('❌ ดึงข้อมูลไม่ได้: ' + (e.message || e.code), 'err');
+    log('💡 ลองเปิด snowitefc Firebase Console แล้วตั้ง rules ให้ read: true ชั่วคราว', 'warn');
+  }
+}
+
+async function doMigrate() {
+  if (!srcState) { log('❌ ยังไม่มีข้อมูลต้นทาง', 'err'); return; }
+  const btn = document.getElementById('btn-migrate');
+  btn.disabled = true;
+  btn.textContent = '⏳ กำลังย้าย...';
+  setStep('4. กำลังเขียนข้อมูลไปห้อง 92921...');
+
+  const toArr = v => !v ? [] : Array.isArray(v) ? v : Object.values(v);
+
+  try {
+    // Merge into destination using transaction
+    await dstDb.ref('rooms/' + DST_CODE + '/state').transaction(current => {
+      if (!current) {
+        log('📝 ห้อง 92921 ว่าง — เขียนข้อมูลทั้งหมด', 'warn');
+        return { ...srcState, lastUpdatedAt: Date.now() };
+      }
+      // Merge members
+      const dstMembers = toArr(current.members || []);
+      const srcMembers = toArr(srcState.members || []);
+      const dstMemberIds = new Set(dstMembers.map(m => String(m.id)));
+      const newMembers = srcMembers.filter(m => !dstMemberIds.has(String(m.id)));
+      // Merge matches
+      const dstMatches = toArr(current.matches || []);
+      const srcMatches = toArr(srcState.matches || []);
+      const dstMatchIds = new Set(dstMatches.map(m => String(m.id)));
+      const newMatches = srcMatches.filter(m => !dstMatchIds.has(String(m.id)));
+      // Merge finance
+      const dstFinance = toArr(current.finance || []);
+      const srcFinance = toArr(srcState.finance || []);
+      const dstFinanceIds = new Set(dstFinance.map(f => String(f.id)));
+      const newFinance = srcFinance.filter(f => !dstFinanceIds.has(String(f.id)));
+
+      log(`➕ เพิ่มสมาชิก ${newMembers.length} คน, แมทช์ ${newMatches.length} เกม, การเงิน ${newFinance.length} รายการ`, 'warn');
+      return {
+        ...current,
+        members: [...dstMembers, ...newMembers],
+        matches: [...dstMatches, ...newMatches],
+        finance: [...dstFinance, ...newFinance],
+        lastUpdatedAt: Date.now(),
+      };
+    });
+
+    log('✅ ย้ายข้อมูลสำเร็จ!', 'ok');
+    setStep('✅ เสร็จแล้ว! เปิดแอปแล้วเข้าห้อง 92921 ได้เลย');
+    btn.textContent = '✅ เสร็จแล้ว';
+    btn.className = '';
+    btn.style.background = '#2ecc71';
+  } catch(e) {
+    log('❌ เขียนข้อมูลไม่ได้: ' + (e.message || e.code), 'err');
+    btn.disabled = false;
+    btn.textContent = '🔄 ลองอีกครั้ง';
+    btn.className = 'danger';
+  }
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>

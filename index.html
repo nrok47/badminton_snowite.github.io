@@ -675,6 +675,12 @@ function _sClear() {
         <span>👤</span> เลือกตัวเองในก๊วน
       </button>
     </div>
+    <button onclick="switchRoom()" style="width:100%;background:none;border:none;cursor:pointer;
+      padding:9px 12px;border-radius:9px;text-align:left;font-size:13px;color:var(--text);
+      font-family:'Kanit',sans-serif;display:flex;align-items:center;gap:8px;
+      transition:background .15s;" onmouseover="this.style.background='var(--s3)'" onmouseout="this.style.background='none'">
+      <span>🔄</span> เปลี่ยนห้อง
+    </button>
     <button onclick="profileLogout()" style="width:100%;background:none;border:none;cursor:pointer;
       padding:9px 12px;border-radius:9px;text-align:left;font-size:13px;color:#ef4444;
       font-family:'Kanit',sans-serif;display:flex;align-items:center;gap:8px;
@@ -2046,6 +2052,18 @@ function copyRoomCode() {
   }).catch(() => {
     toast(code, '🔑');
   });
+}
+
+async function switchRoom() {
+  if (!confirm('ออกจากห้องนี้และเลือกห้องใหม่?')) return;
+  document.getElementById('profile-menu').style.display = 'none';
+  _step0SignedInDone = false;
+  const uid = _sGet('bcm_myUid');
+  if (uid && window.db) {
+    try { await window.db.ref('users/' + uid).update({ roomCode: null, role: null }); } catch(_) {}
+  }
+  _sClear();
+  location.reload();
 }
 
 function profileLogout() {
@@ -4381,6 +4399,16 @@ async function saDeleteRoom(code) {
   if (!_db) return;
   try {
     await _db.ref('rooms/' + code).remove();
+    // ปลด binding ของ users ที่ยังผูกกับห้องนี้อยู่
+    try {
+      const usersSnap = await _db.ref('users').once('value');
+      const users = usersSnap.val() || {};
+      await Promise.all(
+        Object.entries(users)
+          .filter(([, u]) => u.roomCode === code)
+          .map(([uid]) => _db.ref('users/' + uid).update({ roomCode: null, role: null }))
+      );
+    } catch(_) {}
     toast(`🗑️ ลบห้อง ${clubName} (${code}) สำเร็จ`, '🗑️');
     renderSuperAdminPanel();
   } catch(e) {
@@ -4846,6 +4874,12 @@ const firebaseConfig = {
                 if (st.rulesConfig) Object.assign(RC, st.rulesConfig);
                 S.proMatches = toArr(st.proMatches);
                 window._roomMeta = roomData.metadata || {};
+              } else {
+                // ห้องถูกลบหรือไม่พบ → ปลด binding แต่ keep user profile
+                try { await _db.ref('users/' + user.uid).update({ roomCode: null, role: null }); } catch(_) {}
+                _sClear();
+                _showChooseScreen();
+                return;
               }
 
               if (ws) { ws.classList.add('hide'); setTimeout(()=>{ ws.style.display='none'; },420); }

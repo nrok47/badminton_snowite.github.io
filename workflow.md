@@ -4,6 +4,46 @@
 
 ---
 
+## Firebase Database Rules — ตั้งค่าก่อนใช้งาน
+
+> **สำคัญ:** ต้องตั้งค่า Security Rules ใน Firebase Console ก่อนที่แอพจะทำงานได้อย่างถูกต้อง
+
+### ขั้นตอนการตั้งค่า Firebase Realtime Database Rules
+
+1. ไปที่ [Firebase Console](https://console.firebase.google.com/)
+2. เลือกโปรเจกต์ **badmintonsnowite**
+3. เมนูซ้าย → **Realtime Database** → แท็บ **Rules**
+4. ลบ rules เดิมทั้งหมด แล้ววาง JSON ด้านล่างนี้แทน:
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$roomCode": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "proPlayers": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null"
+      }
+    }
+  }
+}
+```
+
+5. กด **Publish** เพื่อบันทึก rules
+
+> ไฟล์ `database.rules.json` ในโปรเจกต์นี้มีเนื้อหา rules เดียวกัน ใช้เป็น reference ได้
+
+### อธิบาย Rules
+- `rooms/$roomCode` — ผู้ใช้ที่ login แล้ว (auth != null) อ่าน/เขียนข้อมูลห้องได้
+- `proPlayers/$uid` — ผู้ใช้ที่ login แล้วอ่าน Pro leaderboard ได้, เขียนได้เฉพาะ node ของตัวเอง
+
+---
+
 ## 1. สร้างห้อง (Room Creation)
 
 1. เปิดแอพ → กด **"สร้างก๊วนใหม่"**

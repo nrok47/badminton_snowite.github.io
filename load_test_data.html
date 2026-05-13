@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โหลดข้อมูลทดสอบ — Badminton Club</title>
+<style>
+  body { font-family: 'Kanit', sans-serif, sans-serif; background: #0a1628; color: #e8edf2; padding: 24px; max-width: 600px; margin: 0 auto; }
+  h1 { font-size: 20px; margin-bottom: 8px; }
+  p { font-size: 13px; color: #8ca5c0; margin-bottom: 24px; }
+  .btn { background: #f0c040; color: #000; border: none; padding: 12px 28px; font-size: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  #log { margin-top: 24px; background: #0f1f3d; border-radius: 8px; padding: 16px; font-size: 12px; font-family: monospace; min-height: 80px; white-space: pre-wrap; line-height: 1.7; }
+  .ok { color: #22c55e; }
+  .err { color: #f43f5e; }
+  .info { color: #60a5fa; }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<h1>🏸 โหลดข้อมูลทดสอบ</h1>
+<p>กดปุ่มด้านล่างเพื่อโหลดข้อมูลทดสอบ 2 ห้อง (11111 และ 22222) พร้อม Pro Match ลงใน Firebase<br>
+⚠️ ต้อง login ด้วย Google ก่อน และต้องมี permission เขียน Firebase</p>
+<button class="btn" id="load-btn" onclick="loadTestData()">📥 โหลดข้อมูลทดสอบ</button>
+<div id="log"><span class="info">รอการดำเนินการ...</span></div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+  authDomain: "badmintonsnowite.firebaseapp.com",
+  databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+  projectId: "badmintonsnowite",
+  storageBucket: "badmintonsnowite.firebasestorage.app",
+  messagingSenderId: "278915115830",
+  appId: "1:278915115830:web:5aff2fbb71db4df62a6197"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+const auth = firebase.auth();
+
+function log(msg, type = 'info') {
+  const el = document.getElementById('log');
+  const line = document.createElement('span');
+  line.className = type;
+  line.textContent = msg + '\n';
+  if (el.querySelector('.info')?.textContent?.startsWith('รอ')) el.innerHTML = '';
+  el.appendChild(line);
+}
+
+async function loadTestData() {
+  const btn = document.getElementById('load-btn');
+  btn.disabled = true;
+  log('🔍 กำลังโหลด test_data.json...', 'info');
+
+  let testData;
+  try {
+    const resp = await fetch('./test_data.json');
+    if (!resp.ok) throw new Error('ไม่พบไฟล์ test_data.json (HTTP ' + resp.status + ')');
+    testData = await resp.json();
+    log('✅ โหลด test_data.json สำเร็จ', 'ok');
+  } catch(e) {
+    log('❌ โหลด test_data.json ล้มเหลว: ' + e.message, 'err');
+    btn.disabled = false;
+    return;
+  }
+
+  // ตรวจสอบ auth
+  log('🔐 ตรวจสอบ login...', 'info');
+  const user = auth.currentUser;
+  if (!user) {
+    log('⚠️ ยังไม่ได้ login — กำลัง login ด้วย Google...', 'info');
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+      log('✅ Login สำเร็จ', 'ok');
+    } catch(e) {
+      log('❌ Login ล้มเหลว: ' + e.message, 'err');
+      btn.disabled = false;
+      return;
+    }
+  } else {
+    log('✅ Login แล้ว: ' + user.email, 'ok');
+  }
+
+  // เขียนข้อมูลแต่ละห้อง
+  for (const [key, room] of Object.entries(testData)) {
+    const code = room.roomCode;
+    log(`\n📁 กำลังเขียนห้อง ${code} (${room.clubName})...`, 'info');
+
+    // แปลง members/matches/proMatches เป็น object keyed by id
+    const membersObj = {};
+    room.members.forEach(m => { membersObj[m.id] = m; });
+    const matchesObj = {};
+    (room.matches || []).forEach(m => { matchesObj[m.id] = m; });
+    const proMatchesObj = {};
+    (room.proMatches || []).forEach(m => { proMatchesObj[m.id] = m; });
+
+    const statePayload = {
+      members: membersObj,
+      matches: matchesObj,
+      proMatches: proMatchesObj,
+      lastUpdatedAt: Date.now()
+    };
+
+    try {
+      await db.ref(`rooms/${code}/state`).set(statePayload);
+      log(`  ✅ เขียน state สำเร็จ (${room.members.length} สมาชิก, ${room.matches.length} แมทช์, ${(room.proMatches||[]).length} Pro match)`, 'ok');
+    } catch(e) {
+      log(`  ❌ เขียน state ล้มเหลว: ` + e.message, 'err');
+    }
+
+    try {
+      await db.ref(`rooms/${code}/clubName`).set(room.clubName);
+      await db.ref(`rooms/${code}/metadata`).set({ subscribed: true, createdAt: Date.now() });
+      log(`  ✅ เขียน metadata (subscribed: true) สำเร็จ`, 'ok');
+    } catch(e) {
+      log(`  ❌ เขียน metadata ล้มเหลว: ` + e.message, 'err');
+    }
+
+    // เขียน proPlayers สำหรับสมาชิกที่มี proTier
+    const proMembers = room.members.filter(m => m.proTier && m.googleUid);
+    for (const m of proMembers) {
+      try {
+        await db.ref(`proPlayers/${m.googleUid}`).set({
+          name: m.name,
+          photoURL: '',
+          roomCode: code,
+          clubName: room.clubName,
+          proMatchDeltas: m.proMatchDeltas || [],
+          lastUpdatedAt: Date.now()
+        });
+        log(`  ✅ proPlayers/${m.googleUid} (${m.name}) เขียนสำเร็จ`, 'ok');
+      } catch(e) {
+        log(`  ❌ proPlayers/${m.googleUid} ล้มเหลว: ` + e.message, 'err');
+      }
+    }
+  }
+
+  log('\n🎉 โหลดข้อมูลทดสอบเสร็จสมบูรณ์!', 'ok');
+  log('เปิดแอพ index.html แล้วกรอกรหัส 11111 หรือ 22222 เพื่อทดสอบ', 'info');
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>

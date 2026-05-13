@@ -4099,12 +4099,13 @@ renderAll(); // render empty state while waiting for Firebase
 <script>
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
-  authDomain: "badmintonsnowite.firebaseapp.com",
-  databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
-  projectId: "badmintonsnowite",
-  appId: "1:278915115830:web:5aff2fbb71db4df62a6197"
-};
+  const firebaseConfig = {
+    apiKey: "AIzaSyCwE3sUBHEV5VYqyYbUz4r3yGBEToATpVQ",
+    authDomain: "badmintonsnowite.firebaseapp.com",
+    databaseURL: "https://badmintonsnowite-default-rtdb.firebaseio.com",
+    projectId: "badmintonsnowite",
+    appId: "1:278915115830:web:5aff2fbb71db4df62a6197"
+  };
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();

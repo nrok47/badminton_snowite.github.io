@@ -1,0 +1,16 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomCode": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "proPlayers": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "auth != null"
+      }
+    }
+  }
+}

@@ -80,14 +80,19 @@ async function init() {
     log('✅ เชื่อมต่อ badmintonsnowite สำเร็จ', 'ok');
   } catch(e) { log('❌ badmintonsnowite: ' + e.message, 'err'); return; }
 
-  // Sign in to badmintonsnowite (target DB needs auth to write)
-  log('🔑 กำลัง Sign in กับ badmintonsnowite...', 'warn');
-  const provider = new firebase.auth.GoogleAuthProvider(firebase.app('dst'));
-  try {
-    await dstAuth.signInWithPopup(provider);
-    log('✅ Sign in สำเร็จ: ' + dstAuth.currentUser.displayName, 'ok');
-  } catch(e) {
-    if (e.code !== 'auth/popup-closed-by-user') log('⚠️ Sign in ล้มเหลว (อาจเป็นแค่ warning): ' + e.message, 'warn');
+  // รอ auth state ก่อน — browser อาจมี session เดิมจาก main app
+  log('🔑 ตรวจสอบ session...', 'warn');
+  const currentUser = await new Promise(resolve => {
+    const unsub = dstAuth.onAuthStateChanged(u => { unsub(); resolve(u); });
+  });
+
+  if (currentUser) {
+    log('✅ มี session อยู่แล้ว: ' + currentUser.displayName, 'ok');
+  } else {
+    // ไม่มี session — ใช้ redirect (popup ถูก block โดย GitHub Pages COOP header)
+    log('⚠️ ไม่มี session — กำลัง redirect ไป Google Sign-in...', 'warn');
+    await dstAuth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+    return; // page จะ reload หลัง redirect กลับมา
   }
 
   // Read source data

@@ -4328,12 +4328,14 @@ async function renderSuperAdminPanel() {
 
     if (!entries.length) { listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--muted);">ยังไม่มีห้อง</div>'; return; }
 
+    window._saRooms = {};
     listEl.innerHTML = entries.map(([code, room]) => {
       const meta = room.metadata || {};
       const st   = room.state || {};
       const members = !st.members ? [] : Array.isArray(st.members) ? st.members : Object.values(st.members);
       const matches = !st.matches ? [] : Array.isArray(st.matches) ? st.matches : Object.values(st.matches);
       const subbed = !!meta.subscribed;
+      window._saRooms[code] = { clubName: room.clubName || code };
       return `<div style="background:var(--s2);border-radius:10px;padding:14px;margin-bottom:10px;border:1px solid var(--border);">
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
           <div style="flex:1;">
@@ -4342,11 +4344,47 @@ async function renderSuperAdminPanel() {
           </div>
           <span style="background:${subbed?'var(--green)':'var(--s3)'};color:${subbed?'#fff':'var(--muted)'};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;">${subbed?'✅ Subscribed':'🔒 Free'}</span>
         </div>
-        <button class="btn btn-sm ${subbed?'btn-r':'btn-g'}" onclick="saToggleSubscription('${code}',${!subbed})">${subbed?'❌ ยกเลิก Subscription':'✅ เปิด Subscription'}</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm ${subbed?'btn-r':'btn-g'}" onclick="saToggleSubscription('${code}',${!subbed})">${subbed?'❌ ยกเลิก Subscription':'✅ เปิด Subscription'}</button>
+          <button class="btn btn-sm" style="background:var(--s3);color:var(--text);" onclick="saEditRoomName('${code}')">✏️ แก้ชื่อ</button>
+          <button class="btn btn-sm" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3);" onclick="saDeleteRoom('${code}')">🗑️ ลบห้อง</button>
+        </div>
       </div>`;
     }).join('');
   } catch(e) {
     listEl.innerHTML = `<div style="color:var(--red);">เกิดข้อผิดพลาด: ${esc(String(e))}</div>`;
+  }
+}
+
+async function saEditRoomName(code) {
+  if (!isSuperAdmin()) return;
+  const currentName = window._saRooms?.[code]?.clubName || code;
+  const newName = prompt(`แก้ชื่อก๊วน "${currentName}"\nชื่อใหม่:`, currentName);
+  if (!newName || newName.trim() === '' || newName.trim() === currentName) return;
+  const _db = window.db;
+  if (!_db) return;
+  try {
+    await _db.ref('rooms/' + code + '/clubName').set(newName.trim());
+    toast('✅ แก้ชื่อสำเร็จ: ' + newName.trim());
+    renderSuperAdminPanel();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + String(e), '⚠️');
+  }
+}
+
+async function saDeleteRoom(code) {
+  if (!isSuperAdmin()) return;
+  const clubName = window._saRooms?.[code]?.clubName || code;
+  const confirmed = confirm(`⚠️ ลบห้อง "${clubName}" (${code})?\n\nจะลบข้อมูลทั้งหมด: สมาชิก, แมทช์, Pro Match\nการดำเนินการนี้ไม่สามารถยกเลิกได้\n\nกด OK เพื่อยืนยัน`);
+  if (!confirmed) return;
+  const _db = window.db;
+  if (!_db) return;
+  try {
+    await _db.ref('rooms/' + code).remove();
+    toast(`🗑️ ลบห้อง ${clubName} (${code}) สำเร็จ`, '🗑️');
+    renderSuperAdminPanel();
+  } catch(e) {
+    toast('เกิดข้อผิดพลาด: ' + String(e), '⚠️');
   }
 }
 

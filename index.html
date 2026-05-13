@@ -4339,9 +4339,9 @@ const firebaseConfig = {
               roomCode = userData.roomCode;
               role = userData.role || 'user';
             } else {
-              // 2. Fallback: หาจาก rooms ที่ adminUid === user.uid
+              // 2. Fallback: หาจาก rooms ที่ metadata/adminUid === user.uid
               try {
-                const roomsSnap = await _db.ref('rooms').orderByChild('adminUid').equalTo(user.uid).limitToFirst(1).once('value');
+                const roomsSnap = await _db.ref('rooms').orderByChild('metadata/adminUid').equalTo(user.uid).limitToFirst(1).once('value');
                 const roomsData = roomsSnap.val();
                 if (roomsData) {
                   const code = Object.keys(roomsData)[0];
@@ -4359,7 +4359,7 @@ const firebaseConfig = {
                 try {
                   const allRoomsSnap = await _db.ref('rooms').once('value');
                   const allRooms = allRoomsSnap.val() || {};
-                  const found = Object.entries(allRooms).find(([, r]) => r.adminUid === user.uid);
+                  const found = Object.entries(allRooms).find(([, r]) => r.metadata?.adminUid === user.uid);
                   if (found) {
                     const [code] = found;
                     roomCode = code;

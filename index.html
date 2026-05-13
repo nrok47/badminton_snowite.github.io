@@ -551,6 +551,7 @@ function _sClear() {
           <div class="wc-choice-sub">เป็น Admin ของก๊วน</div>
         </div>
       </div>
+      <div id="w-room-list" style="margin-top:16px;width:100%;"></div>
       <button class="welcome-back" onclick="wSignOutAndReset()">← ออกจากระบบ</button>
     </div>
 
@@ -4809,6 +4810,33 @@ document.getElementById('modal-club-name').addEventListener('click',function(e){
 // ===== WELCOME SCREEN (AUTH) =====
 // (global vars declared above Firebase init block)
 
+async function _loadRoomList() {
+  const el = document.getElementById('w-room-list');
+  if (!el || !window.db) return;
+  el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">⏳ กำลังโหลดรายการห้อง...</div>';
+  try {
+    const snap = await window.db.ref('rooms').once('value');
+    const rooms = snap.val() || {};
+    const entries = Object.entries(rooms);
+    if (entries.length === 0) { el.innerHTML = ''; return; }
+    el.innerHTML = '<div style="font-size:11px;color:var(--muted);text-align:center;margin-bottom:8px;letter-spacing:.5px;">ห้องที่มีอยู่</div>'
+      + entries.map(([code, room]) => {
+          const name = (room.metadata?.clubName || room.state?.clubName || '(ไม่มีชื่อ)');
+          const memberCount = Object.keys(room.state?.members || {}).length || 0;
+          return `<div onclick="document.getElementById('join-code-input').value='${code}';wGoStep('join')"
+            style="background:var(--card);border-radius:10px;padding:10px 14px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(255,255,255,.06);">
+            <div>
+              <div style="font-weight:600;font-size:14px;">${esc(name)}</div>
+              <div style="font-size:12px;color:var(--muted);">รหัส: <b style="letter-spacing:2px;">${esc(code)}</b>${memberCount ? ' · ' + memberCount + ' คน' : ''}</div>
+            </div>
+            <div style="font-size:20px;">🏸</div>
+          </div>`;
+        }).join('');
+  } catch(e) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:8px 0;">ไม่สามารถโหลดรายการห้องได้</div>';
+  }
+}
+
 function wGoStep(id) {
   document.querySelectorAll('.w-step').forEach(el => el.classList.remove('on'));
   // รองรับ ws-step-X และ ws-stepX (เช่น ws-step0)
@@ -4818,6 +4846,10 @@ function wGoStep(id) {
   // แสดง hint ห้องล่าสุดเมื่อกลับหน้า main
   if (id === 'main' && typeof _wShowLastRoomHint === 'function') {
     setTimeout(_wShowLastRoomHint, 50);
+  }
+  // โหลดรายการห้องเมื่อแสดง choose screen
+  if (id === 'choose') {
+    setTimeout(_loadRoomList, 100);
   }
 }
 

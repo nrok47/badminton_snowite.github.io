@@ -609,6 +609,7 @@ function _sClear() {
       <span id="fb-text">กำลังเชื่อมต่อ...</span>
     </div>
     <div id="header-room-badge" style="display:none;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:800;background:rgba(240,192,64,.12);border:1px solid rgba(240,192,64,.3);color:var(--accent);font-family:'IBM Plex Mono',monospace;cursor:pointer;" title="รหัสห้อง" onclick="_showRoomCode()"></div>
+    <div id="header-sub-badge" style="display:none;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-left:4px;"></div>
     <div id="header-guest-badge" style="display:none;padding:3px 10px;border-radius:6px;font-size:10px;font-weight:800;background:rgba(56,189,248,.10);border:1px solid rgba(56,189,248,.3);color:var(--blue);font-family:'Kanit',sans-serif;">👁️ GUEST</div>
     <!-- Profile Button (แสดงทั้ง guest และ member/admin) -->
     <button id="profile-btn" onclick="toggleProfileMenu(event)" style="background:none;border:none;cursor:pointer;padding:0;position:relative;display:flex;align-items:center;">
@@ -787,6 +788,10 @@ function _sClear() {
       <button class="btn btn-s btn-sm" onclick="clearMatchFilter()">✕ ล้าง</button>
     </div>
     <div id="match-history"><div class="empty"><div class="empty-i">📋</div><div class="empty-t">ยังไม่มีประวัติ</div></div></div>
+  </div>
+  <div class="panel" id="pro-history-panel" style="display:none;">
+    <div class="pt">⚡ ประวัติ Pro Match</div>
+    <div id="pro-match-history"></div>
   </div>
 </div>
 
@@ -1476,6 +1481,7 @@ const PRO_WIN            = 3000;
 const PRO_LOSS           = -2100;
 const PRO_MARGIN_BONUS   = 600;
 const PRO_WINDOW         = 10;
+const PRO_DECAY_DAYS     = 30;
 
 function isSuperAdmin() {
   return SUPER_ADMIN_EMAILS.includes((_sGet('bcm_adminEmail') || '').toLowerCase().trim());
@@ -1756,6 +1762,14 @@ function calcProElo(member) {
   return PRO_BASE_ELO + deltas.reduce((s, d) => s + (d.delta || 0), 0);
 }
 
+function isProStale(member) {
+  const deltas = member.proMatchDeltas || [];
+  if (!deltas.length) return false;
+  const newest = deltas.reduce((max, d) => Math.max(max, d.t || 0), 0);
+  if (!newest) return false;
+  return (Date.now() - newest) > PRO_DECAY_DAYS * 24 * 60 * 60 * 1000;
+}
+
 function isProMatch(winners, losers) {
   if (!isSubscribed()) return false;
   const all = [...winners, ...losers];
@@ -1789,7 +1803,7 @@ async function recordProMatch() {
   winners.forEach((id, i) => {
     const m = gm(id); if (!m) return;
     if (!m.proMatchDeltas) m.proMatchDeltas = [];
-    m.proMatchDeltas.push({ matchId, delta: wDeltas[i] });
+    m.proMatchDeltas.push({ matchId, delta: wDeltas[i], t: Date.now() });
     if (m.proMatchDeltas.length > PRO_WINDOW) m.proMatchDeltas.shift();
     m.matchCount = (m.matchCount ?? 0) + 1;
     m.wins = (m.wins ?? 0) + 1;
@@ -1797,7 +1811,7 @@ async function recordProMatch() {
   losers.forEach((id, i) => {
     const m = gm(id); if (!m) return;
     if (!m.proMatchDeltas) m.proMatchDeltas = [];
-    m.proMatchDeltas.push({ matchId, delta: lDeltas[i] });
+    m.proMatchDeltas.push({ matchId, delta: lDeltas[i], t: Date.now() });
     if (m.proMatchDeltas.length > PRO_WINDOW) m.proMatchDeltas.shift();
     m.matchCount = (m.matchCount ?? 0) + 1;
     m.losses = (m.losses ?? 0) + 1;
@@ -2403,6 +2417,23 @@ function renderRole() {
   document.querySelectorAll('.super-admin-only').forEach(el => {
     el.style.display = isSuperAdmin() ? '' : 'none';
   });
+  // Subscription badge
+  const subBadge = document.getElementById('header-sub-badge');
+  if (subBadge && _sGet('bcm_roomCode')) {
+    subBadge.style.display = 'inline-block';
+    if (isSubscribed()) {
+      subBadge.textContent = '✅ Pro';
+      subBadge.style.background = 'rgba(34,197,94,.15)';
+      subBadge.style.color = 'var(--green)';
+      subBadge.style.border = '1px solid rgba(34,197,94,.3)';
+    } else {
+      const left = freeMatchesLeft();
+      subBadge.textContent = left <= 0 ? '🔒 Free' : `🔓 Free (${left})`;
+      subBadge.style.background = left <= 3 ? 'rgba(239,68,68,.12)' : 'rgba(100,116,139,.1)';
+      subBadge.style.color = left <= 3 ? 'var(--red)' : 'var(--muted)';
+      subBadge.style.border = `1px solid ${left <= 3 ? 'rgba(239,68,68,.3)' : 'var(--border)'}`;
+    }
+  }
 }
 
 function renderFreemiumBanner(){
@@ -2420,12 +2451,47 @@ function renderFreemiumBanner(){
   }
 }
 
+function renderProMatchHistory() {
+  const panel = document.getElementById('pro-history-panel');
+  const el = document.getElementById('pro-match-history');
+  if (!panel || !el) return;
+  const show = isSubscribed() && (S.proMatches||[]).length > 0;
+  panel.style.display = show ? '' : 'none';
+  if (!show) return;
+  const matches = [...(S.proMatches||[])].reverse();
+  el.innerHTML = matches.map(match => {
+    const winnerNames = (match.winners||[]).map(id => { const m = gm(id); return m ? esc(m.name) : '?'; });
+    const loserNames  = (match.losers||[]).map(id => { const m = gm(id); return m ? esc(m.name) : '?'; });
+    const wDelta = (match.wDeltas||[])[0] || 0;
+    const lDelta = (match.lDeltas||[])[0] || 0;
+    const dt = match.time ? new Date(match.time).toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'2-digit'}) : (match.dateStr||'');
+    return `<div style="background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span style="font-size:10px;font-weight:800;background:linear-gradient(135deg,#f59e0b33,#ef444422);border:1px solid #f59e0b88;color:var(--accent);border-radius:99px;padding:2px 8px;">⚡ Pro</span>
+        <span style="font-size:11px;color:var(--muted);margin-left:auto;">${dt}${match.margin ? ' 🎯' : ''}</span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <div style="flex:1;">
+          <div style="font-size:11px;color:var(--green);font-weight:700;">✅ ${winnerNames.join(' & ')}</div>
+          <div style="font-size:10px;color:var(--muted);">⚡ +${wDelta.toLocaleString()}</div>
+        </div>
+        <div style="font-size:16px;font-weight:800;color:var(--accent);font-family:var(--mono);">${match.sw??'?'}–${match.sl??'?'}</div>
+        <div style="flex:1;text-align:right;">
+          <div style="font-size:11px;color:var(--red);font-weight:700;">❌ ${loserNames.join(' & ')}</div>
+          <div style="font-size:10px;color:var(--muted);">⚡ ${lDelta.toLocaleString()}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 function renderAll(){
   renderStats(); renderRanking(); renderRecentMatches();
   renderBestPair(); renderWorstPair(); renderDashboardStats();
   renderMemberGrid(); renderSelects(); renderMatchHistory(); renderFinance(); renderDecayHistory(); renderRSVP();
   renderRules(); renderPlayerStats(); renderTrophy();
   renderFreemiumBanner();
+  renderProMatchHistory();
   updateSeasonLabels();
   renderRole();
 }
@@ -2865,6 +2931,7 @@ function renderMemberGrid(){
       ${gav(m, i, 36, 15)}
       <div class="mcard-name">${m.name}${streak>=2?` 🧊`:''}</div>
       <div class="mcard-elo">${(m.elo??BASE).toLocaleString()}</div>
+      ${m.proTier && isSubscribed() ? `<div style="font-size:10px;color:var(--accent);font-weight:700;line-height:1.3;">⚡ ${calcProElo(m).toLocaleString()}${isProStale(m) ? ' 💤' : ''}</div>` : ''}
       <div class="mcard-sub">${m.wins||0}W ${m.losses||0}L · ${wr}%${streak>0?` · L${streak}`:''}</div>
     </div>`;
   }).join('');
@@ -3467,6 +3534,7 @@ function renderPlayerStats(){
       <div class="sq-icon">${m.icon||'🏸'}</div>
       <div class="sq-name">${esc(m.name)}&nbsp;${bgTagBadge(m.elo??BASE)}${championStarsBadge(m.id)}</div>
       <div class="sq-elo">${(m.elo??BASE).toLocaleString()}</div>
+      ${m.proTier && isSubscribed() ? `<div style="font-size:9px;color:var(--accent);font-weight:700;line-height:1.3;">⚡ ${calcProElo(m).toLocaleString()}${isProStale(m) ? ' 💤' : ''}</div>` : ''}
       ${streak}
     </div>`;
   }).join('');
@@ -4222,10 +4290,13 @@ async function renderProLeaderboard() {
       const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:var(--muted);">#${i+1}</span>`;
       const diff = p.proElo - PRO_BASE_ELO;
       const diffStr = diff>0?`<span style="color:var(--green);">+${diff.toLocaleString()}</span>`:diff<0?`<span style="color:var(--red);">${diff.toLocaleString()}</span>`:`<span style="color:var(--muted);">0</span>`;
+      const staleMs = PRO_DECAY_DAYS * 24 * 60 * 60 * 1000;
+      const lastT = (p.proMatchDeltas || []).reduce((max, d) => Math.max(max, d.t || 0), 0);
+      const isStale = lastT > 0 && (Date.now() - lastT) > staleMs;
       return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
         <div style="width:32px;text-align:center;font-size:16px;">${medal}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name||'?')}</div>
+          <div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name||'?')}${isStale ? ' <span style="font-size:10px;color:var(--muted);">(ไม่ active 30+ วัน)</span>' : ''}</div>
           <div style="font-size:10px;color:var(--muted);">${esc(p.clubName||'')} · ${p.games} เกม</div>
         </div>
         <div style="text-align:right;">
@@ -5008,14 +5079,17 @@ const firebaseConfig = {
       const serverMembers  = toArrLocal(data.members || []);
       const serverFinance  = toArrLocal(data.finance || []);
       const serverDecay    = toArrLocal(data.decayEvents || []);
+      const serverProMatches = toArrLocal(data.proMatches || []);
 
       const localMatchIds  = new Set(S.matches.map(m => String(m.id)));
       const localFinIds    = new Set(S.finance.map(f => String(f.id)));
       const localDecayIds  = new Set((S.decayEvents||[]).map(d => String(d.id)));
+      const localProIds    = new Set((S.proMatches||[]).map(m => String(m.id)));
 
       const hasNewMatches  = serverMatches.some(m => !localMatchIds.has(String(m.id)));
       const hasNewFinance  = serverFinance.some(f => !localFinIds.has(String(f.id)));
       const hasNewDecay    = serverDecay.some(d => !localDecayIds.has(String(d.id)));
+      const hasNewProMatches = serverProMatches.some(m => !localProIds.has(String(m.id)));
 
       const memberSig = m => `${m.id}|${m.name}|${m.icon||''}|${m.elo||0}`;
       const localMemberSig = new Set(S.members.map(memberSig));
@@ -5028,7 +5102,7 @@ const firebaseConfig = {
                           JSON.stringify(data.rsvp) !== JSON.stringify(S.rsvp || {});
 
       const hasChanges = hasNewMatches || hasNewMembers || hasNewFinance ||
-                         hasNewDecay || hasNewRules || hasNewRsvp;
+                         hasNewDecay || hasNewRules || hasNewRsvp || hasNewProMatches;
 
       // first sync — โหลดข้อมูลและ trigger claim ก่อนเสมอ ไม่ว่า hasChanges จะเป็นอะไร
       if (_firstSync) {
@@ -5037,6 +5111,7 @@ const firebaseConfig = {
         S.matches     = serverMatches;
         S.finance     = serverFinance;
         S.decayEvents = serverDecay;
+        S.proMatches  = serverProMatches;
         S.seasons     = toArrLocal(data.seasons || []);
         if (data.rsvp)        S.rsvp = data.rsvp;
         if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
@@ -5061,6 +5136,7 @@ const firebaseConfig = {
       S.matches     = serverMatches;
       S.finance     = serverFinance;
       S.decayEvents = serverDecay;
+      S.proMatches  = serverProMatches;
       S.seasons     = toArrLocal(data.seasons || []);
       if (data.rsvp)        S.rsvp = data.rsvp;
       if (data.rulesConfig) Object.assign(RC, data.rulesConfig);

@@ -1638,7 +1638,23 @@ function computeDeltas(winners, losers, sw, sl){
 }
 
 // ===== MATCH PREVIEW =====
+function syncPlayerDropdowns() {
+  const ids = ['w1','w2','l1','l2'];
+  const vals = {};
+  ids.forEach(id => { const el = document.getElementById(id); vals[id] = el ? el.value : ''; });
+  ids.forEach(id => {
+    const el = document.getElementById(id); if (!el) return;
+    const others = new Set(ids.filter(o => o !== id).map(o => vals[o]).filter(v => v));
+    Array.from(el.options).forEach(opt => {
+      if (!opt.value) return;
+      opt.disabled = others.has(opt.value);
+      opt.style.color = opt.disabled ? 'var(--muted)' : '';
+    });
+  });
+}
+
 function updateMatchPreview(){
+  syncPlayerDropdowns();
   const box=document.getElementById('match-preview'); if(!box) return;
   const w1v=document.getElementById('w1').value;
   const l1v=document.getElementById('l1').value;
@@ -2976,6 +2992,7 @@ function renderSelects(){
     }).join('');
     if(playersForRecord.find(m=>m.id===parseInt(cur))) el.value=cur;
   });
+  if (typeof syncPlayerDropdowns === 'function') syncPlayerDropdowns();
   // edit modal + decay: ใช้ทั้งหมด
   ['ew1','ew2','el1','el2','decay-player'].forEach(id=>{
     const el=document.getElementById(id); if(!el) return;

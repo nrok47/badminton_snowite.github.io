@@ -4707,16 +4707,19 @@ loadTheme();
 document.addEventListener('DOMContentLoaded', function() {
   if (typeof wGoStep === 'function') wGoStep('loading');
   // Safety fallback: ถ้า onAuthStateChanged ค้างใน 10 วินาที → แสดง login screen
+  // หมายเหตุ: ตรวจ ws.style.display และ classList ก่อนแสดง เพื่อป้องกันกรณีที่ auth เสร็จแล้ว
+  // (success path ซ่อน ws ด้วย classList.add('hide') + display:none แต่ไม่ได้ call wGoStep)
   setTimeout(function() {
     var loadingStep = document.getElementById('ws-step-loading');
     var ws = document.getElementById('welcome-screen');
-    if (ws && loadingStep && loadingStep.classList.contains('on')) {
+    if (ws && loadingStep && loadingStep.classList.contains('on')
+        && ws.style.display !== 'none' && !ws.classList.contains('hide')) {
       console.warn('[BCM] Auth/Firebase timeout — forcing login screen');
       ws.style.display = '';
       ws.classList.remove('hide');
       if (typeof wGoStep === 'function') wGoStep('main');
     }
-  }, 6000);
+  }, 10000);
 });
 function _showRoomCode(){
   const code = _sGet('bcm_roomCode') || '?';

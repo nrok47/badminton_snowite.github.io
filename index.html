@@ -1079,6 +1079,13 @@ function toggleAdminTool() {
         <span>⚡ Pro Tier — เปิดใช้ Pro ELO สำหรับสมาชิกคนนี้</span>
       </label>
     </div>
+    <div class="fg" id="edit-member-coadmin-row" style="display:none;">
+      <label class="fl" style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <input type="checkbox" id="edit-member-coadmin" style="width:16px;height:16px;accent-color:#f59e0b;">
+        <span>🔧 Co-Admin — สิทธิ์บันทึกผลการแข่งขัน</span>
+      </label>
+      <div id="edit-member-coadmin-hint" style="font-size:10px;color:var(--muted);margin-top:4px;padding-left:24px;"></div>
+    </div>
     <div class="modal-act">
       <button class="btn btn-y btn-full" onclick="saveMemberEdit()">✅ บันทึก</button>
       <button class="btn btn-s" onclick="closeModal('modal-edit-member')">ยกเลิก</button>
@@ -1422,7 +1429,7 @@ function toggleAdminTool() {
 
 <script>
 // ===== STATE =====
-let S = { members:[], matches:[], finance:[], decayEvents:[], seasons:[], seasonGoal: 100, rsvp: {}, proMatches:[] };
+let S = { members:[], matches:[], finance:[], decayEvents:[], seasons:[], seasonGoal: 100, rsvp: {}, proMatches:[], coAdminIds: [] };
 
 // ===== RULES CONFIG (editable) =====
 let RC = {
@@ -1723,7 +1730,7 @@ function updateMatchPreview(){
 
 // ===== RECORD =====
 function recordMatch(){
-  if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
+  if(!canRecord()){ toast('เฉพาะ Admin / Co-Admin เท่านั้น','🚫'); return; }
   if(!isSubscribed() && freeMatchesLeft()<=0){ openModal('modal-upgrade'); return; }
   const w1v=document.getElementById('w1').value;
   const l1v=document.getElementById('l1').value;
@@ -1834,7 +1841,7 @@ function isProMatch(winners, losers) {
 }
 
 async function recordProMatch() {
-  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น', '🚫'); return; }
+  if (!canRecord()) { toast('เฉพาะ Admin / Co-Admin เท่านั้น', '🚫'); return; }
   if (!isSubscribed()) { toast('ต้องเป็น Subscribed room', '🔒'); return; }
 
   const w1v = document.getElementById('w1').value;
@@ -2406,6 +2413,13 @@ function openRenameSelf() {
 function isAdmin() {
   return _sGet('bcm_role') === 'admin';
 }
+function isCoAdmin() {
+  const uid = _sGet('bcm_myUid');
+  return !!uid && (S.coAdminIds || []).includes(uid);
+}
+function canRecord() {
+  return isAdmin() || isCoAdmin();
+}
 function isGuest() {
   return false; // guest mode removed
 }
@@ -2427,9 +2441,11 @@ function isMyMember(id) {
 function renderRole() {
   const admin = isAdmin();
   const member = isMember();
+  const coAdmin = !admin && isCoAdmin();
   // Toggle body classes
-  document.body.classList.toggle('member-mode', member);
+  document.body.classList.toggle('member-mode', member && !coAdmin);
   document.body.classList.toggle('admin-mode', admin);
+  document.body.classList.toggle('co-admin-mode', coAdmin);
   document.querySelectorAll('.admin-only').forEach(el => {
     el.style.display = admin ? '' : 'none';
   });
@@ -2464,7 +2480,7 @@ function renderRole() {
   const menuRoom = document.getElementById('profile-menu-room');
   const menuRole = document.getElementById('profile-menu-role');
   if (menuRoom && roomCode) menuRoom.textContent = roomCode;
-  if (menuRole) menuRole.textContent = admin ? '⚙️ Admin' : '🏸 Member';
+  if (menuRole) menuRole.textContent = admin ? '⚙️ Admin' : coAdmin ? '🔧 Co-Admin' : '🏸 Member';
   // Profile menu member action buttons
   const renameBtn = document.getElementById('profile-menu-rename-btn');
   const claimBtn  = document.getElementById('profile-menu-claim-btn');
@@ -3391,14 +3407,29 @@ function editMember(id){
   const title    = document.getElementById('edit-member-modal-title');
   const proRow = document.getElementById('edit-member-pro-row');
   const proChk = document.getElementById('edit-member-pro');
+  const coAdminRow  = document.getElementById('edit-member-coadmin-row');
+  const coAdminChk  = document.getElementById('edit-member-coadmin');
+  const coAdminHint = document.getElementById('edit-member-coadmin-hint');
   if(memberSelf && !adminMode){
-    if(phoneRow) phoneRow.style.display='none';
-    if(proRow)   proRow.style.display='none';
+    if(phoneRow)    phoneRow.style.display='none';
+    if(proRow)      proRow.style.display='none';
+    if(coAdminRow)  coAdminRow.style.display='none';
     if(title) title.textContent='✏️ เปลี่ยนชื่อในเกม';
   } else {
     if(phoneRow) phoneRow.style.display='';
     if(proRow)   proRow.style.display = (adminMode && isSubscribed()) ? '' : 'none';
     if(proChk)   proChk.checked = !!(m.proTier);
+    if(adminMode && coAdminRow) {
+      coAdminRow.style.display = '';
+      const hasUid = !!m.googleUid;
+      if(coAdminChk) {
+        coAdminChk.checked   = hasUid && (S.coAdminIds || []).includes(m.googleUid);
+        coAdminChk.disabled  = !hasUid;
+      }
+      if(coAdminHint) coAdminHint.textContent = hasUid ? '' : '⚠️ สมาชิกนี้ยังไม่ผูกบัญชี Google — Claim ก่อนจึงจะให้สิทธิ์ได้';
+    } else if(coAdminRow) {
+      coAdminRow.style.display='none';
+    }
     if(title) title.textContent='✏️ แก้ไขสมาชิก';
   }
   openModal('modal-edit-member');
@@ -3416,15 +3447,25 @@ function saveMemberEdit(){
   if(!m) return;
   const oldName=m.name;
   m.name=name;
-  // admin เท่านั้นที่แก้ phone + proTier ได้
+  // admin เท่านั้นที่แก้ phone + proTier + coAdmin ได้
   if(isAdmin()){
     m.phone = document.getElementById('edit-member-phone').value.trim();
     if (isSubscribed()) {
       const proChk = document.getElementById('edit-member-pro');
       if (proChk) m.proTier = proChk.checked;
     }
+    // Co-Admin toggle
+    const coAdminChk = document.getElementById('edit-member-coadmin');
+    if (coAdminChk && m.googleUid) {
+      if (!S.coAdminIds) S.coAdminIds = [];
+      if (coAdminChk.checked && !S.coAdminIds.includes(m.googleUid)) {
+        S.coAdminIds.push(m.googleUid);
+      } else if (!coAdminChk.checked) {
+        S.coAdminIds = S.coAdminIds.filter(id => id !== m.googleUid);
+      }
+    }
   }
-  save(); closeModal('modal-edit-member'); renderAll(); toast(`แก้ไข "${oldName}" → "${name}" สำเร็จ`);
+  save(); closeModal('modal-edit-member'); renderAll(); renderRole(); toast(`แก้ไข "${oldName}" → "${name}" สำเร็จ`);
 }
 
 function confirmDelete(id){
@@ -5081,7 +5122,8 @@ const firebaseConfig = {
                 S.decayEvents = toArr(st.decayEvents);
                 S.seasons     = toArr(st.seasons);
                 if (st.rulesConfig) Object.assign(RC, st.rulesConfig);
-                S.proMatches = toArr(st.proMatches);
+                S.proMatches  = toArr(st.proMatches);
+                S.coAdminIds  = Array.isArray(st.coAdminIds) ? st.coAdminIds : st.coAdminIds ? Object.values(st.coAdminIds) : [];
                 window._roomMeta = roomData.metadata || {};
               } else {
                 // ห้องถูกลบหรือไม่พบ → ปลด binding แต่ keep user profile
@@ -5181,6 +5223,7 @@ const firebaseConfig = {
           proMatches: [...serverProMatches, ...newLocalPro],
           seasons: toArr(S.seasons || []),
           seasonGoal: S.seasonGoal,
+          coAdminIds: S.coAdminIds || [],
           rulesConfig: RC,
           clubName,
           lastUpdatedAt: writeTs
@@ -5394,6 +5437,7 @@ const firebaseConfig = {
         S.decayEvents = serverDecay;
         S.proMatches  = serverProMatches;
         S.seasons     = toArrLocal(data.seasons || []);
+        S.coAdminIds  = Array.isArray(data.coAdminIds) ? data.coAdminIds : data.coAdminIds ? Object.values(data.coAdminIds) : [];
         if (data.rsvp)        S.rsvp = data.rsvp;
         if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
         if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;
@@ -5419,6 +5463,7 @@ const firebaseConfig = {
       S.decayEvents = serverDecay;
       S.proMatches  = serverProMatches;
       S.seasons     = toArrLocal(data.seasons || []);
+      S.coAdminIds  = Array.isArray(data.coAdminIds) ? data.coAdminIds : data.coAdminIds ? Object.values(data.coAdminIds) : [];
       if (data.rsvp)        S.rsvp = data.rsvp;
       if (data.rulesConfig) Object.assign(RC, data.rulesConfig);
       if (data.seasonGoal)  S.seasonGoal = data.seasonGoal;

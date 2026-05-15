@@ -1666,10 +1666,10 @@ function syncPlayerDropdowns() {
   ids.forEach(id => { const el = document.getElementById(id); vals[id] = el ? el.value : ''; });
   ids.forEach(id => {
     const el = document.getElementById(id); if (!el) return;
-    const others = new Set(ids.filter(o => o !== id).map(o => vals[o]).filter(v => v));
+    const others = new Set(ids.filter(o => o !== id).map(o => String(vals[o])).filter(v => v));
     Array.from(el.options).forEach(opt => {
       if (!opt.value) return;
-      opt.disabled = others.has(opt.value);
+      opt.disabled = others.has(String(opt.value));
       opt.style.color = opt.disabled ? 'var(--muted)' : '';
     });
   });
@@ -1798,11 +1798,13 @@ function calcProDeltas(winners, losers, sw, sl) {
   const baseLoss = PRO_LOSS - (marginOk ? PRO_MARGIN_BONUS : 0);
   const wDeltas = winners.map(id => {
     const m = gm(id);
+    if (!m) return Math.round(baseWin);
     const tier = calcProTier(calcProElo(m));
     return Math.round(baseWin * PRO_TIER_CONFIG[tier].winMult);
   });
   const lDeltas = losers.map(id => {
     const m = gm(id);
+    if (!m) return Math.round(baseLoss);
     const tier = calcProTier(calcProElo(m));
     return Math.round(baseLoss * PRO_TIER_CONFIG[tier].lossMult);
   });
@@ -3413,7 +3415,13 @@ function editMember(id){
   if(memberSelf && !adminMode){
     if(phoneRow)    phoneRow.style.display='none';
     if(proRow)      proRow.style.display='none';
-    if(coAdminRow)  coAdminRow.style.display='none';
+    if(coAdminRow && isCoAdmin()) {
+      coAdminRow.style.display='';
+      if(coAdminChk) { coAdminChk.checked=true; coAdminChk.disabled=true; }
+      if(coAdminHint) coAdminHint.textContent='🔧 คุณมีสิทธิ์ Co-Admin (Admin กำหนดให้)';
+    } else if(coAdminRow) {
+      coAdminRow.style.display='none';
+    }
     if(title) title.textContent='✏️ เปลี่ยนชื่อในเกม';
   } else {
     if(phoneRow) phoneRow.style.display='';
@@ -3624,7 +3632,7 @@ function getPlayerStats(id){
 
 let _cacheH2H = {}, _cacheH2HMatchCount = -1;
 function getH2HRecord(id1, id2) {
-  const key = Math.min(id1,id2) + '_' + Math.max(id1,id2);
+  const key = Math.min(Number(id1),Number(id2)) + '_' + Math.max(Number(id1),Number(id2));
   if (S.matches.length !== _cacheH2HMatchCount) { _cacheH2H = {}; _cacheH2HMatchCount = S.matches.length; }
   if (!_cacheH2H[key]) {
     const ms = S.matches.filter(m =>
@@ -5424,9 +5432,11 @@ const firebaseConfig = {
                           JSON.stringify(data.rulesConfig) !== JSON.stringify(S.rulesConfig || RC);
       const hasNewRsvp  = data.rsvp &&
                           JSON.stringify(data.rsvp) !== JSON.stringify(S.rsvp || {});
+      const serverCoAdminIds = Array.isArray(data.coAdminIds) ? data.coAdminIds : data.coAdminIds ? Object.values(data.coAdminIds) : [];
+      const hasNewCoAdminIds = JSON.stringify(serverCoAdminIds) !== JSON.stringify(S.coAdminIds || []);
 
       const hasChanges = hasNewMatches || hasNewMembers || hasNewFinance ||
-                         hasNewDecay || hasNewRules || hasNewRsvp || hasNewProMatches;
+                         hasNewDecay || hasNewRules || hasNewRsvp || hasNewProMatches || hasNewCoAdminIds;
 
       // first sync — โหลดข้อมูลและ trigger claim ก่อนเสมอ ไม่ว่า hasChanges จะเป็นอะไร
       if (_firstSync) {

@@ -1014,6 +1014,15 @@ function toggleAdminTool() {
   <div class="panel">
     <div class="pt">🛡️ Super Admin Panel</div>
     <div id="sa-stats" style="margin-bottom:14px;font-size:12px;color:var(--muted);"></div>
+  <div id="sa-ai-key-section" style="background:var(--s2);border-radius:10px;padding:14px;margin-bottom:12px;border:1px solid var(--border);">
+    <div style="font-weight:700;margin-bottom:6px;">🤖 AI Coach — Anthropic API Key</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;">ใส่ Anthropic API Key เพื่อเปิดใช้งาน AI Coach สำหรับ Pro Players ทุกห้อง</div>
+    <div style="display:flex;gap:6px;margin-bottom:6px;">
+      <input class="fi" id="sa-ai-key-input" type="password" placeholder="sk-ant-api03-..." style="flex:1;font-size:12px;font-family:var(--mono);">
+      <button class="btn btn-g" style="white-space:nowrap;" onclick="saSetAiKey()">💾 บันทึก</button>
+    </div>
+    <div id="sa-ai-key-status" style="font-size:11px;color:var(--muted);"></div>
+  </div>
     <div id="sa-room-list"></div>
     <div style="text-align:center;margin-top:14px;">
       <button class="btn btn-s" onclick="renderSuperAdminPanel()">🔄 รีเฟรช</button>
@@ -1488,6 +1497,12 @@ const PRO_LOSS           = -2100;
 const PRO_MARGIN_BONUS   = 600;
 const PRO_WINDOW         = 10;
 const PRO_DECAY_DAYS     = 30;
+const PRO_TIER_CONFIG    = {
+  BB:    { winMult: 1.25, lossMult: 1.0,  color: '#64748b', range: '≤ 55,000'      },
+  BG1:   { winMult: 1.0,  lossMult: 1.2,  color: '#3b82f6', range: '55,001–70,000' },
+  BG2:   { winMult: 0.8,  lossMult: 1.8,  color: '#8b5cf6', range: '70,001–85,000' },
+  'BG+': { winMult: 0.6,  lossMult: 2.0,  color: '#f59e0b', range: '> 85,000'      },
+};
 
 function isSuperAdmin() {
   return SUPER_ADMIN_EMAILS.includes((_sGet('bcm_adminEmail') || '').toLowerCase().trim());
@@ -1772,12 +1787,19 @@ function recordMatch(){
 // ===== PRO SCORING =====
 function calcProDeltas(winners, losers, sw, sl) {
   const marginOk = sw !== null && sl !== null && (sw - sl) >= RC.marginThreshold;
-  const wDelta = PRO_WIN + (marginOk ? PRO_MARGIN_BONUS : 0);
-  const lDelta = PRO_LOSS - (marginOk ? PRO_MARGIN_BONUS : 0);
-  return {
-    wDeltas: winners.map(() => wDelta),
-    lDeltas: losers.map(() => lDelta),
-  };
+  const baseWin  = PRO_WIN  + (marginOk ? PRO_MARGIN_BONUS : 0);
+  const baseLoss = PRO_LOSS - (marginOk ? PRO_MARGIN_BONUS : 0);
+  const wDeltas = winners.map(id => {
+    const m = gm(id);
+    const tier = calcProTier(calcProElo(m));
+    return Math.round(baseWin * PRO_TIER_CONFIG[tier].winMult);
+  });
+  const lDeltas = losers.map(id => {
+    const m = gm(id);
+    const tier = calcProTier(calcProElo(m));
+    return Math.round(baseLoss * PRO_TIER_CONFIG[tier].lossMult);
+  });
+  return { wDeltas, lDeltas };
 }
 
 function calcProElo(member) {
@@ -1791,6 +1813,18 @@ function isProStale(member) {
   const newest = deltas.reduce((max, d) => Math.max(max, d.t || 0), 0);
   if (!newest) return false;
   return (Date.now() - newest) > PRO_DECAY_DAYS * 24 * 60 * 60 * 1000;
+}
+
+function calcProTier(proElo) {
+  if (proElo <= 55000) return 'BB';
+  if (proElo <= 70000) return 'BG1';
+  if (proElo <= 85000) return 'BG2';
+  return 'BG+';
+}
+function calcProTierBadge(proElo) {
+  const tier = calcProTier(proElo);
+  const c = PRO_TIER_CONFIG[tier].color;
+  return `<span style="display:inline-block;background:${c}22;color:${c};border:1px solid ${c}66;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:800;letter-spacing:.3px;">${tier}</span>`;
 }
 
 function isProMatch(winners, losers) {
@@ -3547,11 +3581,22 @@ function getPlayerStats(id){
   return {id,name:m.name,elo:m.elo??BASE,wins,losses,winRate,streak,streakType};
 }
 
-function getH2HRecord(id1,id2){
-  const matches=S.matches.filter(m=>(m.winners.includes(id1)||m.losers.includes(id1))&&(m.winners.includes(id2)||m.losers.includes(id2)));
-  const id1Wins=matches.filter(m=>m.winners.includes(id1)&&m.losers.includes(id2)).length;
-  const id2Wins=matches.filter(m=>m.winners.includes(id2)&&m.losers.includes(id1)).length;
-  return {total:matches.length,id1Wins,id2Wins};
+let _cacheH2H = {}, _cacheH2HMatchCount = -1;
+function getH2HRecord(id1, id2) {
+  const key = Math.min(id1,id2) + '_' + Math.max(id1,id2);
+  if (S.matches.length !== _cacheH2HMatchCount) { _cacheH2H = {}; _cacheH2HMatchCount = S.matches.length; }
+  if (!_cacheH2H[key]) {
+    const ms = S.matches.filter(m =>
+      (m.winners.includes(id1) || m.losers.includes(id1)) &&
+      (m.winners.includes(id2) || m.losers.includes(id2))
+    );
+    _cacheH2H[key] = {
+      total: ms.length,
+      id1Wins: ms.filter(m => m.winners.includes(id1) && m.losers.includes(id2)).length,
+      id2Wins: ms.filter(m => m.winners.includes(id2) && m.losers.includes(id1)).length,
+    };
+  }
+  return _cacheH2H[key];
 }
 
 function getPlayerRecentMatches(id,limit=10){
@@ -3770,12 +3815,27 @@ function renderRules(){
       <div class="rcard-t" style="font-size:13px;">⚡ Pro Mode — เฉพาะห้อง Subscribed</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">ระบบ ELO แยกต่างหาก ใช้กับผู้เล่นที่ mark เป็น Pro Tier เท่านั้น · ranking ระดับโลกข้ามทุกก๊วน</div>
       <div class="rrow"><span>ELO เริ่มต้น</span><span class="rval" style="color:var(--accent)">${PRO_BASE_ELO.toLocaleString()}</span></div>
-      <div class="rrow"><span>ชนะ</span><span class="rval" style="color:var(--green)">+${PRO_WIN.toLocaleString()}</span></div>
-      <div class="rrow"><span>แพ้</span><span class="rval" style="color:var(--red)">${PRO_LOSS.toLocaleString()}</span></div>
+      <div class="rrow"><span>Base ชนะ</span><span class="rval" style="color:var(--green)">+${PRO_WIN.toLocaleString()}</span></div>
+      <div class="rrow"><span>Base แพ้</span><span class="rval" style="color:var(--red)">${PRO_LOSS.toLocaleString()}</span></div>
       <div class="rrow"><span>Margin bonus/penalty</span><span class="rval" style="color:var(--accent2)">±${PRO_MARGIN_BONUS.toLocaleString()}</span></div>
       <div class="rrow"><span>Sliding window</span><span class="rval">${PRO_WINDOW} เกมล่าสุด</span></div>
       <div class="rrow"><span>เงื่อนไข Pro Match</span><span class="rval">ผู้เล่น 4 คน ต้องเป็น Pro Tier ทั้งหมด</span></div>
       <div class="rrow"><span>Leaderboard</span><span class="rval">ข้ามก๊วน — ดูได้ที่แท็บ ⚡ Pro</span></div>
+      <div style="margin-top:12px;font-weight:700;font-size:12px;margin-bottom:6px;">🏅 BG Tier Multipliers (ตาม Pro ELO ก่อนแมทช์)</div>
+      <table style="width:100%;border-collapse:collapse;font-size:11px;">
+        <tr style="color:var(--muted);border-bottom:1px solid var(--border);">
+          <th style="text-align:left;padding:4px 0;">Tier</th>
+          <th style="text-align:center;padding:4px 0;">Pro ELO</th>
+          <th style="text-align:center;padding:4px 0;color:var(--green);">ชนะ ×</th>
+          <th style="text-align:center;padding:4px 0;color:var(--red);">แพ้ ×</th>
+        </tr>
+        ${Object.entries(PRO_TIER_CONFIG).map(([t,c])=>`<tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:5px 0;font-weight:800;color:${c.color};">${t}</td>
+          <td style="text-align:center;color:var(--muted);font-size:10px;">${c.range}</td>
+          <td style="text-align:center;color:var(--green);font-weight:700;">×${c.winMult}</td>
+          <td style="text-align:center;color:var(--red);font-weight:700;">×${Math.abs(c.lossMult)}</td>
+        </tr>`).join('')}
+      </table>
     </div>
   </div>`;
 }
@@ -4226,6 +4286,113 @@ function genPersonalCoach(id, mem, stats) {
   return `<div style="padding:4px 0;">${html}</div>`;
 }
 
+// ===== CLAUDE AI COACH (Pro Players) =====
+async function callClaudeCoach(memberId) {
+  const m = gm(memberId);
+  if (!m || !m.proTier) return null;
+  const cacheKey = `bcm_cc_${memberId}_${S.matches.length}_${(m.proMatchDeltas||[]).length}`;
+  try {
+    const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
+    if (cached && Date.now() - cached.ts < 24 * 3600 * 1000) return cached.text;
+  } catch(_) {}
+  const _db = window.db;
+  if (!_db) throw new Error('Firebase ไม่พร้อม');
+  const snap = await _db.ref('config/aiKey').once('value');
+  const apiKey = snap.val();
+  if (!apiKey) throw new Error('ยังไม่ได้ตั้งค่า API Key — Super Admin ต้องตั้งค่าใน Super Admin panel');
+  const proElo = calcProElo(m);
+  const tier = calcProTier(proElo);
+  const deltas = m.proMatchDeltas || [];
+  const form = deltas.map(d => d.delta > 0 ? 'ชนะ' : 'แพ้').join(', ') || 'ยังไม่มีข้อมูล';
+  const h2hLines = S.members
+    .filter(x => x.id !== memberId && x.proTier)
+    .map(other => {
+      const h = getH2HRecord(memberId, other.id);
+      if (!h.total) return '';
+      return `- vs ${other.name}: ชนะ ${h.id1Wins} แพ้ ${h.id2Wins} (${h.total} เกม)`;
+    }).filter(Boolean).join('\n') || '- ยังไม่มีข้อมูล H2H';
+  const prompt = `คุณเป็น AI Coach สำหรับผู้เล่นแบดมินตัน Pro Tier ตอบเป็นภาษาไทยกระชับ 2-3 ประโยค
+
+ผู้เล่น: ${m.name}
+Tier: ${tier} (Pro ELO: ${proElo.toLocaleString()})
+ฟอร์มล่าสุด ${deltas.length} เกม: ${form}
+Head-to-Head vs Pro อื่น:
+${h2hLines}
+
+วิเคราะห์ trend ฟอร์มและให้คำแนะนำที่นำไปปฏิบัติได้จริง ห้ามพูดทั่วๆ`;
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+      'anthropic-dangerous-allow-browser': 'true',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 200,
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+  if (!resp.ok) {
+    const err = await resp.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API Error ${resp.status}`);
+  }
+  const data = await resp.json();
+  const text = data.content?.[0]?.text?.trim() || 'ไม่สามารถวิเคราะห์ได้';
+  try { localStorage.setItem(cacheKey, JSON.stringify({ text, ts: Date.now() })); } catch(_) {}
+  return text;
+}
+
+async function showProAiCoach(memberId, btnEl) {
+  if (!isSubscribed()) { toast('ต้องการ Pro subscription', '🔒'); return; }
+  const orig = btnEl.innerHTML;
+  btnEl.innerHTML = '⏳';
+  btnEl.disabled = true;
+  try {
+    const text = await callClaudeCoach(memberId);
+    if (!text) return;
+    let box = btnEl.closest('.pro-player-row')?.querySelector('.ai-coach-box')
+           || btnEl.parentElement?.querySelector('.ai-coach-box');
+    if (!box) {
+      box = document.createElement('div');
+      box.className = 'ai-coach-box';
+      btnEl.closest('.pro-player-row')
+        ? btnEl.closest('.pro-player-row').appendChild(box)
+        : btnEl.parentElement.insertAdjacentElement('afterend', box);
+    }
+    box.innerHTML = `<div class="ai-label">🤖 AI Coach (Claude)</div>${esc(text)}`;
+  } catch(e) {
+    toast(e.message || 'เกิดข้อผิดพลาด', '❌');
+  } finally {
+    btnEl.innerHTML = orig;
+    btnEl.disabled = false;
+  }
+}
+
+async function saSetAiKey() {
+  if (!isSuperAdmin()) return;
+  const input = document.getElementById('sa-ai-key-input');
+  const status = document.getElementById('sa-ai-key-status');
+  if (!input || !status) return;
+  const key = input.value.trim();
+  if (!key.startsWith('sk-ant-')) {
+    status.textContent = '❌ API Key ต้องเริ่มด้วย sk-ant-';
+    status.style.color = 'var(--red)'; return;
+  }
+  const _db = window.db;
+  if (!_db) return;
+  try {
+    await _db.ref('config/aiKey').set(key);
+    status.textContent = '✅ บันทึก API Key แล้ว';
+    status.style.color = 'var(--green)';
+    input.value = '';
+  } catch(e) {
+    status.textContent = '❌ ' + (e.message || 'เกิดข้อผิดพลาด');
+    status.style.color = 'var(--red)';
+  }
+}
+
 // ===== CHAMPION STARS =====
 // Returns number of times a member (by id) has been #1 overall in past seasons
 function getChampionStars(memberId) {
@@ -4329,15 +4496,23 @@ async function renderProLeaderboard() {
       const staleMs = PRO_DECAY_DAYS * 24 * 60 * 60 * 1000;
       const lastT = (p.proMatchDeltas || []).reduce((max, d) => Math.max(max, d.t || 0), 0);
       const isStale = lastT > 0 && (Date.now() - lastT) > staleMs;
-      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div style="width:32px;text-align:center;font-size:16px;">${medal}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name||'?')}${isStale ? ' <span style="font-size:10px;color:var(--muted);">(ไม่ active 30+ วัน)</span>' : ''}</div>
-          <div style="font-size:10px;color:var(--muted);">${esc(p.clubName||'')} · ${p.games} เกม</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-family:var(--mono);font-weight:700;font-size:15px;color:var(--accent);">${p.proElo.toLocaleString()}</div>
-          <div style="font-size:10px;">${diffStr}</div>
+      const tier = calcProTier(p.proElo);
+      const localMember = S.members.find(m => m.googleUid === p.uid);
+      const coachBtn = localMember && isSubscribed()
+        ? `<button class="btn btn-sm" style="font-size:10px;padding:2px 8px;margin-top:4px;" onclick="showProAiCoach(${localMember.id},this)">🤖 AI Coach</button>`
+        : '';
+      return `<div class="pro-player-row" style="padding:10px 0;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <div style="width:32px;text-align:center;font-size:16px;">${medal}</div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:700;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(p.name||'?')}${isStale ? ' <span style="font-size:10px;color:var(--muted);">(ไม่ active 30+ วัน)</span>' : ''}</div>
+            <div style="font-size:10px;color:var(--muted);">${esc(p.clubName||'')} · ${p.games} เกม</div>
+            ${coachBtn}
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--mono);font-weight:700;font-size:15px;color:var(--accent);">${p.proElo.toLocaleString()}</div>
+            <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px;">${calcProTierBadge(p.proElo)}<span style="font-size:10px;">${diffStr}</span></div>
+          </div>
         </div>
       </div>`;
     }).join('');
@@ -4353,6 +4528,19 @@ async function renderSuperAdminPanel() {
   const listEl = document.getElementById('sa-room-list');
   if (!listEl) return;
   listEl.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);">⏳ โหลดข้อมูลทุกห้อง...</div>';
+  // Load current AI key status
+  try {
+    const _db2 = window.db;
+    if (_db2) {
+      const keySnap = await _db2.ref('config/aiKey').once('value');
+      const hasKey = !!keySnap.val();
+      const aiSection = document.getElementById('sa-ai-key-section');
+      if (aiSection) aiSection.style.display = '';
+      const aiStatus = document.getElementById('sa-ai-key-status');
+      if (aiStatus) aiStatus.textContent = hasKey ? '✅ มี API Key ตั้งค่าแล้ว' : '⚠️ ยังไม่มี API Key';
+      if (aiStatus) aiStatus.style.color = hasKey ? 'var(--green)' : 'var(--muted)';
+    }
+  } catch(_) {}
   try {
     const _db = window.db;
     if (!_db) { listEl.innerHTML='<div style="color:var(--red);">Firebase ไม่พร้อม</div>'; return; }

@@ -1847,8 +1847,8 @@ function updateMatchPreview(){
 
 // ===== RECORD =====
 function recordMatch(){
-  if(isGuest()){ toast('Guest: ไม่สามารถบันทึกผลได้ 👁️','🚫'); return; }
-  if(isMember()){ toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); return; }
+  if(isGuest()){ toast('Guest: ไม่สามารถบันทึกผลได้','🚫'); return; }
+  if(isMember()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const w1v=document.getElementById('w1').value;
   const l1v=document.getElementById('l1').value;
   if(!w1v||!l1v){ toast('กรุณาเลือกผู้เล่นอย่างน้อยฝั่งละ 1 คน','⚠️'); return; }
@@ -2407,7 +2407,7 @@ const timeStr = `
 decayHint.innerHTML = `
   ⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}%
   <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">
-    - Decay คะแนนใน ${timeStr}
+    - Decay ใน ${timeStr}
   </span>
 `;
       }
@@ -3389,7 +3389,7 @@ function syncFinanceDetailPaidRow(){
 }
 
 function saveFinanceSessionDetail(){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้','🚫'); return; }
   const id=parseInt(document.getElementById('finance-detail-id').value);
   const session=S.finance?.find(s=>s.id===id);
   if(!session){ toast('ไม่พบ session นี้','⚠️'); return; }
@@ -3399,14 +3399,14 @@ function saveFinanceSessionDetail(){
 }
 
 function deleteFinanceSession(id){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้','🚫'); return; }
   if(!confirm('ลบ session ค่าใช้จ่ายนี้?')) return;
   S.finance=(S.finance||[]).filter(s=>s.id!==id);
   save(); renderAll(); toast('ลบ session แล้ว','🗑️');
 }
 
 function saveFinanceSession(){
-  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้ 👁️','🚫'); return; }
+  if(isGuest()){ toast('Guest: ไม่สามารถแก้ไขได้','🚫'); return; }
   const date  = document.getElementById('f-date').value;
   const note  = document.getElementById('f-note')?.value.trim()||'';
   const participants = [..._fParticipants];
@@ -3661,7 +3661,7 @@ function _bestTeamSplit(grp, partnersMap) {
 
 // ── MAIN: randomCourts ───────────────────────────────────────────────────
 function randomCourts() {
-  if (isGuest()) { toast('Guest: ไม่สามารถจัดคอร์ทได้ 👁️','🚫'); return; }
+  if (isGuest()) { toast('Guest: ไม่สามารถจัดคอร์ทได้','🚫'); return; }
 
   var ds = todayStr();
   var rsvpIds = S.members.filter(function(m){ return rsvpState[m.id]===true; }).map(function(m){ return m.id; });
@@ -5729,7 +5729,7 @@ document.getElementById('modal-bgtier-edit').addEventListener('click', function(
 <script>
 let _eloEditMemberId = null;
 function openEloEdit(memberId) {
-  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); return; }
+  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const m = gm(memberId); if (!m) return;
   _eloEditMemberId = memberId;
   document.getElementById('elo-edit-member-name').textContent = m.name;
@@ -5762,7 +5762,7 @@ function _eloEditPreview() {
   previewEl.innerHTML = `<span style="padding:2px 8px;border-radius:6px;font-size:12px;font-weight:800;font-family:var(--mono);background:${tagColor}22;color:${tagColor};">${lbl}</span> <span>${label}</span> <span style="margin-left:auto;font-family:var(--mono);font-weight:700;color:var(--accent);">${val.toLocaleString()}</span>`;
 }
 async function saveEloEdit() {
-  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); return; }
+  if (!isAdmin()) { toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const m = gm(_eloEditMemberId); if (!m) return;
   const val = parseInt(document.getElementById('elo-edit-value').value);
   const errEl = document.getElementById('elo-edit-error');

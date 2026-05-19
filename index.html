@@ -2397,14 +2397,14 @@ function renderRSVP(){
         const hStr = String(h).padStart(2,'0');
         const mStr = String(min).padStart(2,'0');
         const timeStr = hStr + '<span style="animation:shimmer 1s step-start infinite;display:inline-block;"> : </span>' + mStr;
-        decayHint.innerHTML = `⏳ Decay คะแนนใน <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">${timeStr}</span> — ${decayTargets} คนที่ไม่ได้มา คะแนนลด ${pct}%`;
+        decayHint.innerHTML = `⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}% - `Decay คะแนนใน <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">${timeStr}</span> ;
       }
     }
   }
 }
 
 function toggleRSVP(id,val){
-  if(isMember()){ toast('เฉพาะ Admin เท่านั้น 🚫','🚫'); renderRSVP(); return; }
+  if(isMember()){ toast('เฉพาะ Admin เท่านั้น','🚫'); renderRSVP(); return; }
   rsvpState[id]=val;
   rsvpState._date = todayStr(); // stamp วันที่ session — ใช้โดย auto decay
   S.rsvp={...rsvpState};

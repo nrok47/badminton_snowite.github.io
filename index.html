@@ -2392,12 +2392,26 @@ function renderRSVP(){
       if(diffMs <= 0){
         decayHint.innerHTML = `⏰ <span style="color:var(--red);font-weight:700;">Decay pending</span> — ${decayTargets} คน`;
       } else {
-        const h = Math.floor(diffMs/3600000);
-        const min = Math.floor((diffMs%3600000)/60000);
-        const hStr = String(h).padStart(2,'0');
-        const mStr = String(min).padStart(2,'0');
-        const timeStr = hStr + '<span style="animation:shimmer 1s step-start infinite;display:inline-block;"> : </span>' + mStr;
-        decayHint.innerHTML = `⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}% - Decay คะแนนใน <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">${timeStr}</span>` ;
+      const h = Math.floor(diffMs / 3600000);
+const min = Math.floor((diffMs % 3600000) / 60000);
+const sec = Math.floor((diffMs % 60000) / 1000);
+
+const hStr = String(h).padStart(2, '0');
+const mStr = String(min).padStart(2, '0');
+const sStr = String(sec).padStart(2, '0');
+
+const timeStr = `
+  <span style="animation:shimmer 1s step-start infinite;display:inline-block;">
+    ${hStr} : ${mStr} : ${sStr}
+  </span>
+`;
+
+decayHint.innerHTML = `
+  ⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}%
+  <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">
+    - Decay คะแนนใน ${timeStr}
+  </span>
+`;
       }
     }
   }

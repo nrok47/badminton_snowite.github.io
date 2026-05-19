@@ -2397,7 +2397,7 @@ function renderRSVP(){
         const hStr = String(h).padStart(2,'0');
         const mStr = String(min).padStart(2,'0');
         const timeStr = hStr + '<span style="animation:shimmer 1s step-start infinite;display:inline-block;"> : </span>' + mStr;
-        decayHint.innerHTML = `⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}% - `Decay คะแนนใน <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">${timeStr}</span> ;
+        decayHint.innerHTML = `⏳ คนที่ไม่ได้มา ${decayTargets} คะแนนลด ${pct}% - Decay คะแนนใน <span style="color:var(--accent);font-weight:700;font-family:var(--mono);">${timeStr}</span>` ;
       }
     }
   }

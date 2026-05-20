@@ -450,6 +450,27 @@ body.member-mode .member-hidden { display: none !important; }
 <body>
 
 <script>
+// ============================================================================
+// COMMENT MAP (search these exact labels)
+// [DOMAIN] APP BOOTSTRAP / COMPAT LAYER
+// [DOMAIN] CORE DATA / STATE / SCORING DOMAIN
+// [DOMAIN] APP SHELL / ROLE / RENDER DOMAIN
+// [DOMAIN] DASHBOARD DOMAIN
+// [DOMAIN] FINANCE DOMAIN
+// [DOMAIN] MEMBER / COURT MANAGEMENT DOMAIN
+// [DOMAIN] PLAYER STATS / PROFILE DOMAIN
+// [DOMAIN] RULES / SETTINGS DOMAIN
+// [DOMAIN] COACHING / INSIGHTS DOMAIN
+// [DOMAIN] FIREBASE / SYNC DOMAIN
+// [DOMAIN] RADAR ANALYTICS DOMAIN
+// [UTIL] NAVIGATION / TAB ROUTING
+// [UTIL] MODAL / HISTORY HELPERS
+// [UTIL] THEME HELPERS
+// [UTIL] TOAST / EXPORT / GLOBAL UI EVENTS
+// APP BOOTSTRAP / COMPAT LAYER
+// Current runtime is simplified admin-only mode with Firebase RTDB sync.
+// Legacy auth / room functions remain as no-op stubs for compatibility only.
+// ============================================================================
 // ═══════════════════════════════════════════════════════
 // NO-AUTH MODE — ทุกคนเป็น Admin, ไม่มี room/user/auth
 // ═══════════════════════════════════════════════════════
@@ -464,8 +485,8 @@ function setClubName(name) {
 }
 
 // ── session stubs (ไม่ใช้จริง แต่ code เก่าเรียก) ──
-// ใช้ room code สั้นๆ สำหรับ path: rooms/main/state
-const _ROOM_CODE = 'main';
+// room code เหลือไว้เพื่อความเข้ากันได้กับ UI เก่า ไม่ได้ใช้แยก path หลักแล้ว
+const _ROOM_CODE = 'main'; // UI compatibility only; main data syncs to Firebase path `state`
 
 function _sGet(key) {
   if (key === 'bcm_role')     return 'admin';
@@ -476,9 +497,13 @@ function _sGet(key) {
 }
 function _sSet(key, value) {
   if (key === 'bcm_clubname' && value) localStorage.setItem('bcm_clubname', value);
+  if (key === 'bcm_roomCode' && value) localStorage.setItem('bcm_roomCode', value);
 }
 function _sRemove() {}
 function _sClear() {}
+function getCurrentRoomCode() {
+  return _sGet('bcm_roomCode') || localStorage.getItem('bcm_roomCode') || _ROOM_CODE;
+}
 
 // ── auth/room/welcome stubs (ทุกอย่างที่ไม่ใช้แล้ว) ──
 var _wUser = null, _wJoinCode = '', _wNewCode = '', _wRole = '';
@@ -538,8 +563,10 @@ async function saveClubName() {
   closeModal('modal-club-name');
   if (window.db) {
     try {
-      const code = localStorage.getItem('bcm_roomCode');
-      if (code) await window.db.ref('state').update({ clubName: val, lastUpdatedAt: Date.now() });
+      const code = getCurrentRoomCode();
+      const ts = Date.now();
+      if (code) await window.db.ref(window.FB_PATHS ? window.FB_PATHS.state : 'state').update({ clubName: val, lastUpdatedAt: ts });
+      if (code) await window.db.ref((window.FB_PATHS ? window.FB_PATHS.activeRooms : 'activeRooms') + '/' + code).set({ clubName: val, lastUpdatedAt: ts });
     } catch(e) {}
   }
   toast('เปลี่ยนชื่อก๊วนเป็น "' + val + '" แล้ว');
@@ -1555,6 +1582,10 @@ function toggleAdminTool() {
 <div class="toast" id="toast"><span id="ti">✅</span><span id="tm"></span><button class="toast-undo" id="toast-undo">↩ Undo</button></div>
 
 <script>
+// ============================================================================
+// CORE DATA / STATE / SCORING DOMAIN
+// Global state, rules config, tier helpers, scoring engine, match preview/record
+// ============================================================================
 // ===== STATE =====
 let S = { members:[], matches:[], finance:[], decayEvents:[], seasons:[], seasonGoal: 100, rsvp: {} };
 
@@ -1651,7 +1682,7 @@ async function guestSyncMember(memberId){
     const code = _sGet('bcm_roomCode'); if(!code) return;
     const m = gm(memberId); if(!m) return;
     // อัปเดตเฉพาะ members array ใน Firebase
-    await window.db.ref('state/members').transaction(members => {
+    await window.db.ref(window.FB_PATHS ? window.FB_PATHS.members : 'state/members').transaction(members => {
       if(!members) return members;
       const arr = Object.values(members);
       const idx = arr.findIndex(x => x.id === memberId);
@@ -1664,7 +1695,7 @@ async function guestSyncMember(memberId){
     });
   } catch(e) {
     // fallback: sync state ทั้งหมด
-    try { if(window.db) await window.db.ref('state').set(S); } catch(e2){}
+    try { if(window.db) await window.db.ref(window.FB_PATHS ? window.FB_PATHS.state : 'state').set(window.buildSyncedState ? window.buildSyncedState(S) : S); } catch(e2){}
   }
 }
 
@@ -1911,6 +1942,10 @@ function recordMatch(){
   toast(msg, frozen?'🧊':farmHit?'🚫':'✅');
 }
 
+// ============================================================================
+// APP SHELL / ROLE / RENDER DOMAIN
+// Role state, profile menu, render orchestration, top-level UI refresh
+// ============================================================================
 // ===== RENDER =====
 
 
@@ -1973,7 +2008,7 @@ function toggleProfileMenu(e) {
 
 function profileLogout() { lockAdmin(); }
 function copyRoomCode() {
-  const code = localStorage.getItem('bcm_roomCode');
+  const code = getCurrentRoomCode();
   if (code) navigator.clipboard.writeText(code).then(() => toast('คัดลอกรหัสห้อง ' + code + ' แล้ว', '✅')).catch(() => toast(code, '🔑'));
 }
 
@@ -2093,6 +2128,10 @@ function updateSeasonLabels(){
   if(barLabel) barLabel.textContent = 'S' + n + ' PROGRESS';
 }
 
+// ============================================================================
+// DASHBOARD DOMAIN
+// Dashboard summary cards, best/worst pairs, charts, RSVP, decay summaries
+// ============================================================================
 // ===== คู่เทพ: pair with most wins together =====
 function renderBestPair(){
   const el=document.getElementById('best-pair'); if(!el) return;
@@ -2282,7 +2321,7 @@ function getEloHistory(id){
   S.matches.forEach(m=>{ if(m.winners.includes(id)||m.losers.includes(id)) events.push({type:'match',time:m.time,data:m}); });
   (S.decayEvents||[]).forEach(ev=>{ if(ev.playerId===id) events.push({type:'decay',time:ev.time}); });
   events.sort((a,b)=>a.time-b.time);
-  let elo=BASE;
+  let elo=RC.baseElo||BASE;
   const pts=[{elo}];
   events.forEach(ev=>{
     if(ev.type==='match'){
@@ -2345,13 +2384,14 @@ function getWinStreak(id){
 // ===== ELO SNAPSHOTS (before/after per match) =====
 function computeEloSnapshots(){
   const elos={};
-  S.members.forEach(m=>elos[m.id]=BASE);
+  const _base=RC.baseElo||BASE;
+  S.members.forEach(m=>elos[m.id]=_base);
   const snaps={};
   [...S.matches].sort((a,b)=>a.time-b.time).forEach(match=>{
     snaps[match.id]={};
-    [...match.winners,...match.losers].forEach(id=>{ snaps[match.id][id]={before:elos[id]??BASE}; });
-    match.winners.forEach((id,i)=>{ elos[id]=Math.max(RC.eloFloor||FLOOR,(elos[id]??BASE)+(match.wDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
-    match.losers.forEach((id,i)=>{ elos[id]=Math.max(RC.eloFloor||FLOOR,(elos[id]??BASE)+(match.lDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
+    [...match.winners,...match.losers].forEach(id=>{ snaps[match.id][id]={before:elos[id]??_base}; });
+    match.winners.forEach((id,i)=>{ elos[id]=Math.max(RC.eloFloor||FLOOR,(elos[id]??_base)+(match.wDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
+    match.losers.forEach((id,i)=>{ elos[id]=Math.max(RC.eloFloor||FLOOR,(elos[id]??_base)+(match.lDeltas[i]??0)); snaps[match.id][id].after=elos[id]; });
   });
   return snaps;
 }
@@ -2378,8 +2418,8 @@ function renderRSVP(){
   if(decayHint){
     const rsvpDate = (S.rsvp||{})._date;
     const pct = RC.decayPct ?? RC.decayAmount ?? 5;
-    // decay หัก เฉพาะคนที่ถูก untick (false) เท่านั้น — undefined = ไม่ได้ set = ไม่โดน
-    const decayTargets = S.members.filter(m => (S.rsvp||{})[m.id] === false).length;
+    // decay หัก ทุกคนที่ไม่ได้ mark มา (true) — undefined และ false ถือว่าขาด
+    const decayTargets = S.members.filter(m => (S.rsvp||{})[m.id] !== true).length;
     // ต้องมีคนถูก tick จริง (true) อย่างน้อย 1 คน — ไม่งั้นถือว่าไม่มี RSVP session
     const hasAnyTick = S.members.some(m => (S.rsvp||{})[m.id] === true);
     if(!rsvpDate || !pct || decayTargets === 0 || !hasAnyTick){
@@ -2435,9 +2475,8 @@ function _runDecayForDate(dateStr, rsvpSnapshot) {
   const decayTime = new Date(y, m-1, d, 23, 59, 59).getTime();
   let applied=0, skipped=0;
   S.members.forEach((mem,i) => {
-    // decay เฉพาะคนที่ admin untick (false) เท่านั้น
-    // undefined = ไม่ได้ set → ไม่ decay
-    if (rsvpSnapshot[mem.id] !== false) return;
+    // decay ทุกคนที่ไม่ได้ mark มา (true) — undefined และ false ถือว่าขาด
+    if (rsvpSnapshot[mem.id] === true) return;
     const used = (S.decayEvents||[]).filter(e => e.playerId===mem.id).length;
     if (used >= RC.decayMaxTimes) { skipped++; return; }
     const alreadyDone = (S.decayEvents||[]).some(e => e.playerId===mem.id && e.autoDate===dateStr);
@@ -3098,6 +3137,10 @@ function renderFinance(){
   listEl.innerHTML=cards+paginationHTML;
 }
 
+// ============================================================================
+// FINANCE DOMAIN
+// Finance session UI, participant split, payment summaries, finance CRUD
+// ============================================================================
 // ===== FINANCE MODAL (new design) =====
 function renderFinanceOptions(){} // stub
 function syncFinancePaymentRows(){ _fSync(); } // backward compat
@@ -3374,10 +3417,17 @@ function openFinanceSession(id){
   document.getElementById('fd-per-person').textContent=`${fmtMoney(session.perPerson||0)} ฿`;
   const participantsEl=document.getElementById('fd-participants');
   if(participantsEl){
+    const paid=session.paidParticipants||[];
+    const guestAttr=isGuest()?'disabled style="pointer-events:none;opacity:.5;"':'';
     participantsEl.innerHTML=(session.participants||[]).map(pid=>{
       const name=gm(pid)?.name||'?';
-      return `<div class="chk-item" style="pointer-events:none;opacity:.9;"><span>${name}</span></div>`;
+      const checked=paid.includes(pid)?'checked':'';
+      return `<label class="chk-item" style="padding:6px 8px;">
+        <input type="checkbox" class="fd-paid" value="${pid}" ${checked} ${guestAttr} onchange="syncFinanceDetailPaidRow()">
+        <span style="font-size:13px;">${esc(name)}</span>
+      </label>`;
     }).join('');
+    syncFinanceDetailPaidRow();
   }
   document.getElementById('modal-finance-detail').classList.add('on');
 }
@@ -3467,12 +3517,16 @@ function saveFinanceSession(){
   save(); renderAll(); closeModal('modal-finance'); toast('บันทึกค่าใช้จ่ายแล้ว ✅');
 }
 
+// ============================================================================
+// MEMBER / COURT MANAGEMENT DOMAIN
+// Member CRUD, random court balancing, match editing and admin actions
+// ============================================================================
 // ===== ACTIONS =====
 function addMember(){
   if(!isAdmin()){ toast('เฉพาะ Admin เท่านั้น','🚫'); return; }
   const name=document.getElementById('nm-name').value.trim();
   if(!name){ toast('กรุณากรอกชื่อ','⚠️'); return; }
-  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:BASE, matchCount:0, wins:0, losses:0, lossStreak:0 });
+  S.members.push({ id:Date.now(), name, phone:document.getElementById('nm-phone').value.trim(), elo:RC.baseElo||BASE, matchCount:0, wins:0, losses:0, lossStreak:0 });
   save(); document.getElementById('nm-name').value=''; document.getElementById('nm-phone').value='';
   closeModal('modal-add'); renderAll(); toast(`เพิ่ม "${name}" สำเร็จ`);
 }
@@ -3885,17 +3939,18 @@ function randomCourts() {
 }
 
 function replayStats(){
-  S.members.forEach(m=>{ m.elo=BASE; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });
+  const _base=RC.baseElo||BASE;
+  S.members.forEach(m=>{ m.elo=_base; m.matchCount=0; m.wins=0; m.losses=0; m.lossStreak=0; m.decayCount=0; });
   [...S.matches].sort((a,b)=>a.time-b.time).forEach(match=>{
-    match.winners.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??BASE)+(match.wDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.wins=(m.wins??0)+1; m.lossStreak=0; });
-    match.losers.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??BASE)+(match.lDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.losses=(m.losses??0)+1; m.lossStreak=(m.lossStreak??0)+1; });
+    match.winners.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??_base)+(match.wDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.wins=(m.wins??0)+1; m.lossStreak=0; });
+    match.losers.forEach((id,i)=>{ const m=gm(id); if(!m) return; m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??_base)+(match.lDeltas[i]??0)); m.matchCount=(m.matchCount??0)+1; m.losses=(m.losses??0)+1; m.lossStreak=(m.lossStreak??0)+1; });
   });
   // Apply decay events in order
   (S.decayEvents||[]).sort((a,b)=>a.time-b.time).forEach(ev=>{
     const m=gm(ev.playerId); if(!m) return;
     const pct = RC.decayPct ?? RC.decayAmount ?? 5;
-    const decayVal = Math.round((m.elo ?? BASE) * pct / 100);
-    m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??BASE)-decayVal);
+    const decayVal = Math.round((m.elo ?? _base) * pct / 100);
+    m.elo=Math.max(RC.eloFloor||FLOOR,(m.elo??_base)-decayVal);
     m.decayCount=(m.decayCount??0)+1;
   });
   // Apply eloOverride: admin-set ELO ที่บันทึกไว้ใน member object
@@ -3959,6 +4014,10 @@ function saveEdit(){
   save(); closeModal('modal-edit'); renderAll(); toast('แก้ไขสำเร็จ (คะแนน recalculate แล้ว)');
 }
 
+// ============================================================================
+// PLAYER STATS / PROFILE DOMAIN
+// Player detail pages, H2H, playstyle votes, racket profile, stats rendering
+// ============================================================================
 // ===== STATISTICS =====
 function getPlayerStats(id){
   const m=gm(id); if(!m) return null;
@@ -4221,6 +4280,10 @@ function selectIcon(icon){
   toast('เลือก icon สำเร็จ ✅');
 }
 
+// ============================================================================
+// RULES / SETTINGS DOMAIN
+// Rules display, rules editor, default rules sync, navigation, theme, utility UI
+// ============================================================================
 // ===== RULES RENDER & EDIT =====
 function renderRules(){
   const el=document.getElementById('rules-display'); if(!el) return;
@@ -4354,7 +4417,7 @@ async function saveRulesConfig(){
   RC.decayMaxTimes=parseInt(document.getElementById('rc-decayMaxTimes')?.value)||5;
   // Save RC to state and sync
   S.rulesConfig=RC;
-  save(); // autoSyncToFirebase จะ sync rooms/{code}/state ครบ
+  save(); // autoSyncToFirebase จะ sync state และ rulesConfig ไป Firebase
   closeModal('modal-rules-edit');
   renderRules();
   toast('บันทึกกติกาเรียบร้อย ⚙️☁️');
@@ -4384,7 +4447,7 @@ async function saveRulesAsDefault(){
   };
   try {
     if(!window.db) throw new Error('Firebase ยังไม่พร้อม');
-    await window.db.ref('defaultRules').set(draft);
+    await window.db.ref(window.FB_PATHS ? window.FB_PATHS.defaultRules : 'defaultRules').set(draft);
     toast('บันทึก Default กติกา (รวม BG Tier) ขึ้น Firebase แล้ว ⭐', '⭐');
   } catch(e) {
     toast('บันทึก Default ไม่สำเร็จ: '+(e.message||e), '❌');
@@ -4397,7 +4460,7 @@ async function loadRulesDefault(){
   if(!code){ toast('ไม่พบรหัสห้อง','⚠️'); return; }
   try {
     if(!window.db) throw new Error('Firebase ยังไม่พร้อม');
-    const snap = await window.db.ref('defaultRules').once('value');
+    const snap = await window.db.ref(window.FB_PATHS ? window.FB_PATHS.defaultRules : 'defaultRules').once('value');
     const data = snap.val();
     if(!data){ toast('ยังไม่มี Default กติกาของห้องนี้ใน Firebase', '⚠️'); return; }
     const { savedAt, ...rules } = data;
@@ -4417,6 +4480,8 @@ async function loadRulesDefault(){
 }
 
 let _currentTab = 'dashboard';
+
+// [UTIL] NAVIGATION / TAB ROUTING
 
 function _goToPlayerDetail(id) {
   // switch to stats tab
@@ -4443,6 +4508,7 @@ function tab(name, btn, fromPopstate=false){
   if(!fromPopstate) history.pushState({type:'tab', name}, '', '');
 }
 
+// [UTIL] MODAL / HISTORY HELPERS
 function openModal(id, fromPopstate=false){
   document.getElementById(id).classList.add('on');
   if(!fromPopstate) history.pushState({type:'modal', id}, '', '');
@@ -4496,6 +4562,8 @@ window.addEventListener('popstate', e=>{
 // push initial state เมื่อโหลดครั้งแรก — push 2 ครั้งเพื่อให้ back ไม่ออกแอป
 history.replaceState({type:'tab', name:'dashboard'}, '', '');
 history.pushState({type:'tab', name:'dashboard'}, '', '');
+
+// [UTIL] THEME HELPERS
 function setTheme(theme){
   document.documentElement.dataset.theme=theme;
   localStorage.setItem('bcm_theme',theme);
@@ -4518,6 +4586,7 @@ function loadTheme(){
   const valid=['dark','light','snowite','bwf'];
   setTheme(valid.includes(saved)?saved:'light');
 }
+// [UTIL] TOAST / EXPORT / GLOBAL UI EVENTS
 function toast(msg,icon='✅',undoFn=null){
   const t=document.getElementById('toast');
   document.getElementById('tm').textContent=msg;
@@ -4540,6 +4609,10 @@ function exportData(){
   a.click();
   toast('Export เรียบร้อย','📤');
 }
+// ============================================================================
+// COACHING / INSIGHTS DOMAIN
+// AI-style local coaching text, trophy summaries, season fun facts
+// ============================================================================
 // ===== AI COACH =====
 // ===== LOCAL COACH ENGINE (no API needed) =====
 function genCoachText(m) {
@@ -5127,7 +5200,11 @@ document.addEventListener('DOMContentLoaded', function() {
 renderAll(); // render empty state while waiting for Firebase
 </script>
 
-<!-- Firebase RTDB setup -->
+<!-- =========================================================================
+     FIREBASE / SYNC DOMAIN
+     Realtime Database config, merge sync, online/offline status, active rooms
+     ========================================================================= -->
+<!-- FIREBASE RTDB SYNC -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 <script>
@@ -5142,11 +5219,42 @@ renderAll(); // render empty state while waiting for Firebase
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   window.db = db;
+  const FB_PATHS = {
+    state: 'state',
+    members: 'state/members',
+    defaultRules: 'defaultRules',
+    activeRooms: 'activeRooms',
+    connected: '.info/connected'
+  };
+  const dbRef = (path) => db.ref(path);
+  window.FB_PATHS = FB_PATHS;
+  function buildSyncedState(baseState, serverState) {
+    const ts = Date.now();
+    const clubName = getClubName() || baseState?.clubName || serverState?.clubName || '';
+    return {
+      ...(serverState || {}),
+      ...(baseState || {}),
+      clubName,
+      lastUpdatedAt: ts
+    };
+  }
+  async function syncActiveRoomStamp(tsOverride=null, clubNameOverride=null) {
+    const code = getCurrentRoomCode();
+    if (!code) return;
+    const ts = tsOverride || Date.now();
+    const clubName = clubNameOverride || getClubName() || 'ก๊วนไม่ระบุชื่อ';
+    await dbRef(FB_PATHS.activeRooms + '/' + code).set({
+      clubName,
+      lastUpdatedAt: ts
+    });
+  }
+  window.buildSyncedState = buildSyncedState;
+  window.syncActiveRoomStamp = syncActiveRoomStamp;
 
   async function autoSyncToFirebase() {
     try {
-      await db.ref('state').transaction(serverState => {
-        if (!serverState) return S;
+      await dbRef(FB_PATHS.state).transaction(serverState => {
+        if (!serverState) return buildSyncedState(S);
 
         const serverMatches = toArr(serverState.matches || []);
         const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
@@ -5206,7 +5314,7 @@ renderAll(); // render empty state while waiting for Firebase
         const serverDecayIds = new Set(serverDecay.map(d => String(d.id)));
         const newLocalDecay = toArr(S.decayEvents || []).filter(d => !serverDecayIds.has(String(d.id)));
 
-        return {
+        return buildSyncedState({
           ...serverState,
           matches: [...serverMatches, ...newLocalMatches],
           members,
@@ -5216,10 +5324,15 @@ renderAll(); // render empty state while waiting for Firebase
           seasonGoal: S.seasonGoal,
           rulesConfig: S.rulesConfig,
           rsvp: S.rsvp || {}
-        };
+        }, serverState);
       });
+      await syncActiveRoomStamp();
     } catch(e) {
-      try { await db.ref('state').set(S); } catch(e2) {}
+      try {
+        const payload = buildSyncedState(S);
+        await dbRef(FB_PATHS.state).set(payload);
+        await syncActiveRoomStamp(payload.lastUpdatedAt, payload.clubName);
+      } catch(e2) {}
     }
   }
 
@@ -5227,8 +5340,8 @@ renderAll(); // render empty state while waiting for Firebase
     if(!confirmAdmin('บันทึกข้อมูลทั้งหมดขึ้น Firebase')) return;
     try {
       S.rulesConfig = RC;
-      await db.ref('state').transaction(serverState => {
-        if (!serverState) return S;
+      await dbRef(FB_PATHS.state).transaction(serverState => {
+        if (!serverState) return buildSyncedState(S);
         const serverMatches = toArr(serverState.matches || []);
         const serverMatchIds = new Set(serverMatches.map(m => String(m.id)));
         const newLocalMatches = toArr(S.matches || []).filter(m => !serverMatchIds.has(String(m.id)));
@@ -5238,7 +5351,7 @@ renderAll(); // render empty state while waiting for Firebase
         const serverDecay = toArr(serverState.decayEvents || []);
         const serverDecayIds = new Set(serverDecay.map(d => String(d.id)));
         const newLocalDecay = toArr(S.decayEvents || []).filter(d => !serverDecayIds.has(String(d.id)));
-        return {
+        return buildSyncedState({
           ...serverState,
           members: toArr(S.members || []),
           matches: [...serverMatches, ...newLocalMatches],
@@ -5247,8 +5360,9 @@ renderAll(); // render empty state while waiting for Firebase
           seasons: toArr(S.seasons || []),
           seasonGoal: S.seasonGoal,
           rulesConfig: S.rulesConfig
-        };
+        }, serverState);
       });
+      await syncActiveRoomStamp();
       toast('บันทึกข้อมูลขึ้น Firebase แล้ว ☁️✅');
     } catch(e) {
       toast('Firebase: '+(e.message||e.code||'บันทึกไม่สำเร็จ'), '❌');
@@ -5260,7 +5374,7 @@ renderAll(); // render empty state while waiting for Firebase
   async function loadMembersFromFirebase(silent=false) {
     if(!silent && !confirmAdmin('โหลดข้อมูลจาก Firebase (จะทับข้อมูลปัจจุบัน)')) return;
     try {
-      const snapshot = await db.ref('state').once('value');
+      const snapshot = await dbRef(FB_PATHS.state).once('value');
       const data = snapshot.val();
       if (!data) { if(!silent) toast('ยังไม่มีข้อมูลใน Firebase', '⚠️'); return; }
       S.members     = toArr(data.members);
@@ -5271,7 +5385,7 @@ renderAll(); // render empty state while waiting for Firebase
       if(data.rulesConfig) Object.assign(RC, data.rulesConfig);
       if(!data.rulesConfig){
         try {
-          const defSnap = await db.ref('defaultRules').once('value');
+          const defSnap = await dbRef(FB_PATHS.defaultRules).once('value');
           const defData = defSnap.val();
           if(defData) Object.assign(RC, defData);
         } catch(e2) {}
@@ -5326,7 +5440,7 @@ renderAll(); // render empty state while waiting for Firebase
   }
 
   let _autoLoaded = false;
-  db.ref('.info/connected').on('value', (snapshot) => {
+  dbRef(FB_PATHS.connected).on('value', (snapshot) => {
     if (_forceOffline) return;
     if (snapshot.val() === true) {
       updateFirebaseStatus(true);
@@ -5340,7 +5454,7 @@ renderAll(); // render empty state while waiting for Firebase
   });
 
   // Real-time listener
-  db.ref('state').on('value', snapshot => {
+  dbRef(FB_PATHS.state).on('value', snapshot => {
     if (_forceOffline) return;
     if (!_autoLoaded) return;
     const data = snapshot.val();
@@ -5468,13 +5582,13 @@ async function _wOpenActiveClub() {
     const todayTs = todayStart.getTime();
 
     // --- ดึง activeRooms ก่อน ---
-    const snapAR = await window.db.ref('activeRooms')
+    const snapAR = await window.db.ref(window.FB_PATHS ? window.FB_PATHS.activeRooms : 'activeRooms')
       .orderByChild('lastUpdatedAt')
       .startAt(todayTs)
       .once('value');
     const arData = snapAR.val();
 
-    // --- Fallback: ดึงจาก rooms/{code}/state ของ room ที่เคยใช้ ---
+    // --- Fallback: ดึงจาก state ปัจจุบัน เผื่อ activeRooms ยังไม่ถูก backfill ---
     const knownCodes = [
       localStorage.getItem('bcm_last_room_code'),
       window._session?.roomCode,
@@ -5484,7 +5598,7 @@ async function _wOpenActiveClub() {
     if (knownCodes.length > 0) {
       await Promise.all(knownCodes.map(async code => {
         try {
-          const s = await window.db.ref('state').once('value');
+          const s = await window.db.ref(window.FB_PATHS ? window.FB_PATHS.state : 'state').once('value');
           const d = s.val();
           if (d && d.lastUpdatedAt >= todayTs) {
             fallbackEntries[code] = {
@@ -5493,7 +5607,7 @@ async function _wOpenActiveClub() {
             };
             // backfill activeRooms ไปด้วยเลย (ถ้า auth)
             try {
-              await window.db.ref('activeRooms/' + code).set({
+              await window.db.ref((window.FB_PATHS ? window.FB_PATHS.activeRooms : 'activeRooms') + '/' + code).set({
                 clubName: d.clubName || '',
                 lastUpdatedAt: d.lastUpdatedAt,
               });
@@ -5701,7 +5815,8 @@ async function saveBGTierEdit() {
   try {
     if(!window.db) throw new Error('Firebase ยังไม่พร้อม');
     const _code2 = _sGet('bcm_roomCode'); if(!_code2) throw new Error('ไม่พบรหัสห้อง');
-    await window.db.ref('state').set(S);
+    await window.db.ref(window.FB_PATHS ? window.FB_PATHS.state : 'state').set(window.buildSyncedState ? window.buildSyncedState(S) : S);
+    if (window.syncActiveRoomStamp) await window.syncActiveRoomStamp();
     toast(`บันทึก BG Tier ${_editingBGTag} เรียบร้อย ⚙️☁️`);
   } catch(e) {
     toast('บันทึก local แล้ว (Firebase: '+(e.message||'ไม่สำเร็จ')+')', '⚠️');
@@ -5787,7 +5902,8 @@ async function saveEloEdit() {
   try {
     if (!window.db) throw new Error('Firebase ยังไม่พร้อม');
     const _code3 = _sGet('bcm_roomCode'); if(!_code3) throw new Error('ไม่พบรหัสห้อง');
-    await window.db.ref('state').set(S);
+    await window.db.ref(window.FB_PATHS ? window.FB_PATHS.state : 'state').set(window.buildSyncedState ? window.buildSyncedState(S) : S);
+    if (window.syncActiveRoomStamp) await window.syncActiveRoomStamp();
     toast(`✅ ELO "${m.name}" ${oldElo.toLocaleString()} → ${val.toLocaleString()} ☁️`);
   } catch(e) {
     toast(`✅ ELO "${m.name}" → ${val.toLocaleString()} (local · ${e.message||'Firebase ไม่สำเร็จ'})`,'⚠️');
@@ -5795,6 +5911,11 @@ async function saveEloEdit() {
 }
 document.getElementById('modal-elo-edit').addEventListener('click', function(e){ if(e.target===this) closeModal('modal-elo-edit'); });
 </script>
+
+<!-- =========================================================================
+     RADAR ANALYTICS DOMAIN
+     Player radar model, derived stats, SVG rendering, player detail injection
+     ========================================================================= -->
 
 
 <!-- ═══════════════════════════════════════════════════════════════════

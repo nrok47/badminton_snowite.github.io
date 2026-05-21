@@ -3131,7 +3131,7 @@ function renderMatchHistory(){
         </div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0;margin-left:8px;">
-        <button class="btn btn-s btn-sm" onclick="shareMatchCard(${m.id})" style="min-width:36px;min-height:36px;" title="แชร์ผลแมตช์">📤</button>
+        <button class="btn btn-s btn-sm" onclick="shareMatchCard(${m.id})" style="min-width:36px;min-height:36px;" title="แชร์ผลแมตช์">➜]</button>
         ${(isAdmin() && m.id===latestMatchId)?`<button class="btn btn-r btn-sm" onclick="delMatch(${m.id})" style="min-width:36px;min-height:36px;" title="ลบแมตช์ล่าสุด">🗑</button>`:`<span style="min-width:36px;min-height:36px;display:inline-block;"></span>`}
       </div>
     </div>`;

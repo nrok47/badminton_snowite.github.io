@@ -5230,13 +5230,13 @@ function championStarsBadge(memberId) {
 
 // ── Coach label — สุ่มจาก seed (matchId) ให้คงที่ต่อ match ──
 const COACH_LABELS = [
-  { icon: '🤖', name: 'AI Coach' },
-  { icon: '🏸', name: 'พี่วิวแนะนำ' },
-  { icon: '🐔', name: 'อาฉีแนะนำ' },
-  { icon: '📋', name: 'โค้ชเป้แนะนำ' },
-  { icon: '🎩', name: 'เซอร์อเล็กแนะนำ' },
-  { icon: '🔴', name: 'มูรินโญ่แนะนำ' },
-  { icon: '🇨🇲', name: 'โอนาน่าแนะนำ' },
+  { icon: '🤖', name: 'AI Coach 🗣️' },
+  { icon: '🇹🇭', name: 'พี่วิวแนะนำ 🗣️' },
+  { icon: '🇨🇳', name: 'อาฉีแนะนำ 🗣️' },
+  { icon: '📋', name: 'โค้ชเป้แนะนำ 🗣️' },
+  { icon: '🇬🇧', name: 'เซอร์อเล็กแนะนำ 🗣️' },
+  { icon: '🤫', name: 'มูรินโญ่แนะนำ 🗣️' },
+  { icon: '🇨🇲', name: 'โอนาน่าแนะนำ 🗣️' },
 ];
 function getCoachLabel(seed) {
   const idx = Math.abs(seed || 0) % COACH_LABELS.length;

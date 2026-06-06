@@ -5172,12 +5172,12 @@ function genPersonalCoach(id, mem, stats) {
   if (weakestOpponent && weakestOpponent.l > weakestOpponent.w) {
     const oName = gm(weakestOpponent.oid)?.name || '?';
     const lPct  = Math.round(weakestOpponent.l / weakestOpponent.total * 100);
-    lines.push(`🚨 ${oName} เอาชนะคุณได้ ${lPct}% — ถ้าเจอเกมถัดไป อย่าเล่นตามจังหวะเขา บีบให้เล่นลูกที่เขาไม่ถนัด`);
+    lines.push(`🚨 ${oName}เอาชนะคุณได้ ${lPct}% — ถ้าเจอเกมถัดไป อย่าเล่นตามจังหวะเขา บีบให้เล่นลูกที่เขาไม่ถนัด`);
   }
   if (strongestOpponent && strongestOpponent.w > strongestOpponent.l && strongestOpponent.oid !== weakestOpponent?.oid) {
     const oName = gm(strongestOpponent.oid)?.name || '?';
     const wPct  = Math.round(strongestOpponent.w / strongestOpponent.total * 100);
-    lines.push(`🎯 กับ ${oName} ชนะ ${wPct}% — จำ pattern ที่ใช้กับคนนี้แล้วนำไปใช้กับทุกคนในเกมถัดไป`);
+    lines.push(`🎯 เอาชนะ${oName}ได้ ${wPct}% — จำ pattern ที่ใช้กับคนนี้แล้วนำไปใช้กับทุกคนในเกมถัดไป`);
   }
 
   // ── 6. คู่หู ──

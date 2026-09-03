@@ -1648,7 +1648,7 @@ function toggleAdminTool() {
     </div>
     <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px;">⬆️ เจอทีมเก่งกว่า</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-      <div class="fg"><label class="fl">ทีมอ่อนชนะ</label><input class="fi" type="number" id="rc-upsetWin"></div>
+      <div class="fg"><label class="fl">ล้มทีมเก่งได้</label><input class="fi" type="number" id="rc-upsetWin"></div>
       <div class="fg"><label class="fl">ทีมเก่งแพ้</label><input class="fi" type="number" id="rc-upsetLoss"></div>
     </div>
     <div style="font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.6px;margin:10px 0 6px;">⬇️ เจอทีมอ่อนกว่า</div>
@@ -4766,7 +4766,7 @@ function renderRules(){
     </div>
     <div class="rcard"><div class="rcard-t">⬆️ เจอทีมเก่งกว่า (|Δ| > ${RC.thresholdDiff.toLocaleString()})</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">ทีมตัวเองอ่อนกว่า — ชนะได้มากขึ้น</div>
-      <div class="rrow"><span>ทีมอ่อนชนะ</span><span class="rval" style="color:var(--green)">+${RC.upsetWin.toLocaleString()}</span></div>
+      <div class="rrow"><span>ล้มทีมเก่งได้</span><span class="rval" style="color:var(--green)">+${RC.upsetWin.toLocaleString()}</span></div>
       <div class="rrow"><span>ทีมเก่งแพ้</span><span class="rval" style="color:var(--red)">${RC.upsetLoss.toLocaleString()}</span></div>
     </div>
     <div class="rcard"><div class="rcard-t">⬇️ เจอทีมอ่อนกว่า (|Δ| > ${RC.thresholdDiff.toLocaleString()})</div>
